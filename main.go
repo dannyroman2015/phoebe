@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -10,5 +11,11 @@ func main() {
 		fmt.Fprintln(w, "Hello, world!")
 	})
 
-	http.ListenAndServe(":3000", nil)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":3000"
+	} else {
+		port = ":" + port
+	}
+	http.ListenAndServe(port, nil)
 }
