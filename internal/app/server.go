@@ -12,6 +12,7 @@ type Server struct {
 	Addr   string
 	Logger *log.Logger
 	db     *sql.DB
+	models Models
 }
 
 func NewServer(addr string, db *sql.DB) *Server {
