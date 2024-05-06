@@ -1,10 +1,16 @@
 package app
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
+	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func (s *Server) writeJSON(w http.ResponseWriter, data interface{}, status int) error {
@@ -32,4 +38,20 @@ func (s *Server) readJSON(w http.ResponseWriter, r *http.Request, dst interface{
 	}
 
 	return nil
+}
+
+func OpenPgDB(conStr string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", conStr)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err = db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

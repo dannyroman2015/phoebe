@@ -1,6 +1,7 @@
 package app
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -10,14 +11,16 @@ import (
 type Server struct {
 	Addr   string
 	Logger *log.Logger
+	db     *sql.DB
 }
 
-func NewServer(addr string) *Server {
+func NewServer(addr string, db *sql.DB) *Server {
 	logger := log.New(os.Stdout, "Logger: ", log.LstdFlags)
 
 	return &Server{
 		Addr:   addr,
 		Logger: logger,
+		db:     db,
 	}
 }
 
