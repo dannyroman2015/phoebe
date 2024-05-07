@@ -1,6 +1,14 @@
-<h1>home</h1>
-<a href="/api">asdfds</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <form>
+    <h1>Hello {{.name}} you {{.age}} years olds</h1>
 
-<form action="/api" method="post">
-  <button type="submit">ashd</button>
-</form>
+    {{ block "index" .}} {{ end }}
+</body>
+</html>

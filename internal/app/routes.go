@@ -12,7 +12,7 @@ func (s *Server) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(s.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(s.methodNotAllowedResponse)
 
-	router.GET("/", s.handleGetHome)
+	router.GET("/v/:name", BasicAuth(s.handler, "trung", "123"))
 
 	return router
 }
