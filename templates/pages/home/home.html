@@ -3,12 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/htmx.min.js"></script>
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/d3.v7.min.js"></script>
+  <script src="/static/js/plot.js"></script>
+
   <title>Document</title>
 </head>
 <body>
-  <form>
-    <h1>Hello {{.name}} you {{.age}} years olds</h1>
-
-    {{ block "index" .}} {{ end }}
+  <div x-data="{title: ''}">
+    <h1 x-text="title"></h1>
+    <button @click="title='Trung'" class="bg-red-400 mx-3" hx-get="/send">send</button>
+  </div>
+  <div style="width: 400px;" id="myplot"></div>
 </body>
 </html>
+
+<script>
+  const plot = Plot.rectY({length: 10000}, Plot.binX({y: "count"}, {x: Math.random})).plot();
+  const div = document.querySelector("#myplot");
+  div.append(plot);
+</script>

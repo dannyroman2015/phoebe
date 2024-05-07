@@ -20,3 +20,8 @@ func (s *Server) handler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	tmpl := template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/pages/index/index.html"))
 	tmpl.Execute(w, nil)
 }
+
+func (s *Server) handleGetSend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	tmpl := template.Must(template.ParseFiles("templates/pages/home/footer.html"))
+	tmpl.Execute(w, nil)
+}

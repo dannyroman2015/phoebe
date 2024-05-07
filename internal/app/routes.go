@@ -12,7 +12,11 @@ func (s *Server) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(s.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(s.methodNotAllowedResponse)
 
+	router.ServeFiles("/static/*filepath", http.Dir("static"))
+
 	router.GET("/v/:name", BasicAuth(s.handler, "trung", "123"))
+
+	router.GET("/send", s.handleGetSend)
 
 	return router
 }
