@@ -1,4 +1,4 @@
-// import * as d3 from "./d3.v7"
+
 const div_container = d3.select("div")
 const svg = div_container.append("svg")
 svg.attr("viewBox", "0 0 500 300")
@@ -17,8 +17,6 @@ d3.csv("/static/data.csv", d => {
 });
 
 const createViz = (data) => {
-  const barHeight = 20;
-
   const xScale = d3.scaleLinear()
     .domain([0, 100])
     .range([0, 450])
