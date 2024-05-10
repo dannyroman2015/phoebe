@@ -19,6 +19,17 @@ d3.csv("/static/data.csv", d => {
 const createViz = (data) => {
   const barHeight = 20;
 
+  const xScale = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, 450])
+
+  const yScale = d3.scaleBand()
+    .domain(data.map(d => d.name))
+    .range([0, 250])
+    .paddingInner(0.1)
+
+  console.log(yScale("trung"))
+
   svg
     .selectAll("rect")
     .data(data)
@@ -27,10 +38,10 @@ const createViz = (data) => {
         console.log(d);
         return `bar bar-${d.name}`;
       })
-      .attr("width", d => d.age)
-      .attr("height", barHeight)
-      .attr("x", 0)
-      .attr("y", (d, i) => (barHeight +5) * i )
+      .attr("width", d => xScale(d.age))
+      .attr("height", (yScale.bandwidth()))
+      .attr("x", 100)
+      .attr("y", d => yScale(d.name) )
       .attr("fill", d => d.name == "trung" ? "red" : "black")
 }
 
