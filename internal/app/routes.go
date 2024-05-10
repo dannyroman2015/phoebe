@@ -14,9 +14,11 @@ func (s *Server) routes() http.Handler {
 
 	router.ServeFiles("/static/*filepath", http.Dir("static"))
 
-	router.GET("/v/:name", BasicAuth(s.handler, "trung", "123"))
+	router.GET("/v/:name", BasicAuth(s.handler, "thanh", "123"))
 
 	router.GET("/send", s.handleGetSend)
+
+	router.GET("/test", s.handleGetTest)
 
 	return router
 }
