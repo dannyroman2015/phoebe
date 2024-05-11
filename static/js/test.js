@@ -1,45 +1,29 @@
+// import * as d3 from "./d3.v7";
 
-const div_container = d3.select("div")
-const svg = div_container.append("svg")
-svg.attr("viewBox", "0 0 500 300")
+d3.csv("/static/a.csv", d3.autoType).then( data => {
+  console.log(data);
+  drawLineChart(data);
+})
 
-d3.csv("/static/data.csv", d => {
-  return {
-    "name": d.name,
-    "age": +d.age,
-  };
-}).then(data => {
-  console.log(d3.max(data, d => d.age))
-  console.log(d3.min(data, d => d.age))
-  console.log(d3.extent(data, d => d.age))
-  console.log(data.sort((a, b) => a.age - b.age))
-  createViz(data);
-});
+const drawLineChart = (data) => {
+  const margin = {top: 40, right: 170, bottom: 25, left: 40};
+  const width = 1000;
+  const height = 500;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
-const createViz = (data) => {
-  const xScale = d3.scaleLinear()
-    .domain([0, 100])
-    .range([0, 450])
+  const svg = d3.select("div")
+    .append("svg")
+    .attr("viewBox", `0, 0, ${width}, ${height}`);
 
-  const yScale = d3.scaleBand()
-    .domain(data.map(d => d.name))
-    .range([0, 250])
-    .paddingInner(0.1)
+  const innerChart = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  console.log(yScale("trung"))
-
-  svg
-    .selectAll("rect")
-    .data(data)
-    .join("rect")
-      .attr("class", d => {
-        console.log(d);
-        return `bar bar-${d.name}`;
-      })
-      .attr("width", d => xScale(d.age))
-      .attr("height", (yScale.bandwidth()))
-      .attr("x", 100)
-      .attr("y", d => yScale(d.name) )
-      .attr("fill", d => d.name == "trung" ? "red" : "black")
-}
-
+  const firstDate = d3.min(data, d => d.date)
+  const lastDate = d3.max(data, d => d.date)
+  const xScale = d3.scaleTime()
+    .domain([firstDate, lastDate])
+    .range([0, innerWidth])
+  
+};
