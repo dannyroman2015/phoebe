@@ -7,6 +7,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func (s *Server) handleGetLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, nil)
+}
+
 func (s *Server) handleGetHome(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := map[string]string{"name": "trung", "age": "30"}
 	tmpl := template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/pages/index/index.html"))
