@@ -12,6 +12,7 @@
   <title>Document</title>
 </head>
 <body>
+  <a href="/logout">logout</a>
   <div x-data="{title: ''}">
     <h1 x-text="title"></h1>
     <button @click="title='Trung'" class="bg-red-400 mx-3" hx-get="/send">send</button>

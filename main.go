@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	pgdb, err := app.OpenPgDB(`postgresql://postgres:1kbEviyUjJecPLMxXRNweNyvIobFzCZAQ@monorail.proxy.rlwy.net:27572/railway`)
+	pgdb, err := app.OpenPgDB(`1postgresql://postgres:kbEviyUjJecPLMxXRNweNyvIobFzCZAQ@monorail.proxy.rlwy.net:27572/railway`)
 	if err != nil {
 		log.Println("Failed to connect postgres database")
 	}
