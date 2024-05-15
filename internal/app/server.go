@@ -6,22 +6,25 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Server struct {
 	Addr   string
 	Logger *log.Logger
 	db     *sql.DB
+	mgdb   *mongo.Database
 	models Models
 }
 
-func NewServer(addr string, db *sql.DB) *Server {
+func NewServer(addr string, mgdb *mongo.Database) *Server {
 	logger := log.New(os.Stdout, "Logger: ", log.LstdFlags)
 
 	return &Server{
 		Addr:   addr,
 		Logger: logger,
-		db:     db,
+		mgdb:   mgdb,
 	}
 }
 

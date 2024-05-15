@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"dannyroman2015/phoebe/internal/app"
+	"os"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -24,20 +25,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	userColl := client.Database("phoebe").Collection("user")
+	mgdb := client.Database("phoebe")
 
-	_, err = userColl.DeleteOne(context.Background(), bson.M{"name": "trung"})
-	if err != nil {
-		panic(err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":3000"
+	} else {
+		port = ":" + port
 	}
 
-	// port := os.Getenv("PORT")
-	// if port == "" {
-	// 	port = ":3000"
-	// } else {
-	// 	port = ":" + port
-	// }
-
 	// server := app.NewServer(port, pgdb)
-	// server.Start()
+	server := app.NewServer(port, mgdb)
+	server.Start()
 }
