@@ -1,27 +1,13 @@
 package app
 
-import "database/sql"
+import (
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type Models struct {
-	A ModelA
+	UserModel UserModel
 }
 
-func NewModels(db *sql.DB) *Models {
-	return &Models{
-		A: ModelA{
-			db: db,
-		},
-	}
-}
-
-type ModelA struct {
-	db *sql.DB
-}
-
-func (m *ModelA) Get(id string) {
-	//...
-}
-
-func (m *ModelA) Insert(id string) {
-	//...
+type UserModel struct {
+	mgdb *mongo.Database
 }

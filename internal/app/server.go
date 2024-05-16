@@ -15,7 +15,8 @@ type Server struct {
 	Logger *log.Logger
 	db     *sql.DB
 	mgdb   *mongo.Database
-	models Models
+	Models Models
+	User   *User
 }
 
 func NewServer(addr string, mgdb *mongo.Database) *Server {
