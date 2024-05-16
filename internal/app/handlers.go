@@ -50,7 +50,7 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 // ************** "/login" - get login route *******************
 func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := map[string]string{
-		"msg": "Login with your account. If you do not have account, click Register",
+		"msg": "Login with your account. If you do not have account, click Request",
 	}
 
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
@@ -64,7 +64,7 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 
 	if err := s.mgdb.Collection("user").FindOne(context.Background(), bson.M{"username": username}).Decode(&user); err != nil {
 		data := map[string]string{
-			"msg": "Username is incorrect, plaese check again. Do not have? click Register",
+			"msg": "Username is incorrect, plaese check again. Do not have? click Request",
 		}
 		template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
 		return
@@ -72,7 +72,7 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 
 	if user.Password != password {
 		data := map[string]string{
-			"msg": "Password is incorrect, plaese check again. Forgot? Click Register",
+			"msg": "Password is incorrect, plaese check again. Forgot? Click Request",
 		}
 		template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
 		return
@@ -82,19 +82,19 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
 		Value:   user.Username,
-		Expires: time.Now().Add(time.Minute),
+		Expires: time.Now().Add(2 * time.Minute),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "defaulturl",
 		Value:   user.Defaulturl,
-		Expires: time.Now().Add(time.Minute),
+		Expires: time.Now().Add(2 * time.Minute),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "permission",
 		Value:   strings.Join(user.Permission, " "),
-		Expires: time.Now().Add(time.Minute),
+		Expires: time.Now().Add(2 * time.Minute),
 		Path:    "/",
 	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -102,27 +102,29 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 
 // ************** "/login" - post login request *******************
 func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    "username",
+		Value:   "",
+		Expires: time.Now(),
+		Path:    "/",
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:    "defaulturl",
+		Value:   "",
+		Expires: time.Now(),
+		Path:    "/",
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:    "permission",
+		Value:   "",
+		Expires: time.Now(),
+		Path:    "/",
+	})
 
 	data := map[string]string{
-		"msg": "Logout successful! For more information, click Resgister and send a request to admin",
+		"msg": "Logout successful! For more information, click Request and send a request to admin",
 	}
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
-}
-
-func (s *Server) handleGetHome(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	data := map[string]string{"name": "trung", "age": "30"}
-	tmpl := template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/pages/index/index.html"))
-	tmpl.Execute(w, data)
-}
-
-func (s *Server) handler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tmpl := template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/pages/index/index.html"))
-	tmpl.Execute(w, nil)
-}
-
-func (s *Server) handleGetSend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	tmpl := template.Must(template.ParseFiles("templates/pages/home/footer.html"))
-	tmpl.Execute(w, nil)
 }
 
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

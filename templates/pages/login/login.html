@@ -32,7 +32,7 @@
   
   <div x-ref="tabButtons" class="relative inline-grid items-center justify-center w-full h-10 grid-cols-2 p-1 text-gray-500 bg-gray-100 rounded-lg select-none">
       <button :id="$id(tabId)" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">Login</button>
-      <button :id="$id(tabId)" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">Register</button>
+      <button :id="$id(tabId)" @click="tabButtonClicked($el);" type="button" class="relative z-20 inline-flex items-center justify-center w-full h-8 px-3 text-sm font-medium transition-all rounded-md cursor-pointer whitespace-nowrap">Request</button>
       <div x-ref="tabMarker" class="absolute left-0 z-10 w-1/2 h-full duration-300 ease-out" x-cloak><div class="w-full h-full bg-white rounded-md shadow-sm"></div></div>
   </div>
   <div class="relative w-full mt-2 content">
@@ -60,12 +60,12 @@
           <!-- Tab Content 2 -->
           <div class="border rounded-lg shadow-sm bg-card text-neutral-900">
               <div class="flex flex-col space-y-1.5 p-6">
-                  <h3 class="text-lg font-semibold leading-none tracking-tight">Register</h3>
-                  <p class="text-sm text-neutral-500">Provide information for registering an account. Admin provide later.</p>
+                  <h3 class="text-lg font-semibold leading-none tracking-tight">Request</h3>
+                  <p class="text-sm text-neutral-500">Provide information for asking an account, reporting some errors or sending a message to admin.</p>
               </div>
               <div class="p-6 pt-0 space-y-2">
                   <div class="space-y-1"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="info">Staff ID or Name or Phone</label><input type="text" name="info" placeholder="90020 or Trần Văn A or 0903123456" id="info" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md peer border-neutral-300 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" /></div>
-                  <div class="space-y-1"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="staffId">Reason or Message</label><input type="text" name="reason" placeholder="Nhập báo cáo chất lượng/ Quên mật khẩu" id="reason" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" /></div>
+                  <div class="space-y-1"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="staffId">Message</label><input type="text" name="reason" placeholder="Nhập báo cáo chất lượng/ Quên mật khẩu" id="reason" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" /></div>
               </div>
               <div class="flex items-center p-6 pt-0"><button type="button" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium tracking-wide text-white transition-colors duration-200 rounded-md bg-neutral-950 hover:bg-neutral-900 focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 focus:shadow-outline focus:outline-none">Send Request</button></div>
           </div>

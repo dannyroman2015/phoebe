@@ -19,11 +19,7 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/login", s.serveLogin)
 	router.POST("/login", s.requestLogin)
-	router.GET("/logout", s.logout)
-
-	router.GET("/v/:name", BasicAuth(s.handler, "thanh", "123"))
-
-	router.GET("/send", s.handleGetSend)
+	router.POST("/logout", s.logout)
 
 	router.GET("/test", s.handleGetTest)
 
