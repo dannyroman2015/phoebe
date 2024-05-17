@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <title>Document</title>
+</head>
+<body>
+  <h1>Test alpine</h1>
+  <div x-data="{
+    s : '',
+    greet: () => {
+      const x = ['trung', 'thanh', 'phoebe'];
+      return x[2];
+    },
+  }">
+    <button @click="s=greet()">send</button>
+    <p x-text="s"></p>
+  </div>
+</body>
+</html>

@@ -130,3 +130,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html")).Execute(w, nil)
 }
+
+func (s *Server) handleAlpine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/test/testalpine.html")).Execute(w, nil)
+}
