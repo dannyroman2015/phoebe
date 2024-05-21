@@ -11,7 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// ************** "/" - the default route *******************
+// /////////////////////////////////////////
+//
+//	"/" - the default route
+//
+// /////////////////////////////////////////
 func (s *Server) index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	defaulturlToken, err := r.Cookie("defaulturl")
 	if err != nil {
@@ -42,12 +46,20 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	http.Redirect(w, r, user.Defaulturl, http.StatusSeeOther) // go to user's default page
 }
 
-// ************** "/home" - the home route *******************
+// /////////////////////////////////////////
+//
+//	"/home" - the home route
+//
+// /////////////////////////////////////////
 func (s *Server) home(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/home/home.html")).Execute(w, nil)
 }
 
-// ************** "/login" - get login route *******************
+// /////////////////////////////////////////
+//
+//	"/login" - get login route
+//
+// /////////////////////////////////////////
 func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := map[string]string{
 		"msg": "Login with your account. If you do not have account, click Request",
@@ -56,7 +68,11 @@ func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httproute
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
 }
 
-// ************** "/login" - post login request *******************
+// /////////////////////////////////////////
+//
+//	"/login" - post login request
+//
+// /////////////////////////////////////////
 func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
@@ -100,7 +116,11 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// ************** "/login" - post login request *******************
+// /////////////////////////////////////////
+//
+//	"/login" - post logout request
+//
+// /////////////////////////////////////////
 func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
@@ -125,6 +145,18 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		"msg": "Logout successful! For more information, click Request and send a request to admin",
 	}
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
+}
+
+// /////////////////////////////////////////
+//
+//	"/dashboard" - get dashboard request
+//
+// /////////////////////////////////////////
+func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var data string
+	data = "trung"
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navigation.html")).Execute(w, data)
 }
 
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
