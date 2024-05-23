@@ -156,7 +156,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	var data string
 	data = "trung"
 
-	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navigation.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navbar.html")).Execute(w, data)
 }
 
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -165,4 +165,8 @@ func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httpro
 
 func (s *Server) handleAlpine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/testalpine.html")).Execute(w, nil)
+}
+
+func (s *Server) footer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/test/footer.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
