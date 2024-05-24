@@ -23,6 +23,8 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 
+	router.GET("/sections/cutting", s.cuttingSection)
+
 	router.GET("/footer", s.footer)
 	router.GET("/test", s.handleGetTest)
 	router.GET("/testalpinejs", s.handleAlpine)

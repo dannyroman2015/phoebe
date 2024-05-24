@@ -52,7 +52,7 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 //
 // /////////////////////////////////////////
 func (s *Server) home(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/home/home.html")).Execute(w, nil)
+	template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // /////////////////////////////////////////
@@ -159,8 +159,12 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navbar.html")).Execute(w, data)
 }
 
+func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/cutting.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/test.html")).Execute(w, nil)
+	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 func (s *Server) handleAlpine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
