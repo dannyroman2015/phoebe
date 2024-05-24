@@ -191,7 +191,7 @@ const drawStackedBars = (data) => {
 }
 
 const drawDonutCharts = (data) => {
-  const svg = d3.select("div")
+  const svg = d3.select("#donut")
     .append("svg")
       .attr("viewBox", [0, 0, width, height]);
   

@@ -19,6 +19,7 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/login", s.serveLogin)
 	router.POST("/login", s.requestLogin)
+	router.GET("/logout", s.logout)
 	router.POST("/logout", s.logout)
 
 	router.GET("/dashboard", s.dashboard)
