@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -157,6 +158,21 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	data = "trung"
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navbar.html")).Execute(w, data)
+}
+
+func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	info := r.FormValue("info")
+	reason := r.FormValue("reason")
+	createdDate := time.Now()
+
+	_, err := s.mgdb.Collection("request").InsertOne(context.Background(), bson.M{"sender": info, "message": reason})
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(info, reason, createdDate)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`sdhfkasfd`))
 }
 
 func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

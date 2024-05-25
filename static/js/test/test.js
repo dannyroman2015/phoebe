@@ -278,66 +278,126 @@
 //   })
 
 // }
-const width = 928;
-const height = 500;
-const margin = {
-  top: 30,
-  right: 0,
-  bottom: 30,
-  left: 40
-};
-const innerWidth = width - margin.left - margin.right;
-const innerHeight = height - margin.top - margin.bottom;
 
-d3.csv("/static/h.csv", d3.autoType).then(data => {
-  const d = [
-    {letter: "A", frequency: 0.15},
-    {letter: "B", frequency: 0.25},
-    {letter: "C", frequency: 0.35},
-    {letter: "D", frequency: 0.45}
-  ]
-  drawBarChart(d);
-})
+// function chart(data) {
+//   const width = 928;
+//   const height = 500;
+//   const margin = { top: 20, right: 20, bottom: 20, left: 40 }
 
-const drawBarChart = (data) => {
-  const svg = d3.select("#freletter").append("svg")
-    .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+//   const xScale = d3.scaleUtc()
+//     .domain(d3.extent(data, d => d.date))
+//     .range([margin.left, width - margin.right])
+
+//   const yScale = d3.scaleLinear()
+//     .domain([0, d3.max(data, d => d.close)])
+//     .range([height - margin.bottom, margin.top])
+
+//   const lineGenerator = d3.line()
+//     .x(d => xScale(d.date))
+//     .y(d => yScale(d.close))
+
+//   const axisBottom = d3.axisBottom(xScale)
+//     .ticks(width / 80)
+//     .tickSizeOuter(0)
+
+//   const axisLeft = d3.axisLeft(yScale)
+//     .ticks(height/40)
+
+//   const annotatedLine = lineGenerator(data)
+
+//   const svg = d3.create("svg")
+//     .attr("width", width)
+//     .attr("height", height)
+//     .attr("viewBox", [0, 0, width, height])
+//     .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+
+//   svg.append("path")
+//     .attr("fill", "none")
+//     .attr("stroke", "red")
+//     .attr("stroke-width", 2)
+//     .attr("d", annotatedLine)
+
+//   svg.append("g")
+//     .attr("transform", `translate(0, ${height - margin.bottom})`)
+//     .call(axisBottom)
+
+//   svg.append("g")
+//     .attr("transform", `translate(${margin.left}, 0)`)
+//     .call(axisLeft)
+//     .call(g => g.select(".domain").remove())
+//     .call(g => g.selectAll(".tick line").clone()
+//       .attr("x2", width - margin.left - margin.right)
+//       .attr("stroke-opacity", 0.1))
+//     .call(g => g.append("text")
+//       .text("Daily close")
+//       .attr("text-anchor", "start")
+//       .attr("x", -margin.left)
+//       .attr("y", 15)
+//       .attr("fill", "black")
+//       .attr("font-size", "14px")
+//     )
+
+//   return svg.node()
+// }
+
+
+// const chart = (data) => {
+//   const width = 928;
+//   const height = 500;
+//   const margin = {Top: 20, Right: 40, Bottom: 20, Left: 40}
+
+//   const xScale = d3.scaleUtc()
+//     .domain([data[0].date, data[data.length-1].date])
+//     .range([margin.Left, width - margin.Right])
   
-  const xScale = d3.scaleBand()
-    .domain(data.map(d => d.letter))
-    .range([0, innerWidth])
-    .paddingInner(0.2);
+//   const yScale = d3.scaleLinear()
+//     .domain([0, d3.max(data, d => d.value)])
+//     .range([height - margin.Bottom, margin.Top])
 
-  const yScale = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.frequency)])
-    .range([innerHeight, 0])
+//   const colorScale = d3.scaleOrdinal()
+//     .domain(data.map(d => d.fruit))
+//     .range(d3.schemeCategory10)
 
-  const innerChart = svg.append("g")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+//   const svg = d3.create("svg")
+//     .attr("width", width)
+//     .attr("height", height)
+//     .attr("viewBox", [0, 0, width, height])
+//     .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif")
 
-  innerChart
-    .selectAll("rect")
-    .data(data)
-    .join("rect")
-      .attr("x", d => xScale(d.letter))
-      .attr("y", d => yScale(d.frequency))
-      .attr("width", xScale.bandwidth())
-      .attr("height", d => yScale(0)-yScale(d.frequency))
-      .attr("fill", "blue");
+//   const serie = svg.append("g")
+//     .selectAll()
+//     .data(d3.group(data, d => d.fruit))
+//     .join("g");
 
-  svg.append("g")
-    .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
-    .call(d3.axisBottom(xScale).tickSizeOuter(0));
+//   serie.append("path")
+//     .attr("fill", "none")
+//     .attr("stroke", d => colorScale(d[0]))
+//     .attr("stroke-width", 1.5)
+//     .attr("d", s => d3.line()
+//       .x(d => xScale(d.date))
+//       .y(d => yScale(d.value))
+//     (s[1]));
 
-  svg.append("g")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`)
-    .call(d3.axisLeft(yScale))
-    .call(g => g.select(".domain").remove())
-    .call(g => g.append("text")
-          .attr("x", -margin.left)
-          .attr("y", 10)
-          .attr("fill", "red")
-          .attr("text-anchor", "start")
-          .text("↑ Frequency (%)"));
-}
+//   serie.append("g")
+//       .attr("stroke-linecap", "round")
+//       .attr("stroke-linejoin", "round")
+//       .attr("text-anchor", "middle")
+//     .selectAll()
+//     .data(d => d[1])
+//     .join("text")
+//       .text(d => d.value)
+//       .attr("x", d => xScale(d.date))
+//       .attr("y", d => yScale(d.value))
+//       .attr("dy", "0.35em")
+//       .call(text => text.filter((d, i, data) => i === data.length - 1)
+//         .append("tspan")
+//           .attr("font-weight", "bold")
+//           .text(d => ` ${d.fruit}`))
+//     .clone(true).lower()
+//       .attr("fill", "none")
+//       .attr("stroke", "white")
+//       .attr("stroke-width", 6)
+
+//   return svg.node()
+// }
+
