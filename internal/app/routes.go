@@ -23,6 +23,8 @@ func (s *Server) routes() http.Handler {
 	router.POST("/logout", s.logout)
 	router.POST("/request", s.sendRequest)
 
+	router.GET("/admin", withAuth(s.admin))
+
 	router.GET("/dashboard", s.dashboard)
 
 	router.GET("/sections/cutting", s.cuttingSection)

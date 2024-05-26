@@ -10,13 +10,14 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/" - the default route
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	defaulturlToken, err := r.Cookie("defaulturl")
 	if err != nil {
@@ -47,20 +48,20 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	http.Redirect(w, r, user.Defaulturl, http.StatusSeeOther) // go to user's default page
 }
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/home" - the home route
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) home(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/home/home.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/login" - get login route
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := map[string]string{
 		"msg": "Login with your account. If you do not have account, click Request",
@@ -69,17 +70,18 @@ func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httproute
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
 }
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/login" - post login request
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	user := User{}
 
 	if err := s.mgdb.Collection("user").FindOne(context.Background(), bson.M{"username": username}).Decode(&user); err != nil {
+		log.Println(err)
 		data := map[string]string{
 			"msg": "Username is incorrect, plaese check again. Do not have? click Request",
 		}
@@ -99,29 +101,29 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
 		Value:   user.Username,
-		Expires: time.Now().Add(2 * time.Minute),
+		Expires: time.Now().Add(2 * time.Hour),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "defaulturl",
 		Value:   user.Defaulturl,
-		Expires: time.Now().Add(2 * time.Minute),
+		Expires: time.Now().Add(2 * time.Hour),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:    "permission",
-		Value:   strings.Join(user.Permission, " "),
-		Expires: time.Now().Add(2 * time.Minute),
+		Name:    "authurls",
+		Value:   strings.Join(user.Authurls, " "),
+		Expires: time.Now().Add(2 * time.Hour),
 		Path:    "/",
 	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/login" - post logout request
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
@@ -148,11 +150,47 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
 }
 
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/admin" - get admin page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("user").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var users []User
+	for cur.Next(context.Background()) {
+		var user User
+		if err = cur.Decode(&user); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		users = append(users, user)
+	}
+
+	data := map[string]interface{}{
+		"users": users,
+	}
+
+	template.Must(template.ParseFiles(
+		"templates/pages/admin/admin.html",
+		"templates/pages/admin/usertbl.html",
+		"templates/pages/admin/reqtbl.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, data)
+}
+
+// /////////////////////////////////////////////////////////////////////
 //
 //	"/dashboard" - get dashboard request
 //
-// /////////////////////////////////////////
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var data string
 	data = "trung"
@@ -160,21 +198,37 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navbar.html")).Execute(w, data)
 }
 
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/request" - post request
+//
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	info := r.FormValue("info")
 	reason := r.FormValue("reason")
-	createdDate := time.Now()
 
-	_, err := s.mgdb.Collection("request").InsertOne(context.Background(), bson.M{"sender": info, "message": reason})
+	_, err := s.mgdb.Collection("request").InsertOne(context.Background(), bson.M{
+		"sender":      info,
+		"message":     reason,
+		"createdDate": primitive.NewDateTimeFromTime(time.Now()),
+		"status":      "unread",
+	})
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to send request to admin. Please try again later"))
+		return
 	}
 
-	log.Println(info, reason, createdDate)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`sdhfkasfd`))
+	w.Write([]byte("Successful!!! Request sent to admin. Please wait for the response"))
 }
 
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/sections/cutting" - get cutting page
+//
+// /////////////////////////////////////////////////////////////////////
 func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/cutting.html", "templates/shared/navbar.html")).Execute(w, nil)
 }

@@ -1,12 +1,10 @@
-// import * as d3 from "d3";
+//   const margin = { top: 50, right: 0, bottom: 50, left: 70};
+//   const width = 900;
+//   const height = 350;
+//   const innerWidth = width - margin.left - margin.right;
+//   const innerHeight = height - margin.top - margin.bottom;
 
-// const margin = { top: 50, right: 0, bottom: 50, left: 70};
-// const width = 900;
-// const height = 350;
-// const innerWidth = width - margin.left - margin.right;
-// const innerHeight = height - margin.top - margin.bottom;
-
-// const formatsInfo = [
+//   const formatsInfo = [
 //   {id: "vinyl", label: "Vinyl", color: "#76B6C2"},
 //   {id: "eight_track", label: "8-Track", color: "#4CDDF7"},
 //   {id: "cassette", label: "Cassette", color: "#20B9BC"},
@@ -17,6 +15,7 @@
 // ];
 
 // d3.csv("/static/data.csv", d3.autoType).then( data => {
+  
 //   drawDonutCharts(data);
 //   drawStackedBars(data);
 //   drawStreamGraph(data);
@@ -279,7 +278,7 @@
 
 // }
 
-// function chart(data) {
+// function chart1(data) {
 //   const width = 928;
 //   const height = 500;
 //   const margin = { top: 20, right: 20, bottom: 20, left: 40 }
@@ -339,65 +338,182 @@
 
 //   return svg.node()
 // }
+// const aapl = await d3.csv("/static/aapl.csv", d3.autoType)
+// container0.append(chart1(aapl))
 
-
-// const chart = (data) => {
-//   const width = 928;
+// const chart2 = (data) => {
+//   const width = 1000;
 //   const height = 500;
-//   const margin = {Top: 20, Right: 40, Bottom: 20, Left: 40}
+//   const margin = { top: 40, right: 170, bottom: 25, left: 40 }
+//   const innerWidth = width - margin.left - margin.right;
+//   const innerHeight = height - margin.top - margin.bottom;  
 
-//   const xScale = d3.scaleUtc()
-//     .domain([data[0].date, data[data.length-1].date])
-//     .range([margin.Left, width - margin.Right])
-  
+//   const aubergine = "#75485E"
+
+//   const firstDate = new Date(2021, 0, 1)
+//   const xScale = d3.scaleTime()
+//     .domain([firstDate, d3.max(data, d => d.date)])
+//     .range([0, innerWidth])
+
 //   const yScale = d3.scaleLinear()
-//     .domain([0, d3.max(data, d => d.value)])
-//     .range([height - margin.Bottom, margin.Top])
+//     .domain([0, d3.max(data, d => d.max_temp_F)])
+//     .range([innerHeight, 0])
+    
+//   const bottomAxis = d3.axisBottom(xScale)
+//     .tickFormat(d3.timeFormat("%b"));
 
-//   const colorScale = d3.scaleOrdinal()
-//     .domain(data.map(d => d.fruit))
-//     .range(d3.schemeCategory10)
+//   const leftAxis = d3.axisLeft(yScale);
 
 //   const svg = d3.create("svg")
-//     .attr("width", width)
-//     .attr("height", height)
 //     .attr("viewBox", [0, 0, width, height])
-//     .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif")
 
-//   const serie = svg.append("g")
-//     .selectAll()
-//     .data(d3.group(data, d => d.fruit))
-//     .join("g");
+//   const innerChart = svg.append("g")
+//     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-//   serie.append("path")
-//     .attr("fill", "none")
-//     .attr("stroke", d => colorScale(d[0]))
-//     .attr("stroke-width", 1.5)
-//     .attr("d", s => d3.line()
-//       .x(d => xScale(d.date))
-//       .y(d => yScale(d.value))
-//     (s[1]));
+    
 
-//   serie.append("g")
-//       .attr("stroke-linecap", "round")
-//       .attr("stroke-linejoin", "round")
-//       .attr("text-anchor", "middle")
-//     .selectAll()
-//     .data(d => d[1])
-//     .join("text")
-//       .text(d => d.value)
-//       .attr("x", d => xScale(d.date))
-//       .attr("y", d => yScale(d.value))
-//       .attr("dy", "0.35em")
-//       .call(text => text.filter((d, i, data) => i === data.length - 1)
-//         .append("tspan")
-//           .attr("font-weight", "bold")
-//           .text(d => ` ${d.fruit}`))
-//     .clone(true).lower()
-//       .attr("fill", "none")
-//       .attr("stroke", "white")
-//       .attr("stroke-width", 6)
+//   innerChart.append("g")
+//     .attr("class", "axis-x")
+//     .attr("transform", `translate(0, ${innerHeight})`)
+//     .call(bottomAxis);
 
-//   return svg.node()
+//   innerChart.append("g")
+//     .attr("class", "axis-y")
+//     .attr("transform", `translate(0, 0)`)
+//     .call(leftAxis);
+    
+//   d3.selectAll(".axis-x.tick text")
+//     .attr("y", "20px")
+//     .style("font-family", "Roboto, sans-serif")
+//     .style("font-size", "24px");
+
+//   innerChart
+//     .selectAll("circle")
+//     .data(data)
+//     .join("circle")
+//       .attr("r", 4)
+//       .attr("cx", d => xScale(d.date))
+//       .attr("cy", d => yScale(d.avg_temp_F))
+//       .attr("fill", aubergine);
+    
+//     return svg.node()
 // }
+// const a = await d3.csv("/static/a.csv", d3.autoType)
+// container1.append(chart2(a))
 
+
+
+const drawLineChart = async () => {
+  const data = await d3.csv("/static/a.csv", d3.autoType)
+  
+  /*******************************/
+  /*    Declare the constants    */
+  /*******************************/
+  const margin = {top: 40, right: 170, bottom: 25, left: 40};
+  const width = 1000;
+  const height = 500;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+
+  /*******************************/
+  /*    Append the containers    */
+  /*******************************/
+  // Append the SVG container
+  const svg = d3.select("#line_chart")
+    .append("svg")
+      .attr("viewBox", `0, 0, ${width}, ${height}`);
+
+  // Append the group that will contain the inner chart
+  const innerChart = svg
+    .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  
+  /****************************/
+  /*    Declare the scales    */
+  /****************************/
+  // X scale
+  const firstDate = new Date(2021, 0, 1, 0, 0, 0);
+  const lastDate = d3.max(data, d => d.date);
+  const xScale = d3.scaleTime()
+    .domain([firstDate, lastDate])
+    .range([0, innerWidth]);
+
+  // Y scale
+  const maxTemp = d3.max(data, d => d.max_temp_F);
+  const yScale = d3.scaleLinear()
+    .domain([0, maxTemp])
+    .range([innerHeight, 0]);
+
+  
+  /***************************/
+  /*     Append the axes     */
+  /***************************/
+  // Bottom axis
+  const bottomAxis = d3.axisBottom(xScale)
+    .tickFormat(d3.timeFormat("%b"));
+  innerChart
+    .append("g")
+      .attr("class", "axis-x")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(bottomAxis);
+  d3.selectAll(".axis-x text")
+    .attr("x", d => {
+       const currentMonth = d;
+       const nextMonth = new Date(2021, currentMonth.getMonth() + 1, 1);
+       return (xScale(nextMonth) - xScale(currentMonth)) / 2;
+    })
+    .attr("y", "10px");
+
+  // Left axis
+  const leftAxis = d3.axisLeft(yScale);
+  innerChart
+    .append("g")
+      .attr("class", "axis-y")
+      .call(leftAxis);
+  d3.selectAll(".axis-y text")
+    .attr("x", "-5px");
+
+  // Set the font-family and font-size property of axis labels
+  // This could also be handled from a CSS file
+  d3.selectAll(".axis-x text, .axis-y text")
+    .style("font-family", "Roboto, sans-serif")
+    .style("font-size", "14px");
+
+  // Add label to the y-axis
+  svg
+    .append("text")
+      .text("Temperature (°F)")
+      .attr("y", 20);
+
+  
+  /*********************************************/
+  /*   Line chart of the average temperature   */
+  /*********************************************/
+  // Draw the data points
+  const aubergine = "#75485E";
+  innerChart
+    .selectAll("circle")
+    .data(data)
+    .join("circle")
+      .attr("r", 4)
+      .attr("cx", d => xScale(d.date))
+      .attr("cy", d => yScale(d.avg_temp_F))
+      .attr("fill", aubergine);
+    
+  // Initialize the line/curve generator
+  const curveGenerator = d3.line()
+    .x(d => xScale(d.date))
+    .y(d => yScale(d.avg_temp_F))
+    .curve(d3.curveCatmullRom);
+    
+  // Draw the line/curve
+  innerChart
+    .append("path")
+      .attr("d", curveGenerator(data))
+      .attr("fill", "none")
+      .attr("stroke", aubergine);
+
+};
+drawLineChart();

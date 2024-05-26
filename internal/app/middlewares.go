@@ -3,9 +3,31 @@ package app
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
+
+// ////////////////////////////////////////////////////////////////////////////
+//
+//	withAuth - middleware check authentication by look at "authrls" cookie
+//
+// ////////////////////////////////////////////////////////////////////////////
+func withAuth(h httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		authurlsToken, err := r.Cookie("authurls")
+		if err != nil {
+			log.Println(err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		if !strings.Contains(authurlsToken.Value, r.URL.Path) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized) // should design a page for unauthorized request
+			return
+		}
+		h(w, r, ps)
+	}
+}
 
 // wrap a handler or middleware that return a handler
 func wrapper(handler http.Handler) httprouter.Handle {
