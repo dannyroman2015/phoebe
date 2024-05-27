@@ -192,10 +192,21 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 //
 // /////////////////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var data string
-	data = "trung"
+	var data = []map[string]string{
+		{"id": "vinyl", "label": "Vinyl", "color": "#76B6C2"},
+		{"id": "eight_track", "label": "8-Track", "color": "#4CDDF7"},
+		{"id": "cassette", "label": "Cassette", "color": "#20B9BC"},
+		{"id": "cd", "label": "CD", "color": "#2F8999"},
+		{"id": "download", "label": "Download", "color": "#E39F94"},
+		{"id": "streaming", "label": "Streaming", "color": "#ED7864"},
+		{"id": "other", "label": "Other", "color": "#ABABAB"},
+	}
 
-	template.Must(template.ParseFiles("templates/pages/dashboard/dashboard.html", "templates/shared/navbar.html")).Execute(w, data)
+	template.Must(template.ParseFiles(
+		"templates/pages/dashboard/dashboard.html",
+		"templates/pages/dashboard/provalcht.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, data)
 }
 
 // /////////////////////////////////////////////////////////////////////
