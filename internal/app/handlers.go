@@ -230,7 +230,30 @@ func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprout
 //
 // /////////////////////////////////////////////////////////////////////
 func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/cutting.html", "templates/shared/navbar.html")).Execute(w, nil)
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var records []CuttingRecord
+
+	if err := cur.All(context.Background(), &records); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var data = map[string]interface{}{
+		"records": records,
+	}
+
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/cutting/cutting.html",
+		"templates/pages/sections/cutting/reptbl.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, data)
 }
 
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
