@@ -20,3 +20,13 @@ type CuttingRecord struct {
 	CreatedDate  time.Time `bson:"createdDate"`
 	ModifiedDate time.Time `bson:"modifiedDate"`
 }
+
+type PackingRecord struct {
+	Date     time.Time `bson:"date"`
+	ProType  string    `bson:"protype"`
+	FacNo    string    `bson:"facno"`
+	Qty      int       `bson:"qty"`
+	Unit     string    `bson:"unit"`
+	Price    float64   `bson:"price"`
+	Currency string    `bson:"currency"`
+}
