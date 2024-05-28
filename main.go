@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"dannyroman2015/phoebe/internal/app"
+	"log"
 	"os"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -26,6 +28,21 @@ func main() {
 		panic(err)
 	}
 	mgdb := client.Database("phoebe")
+
+	//region test
+	pineline := mongo.Pipeline{
+		{{"$match", bson.D{{"value", bson.D{{"$gte", 50}, {"$lt", 150}}}}}},
+	}
+	cur, err := mgdb.Collection("persons").Aggregate(context.Background(), pineline)
+	if err != nil {
+		log.Println(err)
+	}
+	var r = []interface{}{}
+	cur.All(context.Background(), &r)
+	for i, v := range r {
+		log.Println(i, v)
+	}
+	//endregion
 
 	port := os.Getenv("PORT")
 	if port == "" {
