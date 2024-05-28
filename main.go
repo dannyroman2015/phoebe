@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,17 +31,31 @@ func main() {
 	mgdb := client.Database("phoebe")
 
 	//region test
-	pineline := mongo.Pipeline{
-		{{"$match", bson.D{{"value", bson.D{{"$gte", 50}, {"$lt", 150}}}}}},
-	}
-	cur, err := mgdb.Collection("persons").Aggregate(context.Background(), pineline)
+
+	a, _ := time.Parse("2006-01-02", "2020-01-01")
+	b, _ := time.Parse("2006-01-02", "2021-01-02")
+	start := primitive.NewDateTimeFromTime(a)
+	end := primitive.NewDateTimeFromTime(b)
+
+	// pineline := mongo.Pipeline{
+	// 	bson.D{{"$match", bson.D{{"$and", bson.A{
+	// 		bson.D{{"orderdate", bson.D{{"$gt", start}}}},
+	// 		bson.D{{"orderdate", bson.D{{"$lt", end}}}},
+	// 	}}}}},
+	// 	bson.D{{"$sort", bson.D{{"orderdate", -1}}}},
+	// }
+	// cur, err := mgdb.Collection("orders").Aggregate(context.TODO(), pineline)
+	var opts = options.Find().SetSort(bson.M{"orderdate": -1})
+	cur, err := mgdb.Collection("orders").Find(context.TODO(),
+		bson.M{"orderdate": bson.M{"$gt": start, "$lt": end}}, opts)
 	if err != nil {
 		log.Println(err)
 	}
 	var r = []interface{}{}
 	cur.All(context.Background(), &r)
-	for i, v := range r {
-		log.Println(i, v)
+	for _, v := range r {
+		res, _ := bson.MarshalExtJSON(v, true, true)
+		log.Println(string(res))
 	}
 	//endregion
 
