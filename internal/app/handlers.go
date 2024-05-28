@@ -193,7 +193,9 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // /////////////////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var data = map[string]interface{}{}
-	var pacRecords = []Packing{}
+
+	// get data for provalchart
+	var pacRecords = []PackingRecord{}
 	cur, err := s.mgdb.Collection("packing").Find(context.Background(), bson.M{})
 	if err != nil {
 		log.Println(err)
@@ -201,7 +203,13 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	defer cur.Close(context.Background())
-	cur.All(context.Background(), &pacRecords)
+
+	if err := cur.All(context.Background(), &pacRecords); err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
 		"templates/pages/dashboard/provalcht.html",
