@@ -32,6 +32,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/footer", s.footer)
 	router.GET("/test", s.handleGetTest)
 	router.GET("/testalpinejs", s.handleAlpine)
+	router.GET("/testthree", s.handletestthree)
 
 	return router
 }
