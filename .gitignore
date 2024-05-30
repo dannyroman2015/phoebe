@@ -26,3 +26,5 @@ tailwind_input/
 
 # Go workspace file
 go.work
+
+vite.config.js

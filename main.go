@@ -38,25 +38,29 @@ func main() {
 	end := primitive.NewDateTimeFromTime(b)
 
 	// pineline := mongo.Pipeline{
-	// 	bson.D{{"$match", bson.D{{"$and", bson.A{
-	// 		bson.D{{"orderdate", bson.D{{"$gt", start}}}},
-	// 		bson.D{{"orderdate", bson.D{{"$lt", end}}}},
-	// 	}}}}},
-	// 	bson.D{{"$sort", bson.D{{"orderdate", -1}}}},
+	// 	bson.D{{"$match", bson.M{"$and": bson.A{bson.M{"orderdate": bson.M{"$gte": start}}, bson.M{"orderdate": bson.M{"$lt": end}}}}}},
+	// 	bson.D{{"$sort", bson.M{"orderdate": 1}}},
+	// 	bson.D{{"$group", bson.M{
+	// 		"_id":            "$orderdate",
+	// 		"first_purchase": bson.M{"$first": "$orderdate"},
+	// 		"total_value":    bson.M{"$sum": "$value"},
+	// 		"total_order":    bson.M{"$sum": 1},
+	// 		"orders":         bson.M{"$push": bson.M{"orderdate": "$orderdate", "value": "$value"}},
+	// 	}}},
 	// }
 	// cur, err := mgdb.Collection("orders").Aggregate(context.TODO(), pineline)
-	var opts = options.Find().SetSort(bson.M{"orderdate": -1})
-	cur, err := mgdb.Collection("orders").Find(context.TODO(),
-		bson.M{"orderdate": bson.M{"$gt": start, "$lt": end}}, opts)
+	var opts = options.Find().SetProjection(bson.M{"_id": 0, "orderdate": 1, "value": 1})
+	cur, err := mgdb.Collection("orders").Find(context.TODO(), bson.M{"orderdate": bson.M{"$gt": start, "$lt": end}}, opts)
 	if err != nil {
 		log.Println(err)
 	}
-	var r = []interface{}{}
+	defer cur.Close(context.Background())
+	var r = []map[string]struct {
+		Orderdate time.Time `bson:"orderdate"`
+		Value     int       `bson:"value"`
+	}{}
 	cur.All(context.Background(), &r)
-	for _, v := range r {
-		res, _ := bson.MarshalExtJSON(v, true, true)
-		log.Println(string(res))
-	}
+	log.Println(r)
 	//endregion
 
 	port := os.Getenv("PORT")
