@@ -288,5 +288,5 @@ func (s *Server) footer(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 }
 
 func (s *Server) handletestgojs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/testgojs.html")).Execute(w, nil)
+	template.Must(template.ParseFiles("templates/pages/test/testgojs.html", "templates/shared/navbar.html")).Execute(w, nil)
 }

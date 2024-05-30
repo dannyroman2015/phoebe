@@ -31,18 +31,21 @@ func main() {
 	mgdb := client.Database("phoebe")
 
 	//region test
-
+	t, _ := time.Parse("2006-01-02", "2020-01-01")
+	v, _ := time.Parse("2006-01-02", "2021-01-01")
+	start := primitive.NewDateTimeFromTime(t)
+	end := primitive.NewDateTimeFromTime(v)
 	pineline := mongo.Pipeline{
-		bson.D{{"$unwind", bson.M{"path": "$products"}}},
-		bson.D{{"$match", bson.D{{"products.price", bson.M{"$gt": 15.00}}}}},
-		bson.D{{"$group", bson.D{
-			{"_id", "$products.prod_id"},
-			{"product", bson.D{{"$first", "$products.name"}}},
-			{"total_value", bson.M{"$sum": "$products.price"}},
-			{"quantity", bson.M{"$sum": 1}},
+		{{"$match", bson.D{{"$and", bson.A{bson.M{"orderdate": bson.M{"$gte": start}}, bson.M{"orderdate": bson.M{"$lt": end}}}}}}},
+		{{"$lookup", bson.M{
+			"from":         "products",
+			"localField":   "product_id",
+			"foreignField": "id",
+			"as":           "product_mapping",
 		}}},
-		bson.D{{"$set", bson.M{"product_id": "$_id"}}},
-		bson.D{{"$unset", "_id"}},
+		{{"$set", bson.M{"product_mapping": bson.M{"$first": "$product_mapping"}}}},
+		{{"$set", bson.M{"product_name": "$product_mapping.name", "product_category": "$product_mapping.category"}}},
+		{{"$unset", bson.A{"_id", "product_id", "product_mapping"}}},
 	}
 
 	cur, err := mgdb.Collection("orders").Aggregate(context.Background(), pineline)
@@ -58,10 +61,11 @@ func main() {
 
 	// var r []P
 	var r []struct {
-		Product_id  string               `bson:"product_id"`
-		Product     string               `bson:"product"`
-		Total_value primitive.Decimal128 `bson:"total_value"`
-		Quantity    int                  `bson:"quantity"`
+		Customer_id      string               `bson:"customer_id"`
+		Orderdate        time.Time            `bson:"orderdate"`
+		Value            primitive.Decimal128 `bson:"value"`
+		Product_name     string               `bson:"product_name"`
+		product_category string               `bson:"product_category"`
 	}
 	if err := cur.All(context.Background(), &r); err != nil {
 		log.Println(err)
