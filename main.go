@@ -32,34 +32,40 @@ func main() {
 
 	//region test
 
-	a, _ := time.Parse("2006-01-02", "2020-01-01")
-	b, _ := time.Parse("2006-01-02", "2021-01-02")
-	start := primitive.NewDateTimeFromTime(a)
-	end := primitive.NewDateTimeFromTime(b)
+	pineline := mongo.Pipeline{
+		bson.D{{"$unwind", bson.M{"path": "$products"}}},
+		bson.D{{"$match", bson.D{{"products.price", bson.M{"$gt": 15.00}}}}},
+		bson.D{{"$group", bson.D{
+			{"_id", "$products.prod_id"},
+			{"product", bson.D{{"$first", "$products.name"}}},
+			{"total_value", bson.M{"$sum": "$products.price"}},
+			{"quantity", bson.M{"$sum": 1}},
+		}}},
+		bson.D{{"$set", bson.M{"product_id": "$_id"}}},
+		bson.D{{"$unset", "_id"}},
+	}
 
-	// pineline := mongo.Pipeline{
-	// 	bson.D{{"$match", bson.M{"$and": bson.A{bson.M{"orderdate": bson.M{"$gte": start}}, bson.M{"orderdate": bson.M{"$lt": end}}}}}},
-	// 	bson.D{{"$sort", bson.M{"orderdate": 1}}},
-	// 	bson.D{{"$group", bson.M{
-	// 		"_id":            "$orderdate",
-	// 		"first_purchase": bson.M{"$first": "$orderdate"},
-	// 		"total_value":    bson.M{"$sum": "$value"},
-	// 		"total_order":    bson.M{"$sum": 1},
-	// 		"orders":         bson.M{"$push": bson.M{"orderdate": "$orderdate", "value": "$value"}},
-	// 	}}},
-	// }
-	// cur, err := mgdb.Collection("orders").Aggregate(context.TODO(), pineline)
-	var opts = options.Find().SetProjection(bson.M{"_id": 0, "orderdate": 1, "value": 1})
-	cur, err := mgdb.Collection("orders").Find(context.TODO(), bson.M{"orderdate": bson.M{"$gt": start, "$lt": end}}, opts)
+	cur, err := mgdb.Collection("orders").Aggregate(context.Background(), pineline)
 	if err != nil {
 		log.Println(err)
 	}
-	defer cur.Close(context.Background())
-	var r = []map[string]struct {
-		Orderdate time.Time `bson:"orderdate"`
-		Value     int       `bson:"value"`
-	}{}
-	cur.All(context.Background(), &r)
+	// type P struct {
+	// 	_id                primitive.ObjectID   `bson:"_id"`
+	// 	First_puchase_date time.Time            `bson:"first_puchase_date"`
+	// 	Total_value        primitive.Decimal128 `bson:"total_value"`
+	// 	Total_order        int                  `bson:"total_orders"`
+	// }
+
+	// var r []P
+	var r []struct {
+		Product_id  string               `bson:"product_id"`
+		Product     string               `bson:"product"`
+		Total_value primitive.Decimal128 `bson:"total_value"`
+		Quantity    int                  `bson:"quantity"`
+	}
+	if err := cur.All(context.Background(), &r); err != nil {
+		log.Println(err)
+	}
 	log.Println(r)
 	//endregion
 

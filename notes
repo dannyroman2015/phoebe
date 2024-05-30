@@ -1,0 +1,17 @@
+pineline := mongo.Pipeline{bson.D{{"$match", bson.M{"$and": bson.A{
+		bson.M{"orderdate": bson.M{"$gt": start}},
+		bson.M{"orderdate": bson.M{"$lt": end}}},
+	}}},
+		bson.D{{"$sort", bson.M{"orderdate": 1}}},
+		bson.D{{"$group", bson.D{
+			{"_id", "$customer_id"},
+			{"first_puchase_order", bson.D{{"$first", "$orderdate"}}},
+			{"total_value", bson.M{"$sum": "$value"}},
+			{"total_orders", bson.M{"$sum": 1}},
+			{"orders", bson.M{"$push": bson.M{"value": "$value", "orderdate": "$orderdate"}}},
+		},
+		}},
+	}
+
+
+  
