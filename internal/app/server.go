@@ -13,18 +13,19 @@ import (
 type Server struct {
 	Addr   string
 	Logger *log.Logger
-	db     *sql.DB
+	pgdb   *sql.DB
 	mgdb   *mongo.Database
 	Models Models
 }
 
-func NewServer(addr string, mgdb *mongo.Database) *Server {
+func NewServer(addr string, mgdb *mongo.Database, pgdb *sql.DB) *Server {
 	logger := log.New(os.Stdout, "Logger: ", log.LstdFlags)
 
 	return &Server{
 		Addr:   addr,
 		Logger: logger,
 		mgdb:   mgdb,
+		pgdb:   pgdb,
 	}
 }
 
