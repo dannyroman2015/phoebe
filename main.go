@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"dannyroman2015/phoebe/internal/app"
-	"log"
 	"os"
 	"time"
 
@@ -13,11 +12,11 @@ import (
 
 func main() {
 	// connect to postgres database
-	pgdb, err := app.OpenPgDB(`postgresql://postgres:kbEviyUjJecPLMxXRNweNyvIobFzCZAQ@monorail.proxy.rlwy.net:27572/railway`)
-	if err != nil {
-		log.Println("Failed to connect postgres database")
-	}
-	defer pgdb.Close()
+	// pgdb, err := app.OpenPgDB(`postgresql://postgres:kbEviyUjJecPLMxXRNweNyvIobFzCZAQ@monorail.proxy.rlwy.net:27572/railway`)
+	// if err != nil {
+	// 	log.Println("Failed to connect postgres database")
+	// }
+	// defer pgdb.Close()
 
 	// connect to mongodb
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -57,7 +56,6 @@ func main() {
 	// 	Total_order        int                  `bson:"total_orders"`
 	// }
 
-	// var r []P
 	// var r []struct {
 	// 	Customer_id      string               `bson:"customer_id"`
 	// 	Orderdate        time.Time            `bson:"orderdate"`
@@ -79,6 +77,7 @@ func main() {
 	}
 
 	// server := app.NewServer(port, pgdb)
-	server := app.NewServer(port, mgdb, pgdb)
+	// server := app.NewServer(port, mgdb, pgdb)
+	server := app.NewServer(port, mgdb)
 	server.Start()
 }

@@ -18,14 +18,13 @@ type Server struct {
 	Models Models
 }
 
-func NewServer(addr string, mgdb *mongo.Database, pgdb *sql.DB) *Server {
+func NewServer(addr string, mgdb *mongo.Database) *Server {
 	logger := log.New(os.Stdout, "Logger: ", log.LstdFlags)
 
 	return &Server{
 		Addr:   addr,
 		Logger: logger,
 		mgdb:   mgdb,
-		pgdb:   pgdb,
 	}
 }
 
