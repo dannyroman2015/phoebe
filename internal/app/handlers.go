@@ -2,9 +2,11 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -273,6 +275,63 @@ func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httpr
 		"templates/pages/sections/cutting/reptbl.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, data)
+}
+
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/score" - get character score page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) chrscore(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/character/score.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/score/search" - search worker for character score page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("search")
+	var filter bson.M
+
+	_, err := strconv.Atoi(searchWord)
+	if err == nil {
+		s := fmt.Sprintf("/.*%s.*/", searchWord)
+		log.Println(s)
+		filter = bson.M{"employeeid": s}
+	} else {
+		filter = bson.M{"name": searchWord}
+	}
+
+	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	if err != nil {
+		log.Println("error at /character/score/search", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access character collection"))
+		return
+	}
+
+	var results []struct {
+		Employeeid string `bson:"employeeid"`
+		Name       string `bson:"name"`
+		Section    string `bson:"section"`
+	}
+	err = cur.All(context.Background(), &results)
+	if err != nil {
+		log.Println("error at /character/score/search", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode results"))
+		return
+	}
+
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/character/search_results.html")).Execute(w, nil)
 }
 
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

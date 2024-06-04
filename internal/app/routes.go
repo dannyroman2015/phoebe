@@ -27,6 +27,9 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 
+	router.GET("/character/score", s.chrscore)
+	router.POST("/character/score/search", s.cssearch)
+
 	router.GET("/sections/cutting", s.cuttingSection)
 
 	router.GET("/footer", s.footer)

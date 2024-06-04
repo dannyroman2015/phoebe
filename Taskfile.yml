@@ -3,4 +3,4 @@ version: '3'
 tasks:
   tw:
     cmds:
-      - npx tailwindcss -i ./tailwind_input/input.css -o ./style/css/style.css
+      - npx tailwindcss -i ./tailwind_input/input.css -o ./style/css/style.css --watch
