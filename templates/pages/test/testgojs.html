@@ -18,140 +18,78 @@
 <style>
   #myDiagramDiv {
     background-color: white;
-    border: solid 1px black;
-    width: 100%;
-    height: 700px;
+    width: 90%;
+    height: 100vh;
+    margin: 10px auto;
   }
   #myDiagramDiv::before{
-    content: "";
+    content: "Chỗ này ghi chú hướng dẫn, tiêu đề vâng vâng và vâng vâng";
     position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 170px;
+    top: 0px;
+    left: 0px;
+    width: 180px;
     height: 80px;
     background: white;
+    font-size: small;
     z-index: 10;
   }
 </style>
 
 <script id="code">
   function init() {
-    // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
-    // For details, see https://gojs.net/latest/intro/buildingObjects.html
-    const $ = go.GraphObject.make; // for conciseness in defining templates
-
-    myDiagram = new go.Diagram(
-      'myDiagramDiv', // must name or refer to the DIV HTML element
+    myDiagram = new go.Diagram('myDiagramDiv',
       {
-        initialAutoScale: go.AutoScale.Uniform, // an initial automatic zoom-to-fit
-        contentAlignment: go.Spot.Center, // align document to the center of the viewport
-        layout: $(go.ForceDirectedLayout, // automatically spread nodes apart
+        initialAutoScale: go.AutoScale.Uniform,
+        contentAlignment: go.Spot.Center,
+        layout: new go.ForceDirectedLayout(
           { defaultElectricalCharge: 300, defaultSpringLength: 150 }
         ),
         'undoManager.isEnabled': true,
+        'toolManager.mouseWheelBehavior': go.WheelMode.Zoom,
       }
     );
 
     // define each Node's appearance
-    myDiagram.nodeTemplate = $(go.Node,
-      'Auto', // the whole node panel
-      { locationSpot: go.Spot.Center },
-      // define the node's outer shape, which will surround the TextBlock
-      $(go.Shape, 'Rectangle', { fill: $(go.Brush, 'Linear', { 0: 'rgb(254, 201, 0)', 1: 'rgb(254, 162, 0)' }), stroke: 'black' }),
-      $(go.TextBlock, { font: 'bold 16pt helvetica, bold arial, sans-serif', margin: new go.Margin(4, 4, 3, 20) }, new go.Binding('text', 'text'))
-    );
+    myDiagram.nodeTemplate = new go.Node("Vertical").add(
+      new go.Panel("Horizontal").add(
+        new go.Shape("Rectangle"),
+        new go.TextBlock().bind("text", "text")
+      ),
+      new go.TextBlock("sdfsdf")
+    )
 
-    // replace the default Link template in the linkTemplateMap
-    myDiagram.linkTemplate = $(go.Link, // the whole link panel
-      // path animation works with these kinds of links too:
-      //{ routing: go.Routing.AvoidsNodes },
-      //{ curve: go.Curve.Bezier },
-      $(go.Shape, // the link shape
-        { stroke: 'black' }
-      ),
-      $(go.Shape, // the arrowhead
-        { toArrow: 'standard', stroke: null }
-      ),
-      $(go.Panel,
-        'Auto',
-        $(go.Shape, // the label background, which becomes transparent around the edges
-          {
-            fill: $(go.Brush, 'Radial', { 0: 'rgb(240, 240, 240)', 0.3: 'rgb(240, 240, 240)', 1: 'rgba(240, 240, 240, 0)' }),
-            stroke: null,
-          }
-        ),
-        $(go.TextBlock, // the label text
-          {
-            textAlign: 'center',
-            font: '12pt helvetica, arial, sans-serif',
-            stroke: '#555555',
-            margin: 4,
-          },
-          new go.Binding('text', 'text')
-        )
+    myDiagram.linkTemplate = new go.Link().add(
+      new go.Shape({ stroke: 'black' }),
+      new go.Shape({ toArrow: 'standard', stroke: null }),
+      new go.Panel('Auto').add(
+        new go.Shape({fill: new go.Brush('Radial', { 0: 'rgb(240, 240, 240)', 0.3: 'rgb(240, 240, 240)', 1: 'rgba(240, 240, 240, 0)' }), stroke: null,}),
+        new go.TextBlock({textAlign: 'center', font: '12pt helvetica, arial, sans-serif', stroke: '#555555', margin: 4,})
+          .bind("text", "text"),
+      )
+    )
+    
+    myDiagram.nodeTemplateMap.add('token', new go.Part({ locationSpot: go.Spot.Center, layerName: 'Foreground' })
+      .add(
+        new go.Shape('Circle', { width: 12, height: 12, fill: 'green', strokeWidth: 0 })
+          .bind('fill', 'color'),
       )
     );
 
-    myDiagram.nodeTemplateMap.add(
-      'token',
-      $(go.Part,
-        { locationSpot: go.Spot.Center, layerName: 'Foreground' },
-        $(go.Shape, 'Circle', { width: 12, height: 12, fill: 'green', strokeWidth: 0 }, new go.Binding('fill', 'color'))
-      )
-    );
+    
 
-    // create the model for the concept map
+    // create the model
     var nodeDataArray = [
-      { key: 1, text: 'Cutting' },
+      { key: 1, text: 'Cutting' , sub: "skdfh"},
       { key: 2, text: 'Lamination' },
       { key: 3, text: 'Reeded Line' },
-      { key: 4, text: 'Panel CNC' },
-      { key: 5, text: 'ASSEMBLY' },
-      { key: 6, text: 'OEM ASSEMBLY' },
-      { key: 7, text: 'WELDING' },
-      { key: 8, text: 'CONCRETE' },
-      { key: 9, text: 'METAL FINISHING' },
-      { key: 10, text: 'MECHINICAL' },
-      { key: 11, text: 'WOOD FINISHING' },
-      { key: 12, text: 'LASER CUTTING' },
-      { key: 13, text: 'ROVER C' },
-      { key: 14, text: 'ROVER B' },
-      { key: 15, text: 'FINE MILL' },
-      { key: 16, text: 'PACKING' },
-      { key: 17, text: 'WH ISSUE' },
-      { key: 18, text: 'QC' },
-      { key: 19, text: 'FACTORY 1' },
-      { key: 20, text: 'FACTORY 2' },
     ];
     var linkDataArray = [
       { from: 1, to: 2, text: 'check' },
       { from: 2, to: 3, text: 'delivery' },
-      { from: 2, to: 4, text: 'delivery' },
-      { from: 2, to: 5, text: 'delivery' },
-      { from: 2, to: 6, text: 'require' },
-      { from: 2, to: 10, text: 'necessary\nfor' },
-      { from: 2, to: 12, text: 'necessary\nfor' },
-      { from: 4, to: 5, text: 'combine\nto form' },
-      { from: 4, to: 6, text: 'return' },
-      { from: 4, to: 7, text: 'come' },
-      { from: 4, to: 8, text: 'go' },
-      { from: 4, to: 9, text: 'come' },
-      { from: 5, to: 9, text: 'go' },
-      { from: 5, to: 11, text: 'go' },
-      { from: 7, to: 13, text: 'give' },
-      { from: 7, to: 14, text: 'in' },
-      { from: 7, to: 19, text: 'begin\nwith' },
-      { from: 8, to: 15, text: 'delivery' },
-      { from: 8, to: 16, text: 'delivery' },
-      { from: 9, to: 17, text: 'delivery' },
-      { from: 11, to: 18, text: 'delivery' },
-      { from: 12, to: 19, text: 'begins\nwith' },
-      { from: 17, to: 18, text: 'needed' },
-      { from: 18, to: 20, text: 'come' },
     ];
     myDiagram.model = new go.GraphLinksModel(nodeDataArray, linkDataArray);
 
-    initTokens();
+    // initTokens();
   }
 
   function initTokens() {
@@ -176,20 +114,20 @@
 
   function updateTokens() {
     var oldskips = myDiagram.skipsUndoManager;
-    myDiagram.skipsUndoManager = true; // don't record these changes in the UndoManager!
+    myDiagram.skipsUndoManager = true;
     var temp = new go.Point();
     myDiagram.parts.each((token) => {
       var data = token.data;
       if (!data) return;
       var at = data.at;
       if (at === undefined) return;
-      var from = myDiagram.findNodeForKey(at);
-      if (from === null) return;
+      var fromNode = myDiagram.findNodeForKey(at);
+      if (fromNode === null) return;
       var frac = data.frac;
       if (frac === undefined) frac = 0.0;
       var next = data.next;
-      var to = myDiagram.findNodeForKey(next);
-      if (to === null) {
+      var toNode = myDiagram.findNodeForKey(next);
+      if (toNode === null) {
         // nowhere to go?
         positionTokenAtNode(token, from); // temporarily stay at the current node
         data.next = chooseDestination(token, from); // and decide where to go next
