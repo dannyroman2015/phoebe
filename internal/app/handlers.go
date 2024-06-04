@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -297,9 +296,7 @@ func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	_, err := strconv.Atoi(searchWord)
 	if err == nil {
-		s := fmt.Sprintf("/.*%s.*/", searchWord)
-		log.Println(s)
-		filter = bson.M{"employeeid": s}
+		filter = bson.M{"employeeid": bson.M{"$regex": ".*" + searchWord + ".*"}}
 	} else {
 		filter = bson.M{"name": searchWord}
 	}
