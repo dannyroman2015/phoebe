@@ -281,8 +281,8 @@ func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httpr
 //	"/character/score" - get character score page
 //
 // /////////////////////////////////////////////////////////////////////
-func (s *Server) chrscore(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/character/score.html", "templates/shared/navbar.html")).Execute(w, nil)
+func (s *Server) cscore(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/score/score.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // /////////////////////////////////////////////////////////////////////
@@ -290,9 +290,9 @@ func (s *Server) chrscore(w http.ResponseWriter, r *http.Request, ps httprouter.
 //	"/character/score/search" - search worker for character score page
 //
 // /////////////////////////////////////////////////////////////////////
-func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Server) cscore_ap(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var filter bson.M
-	searchWord := r.FormValue("search")
+	searchWord := r.FormValue("searchemp")
 	searchRegex := ".*" + searchWord + ".*"
 
 	_, err := strconv.Atoi(searchWord)
@@ -336,7 +336,7 @@ func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.
 		"employees": empResults,
 	}
 
-	template.Must(template.ParseFiles("templates/pages/character/search_results.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/score/score1.html")).Execute(w, data)
 }
 
 // /////////////////////////////////////////////////////////////////////
@@ -345,7 +345,7 @@ func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.
 //	when click on a row of worker for character score page
 //
 // /////////////////////////////////////////////////////////////////////
-func (s *Server) csempid(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	empId := ps.ByName("id")
 	filter := bson.M{"type": "1", "employee.id": empId}
 
@@ -379,7 +379,7 @@ func (s *Server) csempid(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		"empId":    empId,
 		"recEvals": recEvals,
 	}
-	template.Must(template.ParseFiles("templates/pages/character/search_criteria.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/score/score2.html")).Execute(w, data)
 }
 
 // /////////////////////////////////////////////////////////////////////
@@ -388,7 +388,7 @@ func (s *Server) csempid(w http.ResponseWriter, r *http.Request, ps httprouter.P
 //	post when search criteria for character score page
 //
 // /////////////////////////////////////////////////////////////////////
-func (s *Server) cscsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Server) cscore_cp(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	crisearch := r.FormValue("crisearch")
 	empId := ps.ByName("id")
 
@@ -432,7 +432,7 @@ func (s *Server) cscsearch(w http.ResponseWriter, r *http.Request, ps httprouter
 		"critResults": critResults,
 	}
 
-	template.Must(template.ParseFiles("templates/pages/character/criteria_results.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/score/score3.html")).Execute(w, data)
 }
 
 // /////////////////////////////////////////////////////////////////////
@@ -441,11 +441,28 @@ func (s *Server) cscsearch(w http.ResponseWriter, r *http.Request, ps httprouter
 //	post when evaluate criteria for character score page
 //
 // /////////////////////////////////////////////////////////////////////
-func (s *Server) csevaluate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	empId := ps.ByName("id")
-	log.Println(empId)
+func (s *Server) cscore_dp(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	empid := r.FormValue("empid")
+	name := r.FormValue("name")
+	section := r.FormValue("section")
+	criteriaid := r.FormValue("criteriaid")
+	descr := r.FormValue("descr")
+	point := r.FormValue("point")
+	critype := r.FormValue("critype")
+	issdate := r.FormValue("issdate")
+	t, _ := strconv.ParseInt(issdate, 10, 64)
+	t = t / 1000
+	ti := time.Unix(t, 0)
+	log.Println(ti)
 
-	template.Must(template.ParseFiles("templates/pages/character/evalsuccess.html")).Execute(w, nil)
+	s.mgdb.Collection("character").InsertOne(context.Background(), bson.M{
+		"type":     "1",
+		"employee": bson.M{"id": empid, "name": name, "section": section},
+		"criteria": bson.M{"code": criteriaid, "descr": descr, "point": point, "criptype": critype},
+		"issdate":  issdate,
+	})
+
+	template.Must(template.ParseFiles("templates/pages/score/score4.html")).Execute(w, nil)
 }
 
 // /////

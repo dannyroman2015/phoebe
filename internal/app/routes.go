@@ -27,11 +27,11 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 
-	router.GET("/character/score", s.chrscore)
-	router.POST("/character/score/search", s.cssearch)
-	router.GET("/character/score/:id/criteria", s.csempid)
-	router.POST("/character/score/:id/criteria", s.cscsearch)
-	router.POST("/character/score/evaluate", s.csevaluate)
+	router.GET("/character/score", s.cscore)
+	router.POST("/character/score/a", s.cscore_ap)
+	router.GET("/character/score/b/:id", s.cscore_b)
+	router.POST("/character/score/c/:id", s.cscore_cp)
+	router.POST("/character/score/d", s.cscore_dp)
 
 	router.GET("/sections/cutting", s.cuttingSection)
 

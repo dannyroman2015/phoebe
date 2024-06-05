@@ -53,7 +53,10 @@ Chọn tiêu chí để chấm điểm
 
   <tbody class="divide-y divide-gray-200">
     {{range .critResults}}
-    <tr hx-post="/character/score/evaluate" hx-swap="outerHTML" hx-target="#critmsg" hx-confirm="Chấm tiêu chí '{{.Descr}}' cho . Are you sure?" hx-trigger="click" class="hover:bg-neutral-100 cursor-pointer">
+    <tr @click="criteriaid='{{.Criteriaid}}'; descr='{{.Descr}}'; point='{{.Point}}'; critype='{{.Critype}}';" 
+      hx-post="/character/score/d" hx-swap="outerHTML" hx-target="#critmsg" 
+      hx-confirm="Chấm tiêu chí '{{.Descr}}' cho . Are you sure?" hx-trigger="click" hx-include="#outdata"
+      class="hover:bg-neutral-100 cursor-pointer">
       <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Criteriaid}}</td>
       <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Descr}}</td>
       <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Point}}</td>
@@ -62,4 +65,5 @@ Chọn tiêu chí để chấm điểm
     {{end}}
   </tbody>
 </table>
+
 

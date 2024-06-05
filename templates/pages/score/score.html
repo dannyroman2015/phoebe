@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/htmx.min.js"></script>
+  <title>Score</title>
+</head>
+<body x-data="{
+    empid: '',
+    name: '',
+    section: '',
+    criteriaid: '',
+    descr: '',
+    point: '',
+    critype: '',
+    issdate: Date.now(),
+  }"
+>
+  <section class="w-full px-6 pb-12 antialiased bg-white">
+    <div class="mx-auto max-w-7xl">
+
+      {{template "navbar"}}
+
+        <!-- Main Hero Content -->
+      <div id="empContainer" class="container max-w-lg py-32 mx-auto sm:mx-4 mt-px text-left sm:max-w-md md:max-w-lg sm:px-4 md:text-center">
+        <div class="container w-full py-4 max-w-xs mx-auto">
+            <!-- search employees      -->
+            <input hx-post="/character/score/a" hx-target="#search_results" hx-trigger="input changed delay:500ms, search"
+              name="searchemp" type="text" placeholder="Tìm kiếm công nhân viên cần chấm điểm" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" />
+        </div>
+
+        <div id="search_results" class="overflow-x-auto"></div>
+      </div>
+        <!-- End Main Hero Content -->
+
+    </div>
+</section>
+
+<form id="outdata" hidden>
+  <input name="empid" type="text" :value="empid">
+  <input name="name" type="text" :value="name">
+  <input name="section" type="text" :value="section">
+  <input name="criteriaid" type="text" :value="criteriaid">
+  <input name="descr" type="text" :value="descr">
+  <input name="point" type="text" :value="point">
+  <input name="critype" type="text" :value="critype">
+  <input name="issdate" type="number" :value="issdate">
+</form>
+</body>
+</html>
+
