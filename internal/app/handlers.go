@@ -291,17 +291,21 @@ func (s *Server) chrscore(w http.ResponseWriter, r *http.Request, ps httprouter.
 //
 // /////////////////////////////////////////////////////////////////////
 func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	searchWord := r.FormValue("search")
 	var filter bson.M
+	searchWord := r.FormValue("search")
+	searchRegex := ".*" + searchWord + ".*"
 
 	_, err := strconv.Atoi(searchWord)
 	if err == nil {
-		filter = bson.M{"employeeid": bson.M{"$regex": ".*" + searchWord + ".*"}}
+		filter = bson.M{"id": bson.M{"$regex": searchRegex}}
 	} else {
-		filter = bson.M{"name": searchWord}
+		filter = bson.M{"$or": bson.A{
+			bson.M{"name": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"section": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}
 	}
 
-	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), filter)
 	if err != nil {
 		log.Println("error at /character/score/search", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -309,12 +313,12 @@ func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	var results []struct {
-		Employeeid string `bson:"employeeid"`
-		Name       string `bson:"name"`
-		Section    string `bson:"section"`
+	var empResults []struct {
+		Id      string `bson:"id"`
+		Name    string `bson:"name"`
+		Section string `bson:"section"`
 	}
-	err = cur.All(context.Background(), &results)
+	err = cur.All(context.Background(), &empResults)
 	if err != nil {
 		log.Println("error at /character/score/search", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -322,15 +326,129 @@ func (s *Server) cssearch(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	if len(results) == 0 {
+	if len(empResults) == 0 {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
 		return
 	}
 
-	template.Must(template.ParseFiles("templates/pages/character/search_results.html")).Execute(w, nil)
+	var data = map[string]interface{}{
+		"employees": empResults,
+	}
+
+	template.Must(template.ParseFiles("templates/pages/character/search_results.html")).Execute(w, data)
 }
 
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/score/employee/:id"
+//	when click on a row of worker for character score page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) csempid(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	empId := ps.ByName("id")
+	filter := bson.M{"type": "1", "employee.id": empId}
+
+	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	if err != nil {
+		log.Println("Failed to access database")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Truy xuất dữ liệu thất bại"))
+	}
+
+	var recEvals []struct {
+		IssDate  time.Time `bson:"issdate"`
+		Criteria struct {
+			Descr string `bson:"descr"`
+		}
+	}
+	err = cur.All(context.Background(), &recEvals)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Decode thất bại"))
+	}
+
+	if len(recEvals) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
+		return
+	}
+
+	var data = map[string]interface{}{
+		"empId":    empId,
+		"recEvals": recEvals,
+	}
+	template.Must(template.ParseFiles("templates/pages/character/search_criteria.html")).Execute(w, data)
+}
+
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/score/criteria"
+//	post when search criteria for character score page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) cscsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	crisearch := r.FormValue("crisearch")
+	empId := ps.ByName("id")
+
+	var filter bson.M
+	searchRegex := ".*" + crisearch + ".*"
+
+	filter = bson.M{"$or": bson.A{
+		bson.M{"criteriaid": bson.M{"$regex": searchRegex}},
+		bson.M{"descr": bson.M{"$regex": searchRegex, "$options": "i"}},
+		bson.M{"critype": bson.M{"$regex": searchRegex, "$options": "i"}},
+	}}
+
+	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	if err != nil {
+		log.Println("Failed to access database")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Truy xuất dữ liệu thất bại"))
+	}
+
+	var critResults []struct {
+		Criteriaid string `bson:"criteriaid"`
+		Descr      string `bson:"descr"`
+		Point      int    `bson:"point"`
+		Critype    string `bson:"critype"`
+	}
+	err = cur.All(context.Background(), &critResults)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Decode thất bại"))
+	}
+
+	if len(critResults) == 0 {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
+		return
+	}
+
+	var data = map[string]interface{}{
+		"empId":       empId,
+		"critResults": critResults,
+	}
+
+	template.Must(template.ParseFiles("templates/pages/character/criteria_results.html")).Execute(w, data)
+}
+
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/score/evaluate/:id"
+//	post when evaluate criteria for character score page
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) csevaluate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	empId := ps.ByName("id")
+	log.Println(empId)
+
+	template.Must(template.ParseFiles("templates/pages/character/evalsuccess.html")).Execute(w, nil)
+}
+
+// /////
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)
 }

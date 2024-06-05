@@ -15,11 +15,13 @@
       {{template "navbar"}}
 
         <!-- Main Hero Content -->
-        <div class="container max-w-md py-32 mx-auto sm:mx-4 mt-px text-left sm:max-w-md md:max-w-lg sm:px-4 md:text-center">
+        <div id="empContainer" class="container max-w-lg py-32 mx-auto sm:mx-4 mt-px text-left sm:max-w-md md:max-w-lg sm:px-4 md:text-center">
           <div class="container w-full py-4 max-w-xs mx-auto">
-            <input hx-post="/character/score/search" hx-target="#search_results" hx-trigger="input changed delay:1s, search"
-              name="search" type="text" placeholder="Nhập mã số hoặc tên nhân viên cần chấm điểm" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" />
-          </div>
+            
+            <input hx-post="/character/score/search" hx-target="#search_results" hx-trigger="input changed delay:500ms, search"
+              name="search" type="text" placeholder="Tìm kiếm công nhân viên cần chấm điểm" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" />
+          
+            </div>
 
           <div id="search_results" class="overflow-x-auto"></div>
 

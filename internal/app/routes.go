@@ -29,6 +29,9 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/character/score", s.chrscore)
 	router.POST("/character/score/search", s.cssearch)
+	router.GET("/character/score/:id/criteria", s.csempid)
+	router.POST("/character/score/:id/criteria", s.cscsearch)
+	router.POST("/character/score/evaluate", s.csevaluate)
 
 	router.GET("/sections/cutting", s.cuttingSection)
 
