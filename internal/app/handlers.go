@@ -354,6 +354,7 @@ func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.
 		log.Println("Failed to access database")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Truy xuất dữ liệu thất bại"))
+		return
 	}
 
 	var recEvals []struct {
@@ -364,14 +365,9 @@ func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 	err = cur.All(context.Background(), &recEvals)
 	if err != nil {
-		log.Println(err)
+		log.Println("Failed to decode", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Decode thất bại"))
-	}
-
-	if len(recEvals) == 0 {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
 		return
 	}
 
@@ -391,6 +387,7 @@ func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) cscore_cp(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	crisearch := r.FormValue("crisearch")
 	empId := ps.ByName("id")
+	msg := "Vui lòng chọn tiêu chí đánh giá"
 
 	var filter bson.M
 	searchRegex := ".*" + crisearch + ".*"
@@ -406,6 +403,7 @@ func (s *Server) cscore_cp(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println("Failed to access database")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Truy xuất dữ liệu thất bại"))
+		return
 	}
 
 	var critResults []struct {
@@ -419,15 +417,15 @@ func (s *Server) cscore_cp(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Decode thất bại"))
-	}
-
-	if len(critResults) == 0 {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Không tìm thấy. Vui lòng nhập lại"))
 		return
 	}
 
+	if len(critResults) == 0 {
+		msg = "Không tìm thấy. Vui lòng nhập lại"
+	}
+
 	var data = map[string]interface{}{
+		"msg":         msg,
 		"empId":       empId,
 		"critResults": critResults,
 	}
