@@ -30,3 +30,10 @@ type PackingRecord struct {
 	Price    float64   `bson:"price"`
 	Currency string    `bson:"currency"`
 }
+
+type Critera struct {
+	Code        string `bson:"criteriaid"`
+	Description string `bson:"descr"`
+	Point       int    `bson:"point"`
+	Critype     string `bson:"critype"`
+}

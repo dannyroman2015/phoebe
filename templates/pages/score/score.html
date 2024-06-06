@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
   <script src="/static/js/htmx.min.js"></script>
+  <script src="/static/js/gsap.min.js"></script>
   <title>Score</title>
 </head>
 <body x-data="{
@@ -25,8 +26,48 @@
       {{template "navbar"}}
 
         <!-- Main Hero Content -->
-      <div id="empContainer" class="container max-w-lg py-32 mx-auto sm:mx-4 mt-px text-left sm:max-w-md md:max-w-lg sm:px-4 md:text-center">
+      <div id="empContainer" class="container max-w-md py-32 mx-auto sm:mx-4 mt-px text-left sm:max-w-md md:max-w-lg sm:px-4 md:text-center">
         <div class="container w-full py-4 max-w-xs mx-auto">
+
+          <h1 x-data="{
+            startingAnimation: { opacity: 0, y: 50, rotation: '25deg' },
+            endingAnimation: { opacity: 1, y: 0, rotation: '0deg', stagger: 0.02, duration: 0.7, ease: 'back' },
+            addCNDScript: true,
+            splitCharactersIntoSpans(element) {
+                text = element.innerHTML;
+                modifiedHTML = [];
+                for (var i = 0; i < text.length; i++) {
+                    attributes = '';
+                    if(text[i].trim()){ attributes = 'class=\'inline-block\''; }
+                    modifiedHTML.push('<span ' + attributes + '>' + text[i] + '</span>');
+                }
+                element.innerHTML = modifiedHTML.join('');
+            },
+        
+            addScriptToHead(url) {
+                script = document.createElement('script');
+                script.src = url;
+                document.head.appendChild(script);
+            },
+            animateText() {
+                $el.classList.remove('invisible');
+                gsap.fromTo($el.children, this.startingAnimation, this.endingAnimation);
+            }
+        }"
+        x-init="
+            splitCharactersIntoSpans($el);
+            gsapInterval2 = setInterval(function(){
+                if(typeof gsap !== 'undefined'){
+                    animateText();
+                    clearInterval(gsapInterval2);
+                }
+            }, 5);
+        "
+        class="invisible block pb-0.5 overflow-hidden text-3xl font-bold custom-font"
+        >
+        Trang đánh giá, vui lòng làm theo hướng dẫn
+        </h1>
+
             <!-- search employees      -->
             <input hx-post="/character/score/a" hx-target="#search_results" hx-trigger="input changed delay:500ms, search"
               name="searchemp" type="text" placeholder="Tìm kiếm công nhân viên cần chấm điểm" class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" />
@@ -47,7 +88,7 @@
   <input name="descr" type="text" :value="descr">
   <input name="point" type="text" :value="point">
   <input name="critype" type="text" :value="critype">
-  <input name="issdate" type="number" :value="issdate">
+  <input name="issdate" type="date" :value="issdate">
 </form>
 </body>
 </html>

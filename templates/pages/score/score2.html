@@ -8,7 +8,7 @@
   
   <div class="container w-full py-4 max-w-xs mx-auto">
     
-    <input name="issdate" type="datetime-local" value="" 
+    <input id="issuedate" name="issuedate" type="date" @change="issdate=$el.value"
       class="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-neutral-300 ring-offset-background placeholder:text-neutral-500 focus:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50" />
   
   </div>
@@ -42,9 +42,6 @@
     }"
     x-init="
       splitCharactersIntoSpans($el);
-      if(addCNDScript){
-          addScriptToHead('/static/js/gsap.min.js');
-      }
       gsapInterval2 = setInterval(function(){
           if(typeof gsap !== 'undefined'){
               animateText();
@@ -53,7 +50,7 @@
       }, 5);
     "
     class="invisible block pb-0.5 overflow-hidden text-3xl font-bold custom-font"
-      >Chấm điểm gần đây</h1>
+      >Lịch sử 10 lần ghi nhận gần đây</h1>
 
     <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
       <thead class="ltr:text-left rtl:text-right">
@@ -64,14 +61,18 @@
       </thead>
     
       <tbody class="divide-y divide-gray-200">
+        {{range .recentEvals}}
         <tr>
-          {{range .recEvals}}
-          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Criteria.Descr}}</td>
+          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Descr}}</td>
           <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.IssDate}}</td>
-          {{end}}
         </tr>
+        {{end}}
       </tbody>
     </table>
   </div>
 
 </div>
+
+<script>
+  document.getElementById("issuedate").valueAsDate = new Date();
+</script>

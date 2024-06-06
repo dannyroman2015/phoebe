@@ -12,6 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // /////////////////////////////////////////////////////////////////////
@@ -347,9 +348,10 @@ func (s *Server) cscore_ap(w http.ResponseWriter, r *http.Request, ps httprouter
 // /////////////////////////////////////////////////////////////////////
 func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	empId := ps.ByName("id")
-	filter := bson.M{"type": "1", "employee.id": empId}
 
-	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	filter := bson.M{"type": "1", "employee.id": empId}
+	opts := options.Find().SetSort(bson.M{"issdate": -1}).SetLimit(10)
+	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter, opts)
 	if err != nil {
 		log.Println("Failed to access database")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -371,9 +373,19 @@ func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
+	var recentEvals []struct {
+		IssDate string
+		Descr   string
+	}
+	for _, e := range recEvals {
+		recentEvals = append(recentEvals, struct {
+			IssDate string
+			Descr   string
+		}{IssDate: e.IssDate.Format("02-01-2006"), Descr: e.Criteria.Descr})
+	}
 	var data = map[string]interface{}{
-		"empId":    empId,
-		"recEvals": recEvals,
+		"empId":       empId,
+		"recentEvals": recentEvals,
 	}
 	template.Must(template.ParseFiles("templates/pages/score/score2.html")).Execute(w, data)
 }
@@ -387,7 +399,7 @@ func (s *Server) cscore_b(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) cscore_cp(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	crisearch := r.FormValue("crisearch")
 	empId := ps.ByName("id")
-	msg := "Vui lòng chọn tiêu chí đánh giá"
+	msg := "Chọn ngày và tiêu chí để đánh giá"
 
 	var filter bson.M
 	searchRegex := ".*" + crisearch + ".*"
@@ -447,20 +459,52 @@ func (s *Server) cscore_dp(w http.ResponseWriter, r *http.Request, ps httprouter
 	descr := r.FormValue("descr")
 	point := r.FormValue("point")
 	critype := r.FormValue("critype")
-	issdate := r.FormValue("issdate")
-	t, _ := strconv.ParseInt(issdate, 10, 64)
-	t = t / 1000
-	ti := time.Unix(t, 0)
-	log.Println(ti)
+	rawissdate := r.FormValue("issdate")
+	issdate, err := time.Parse("2006-01-02", rawissdate)
+	if err != nil {
+		log.Println("loi chuyen string sang date", err)
+	}
 
 	s.mgdb.Collection("character").InsertOne(context.Background(), bson.M{
 		"type":     "1",
 		"employee": bson.M{"id": empid, "name": name, "section": section},
 		"criteria": bson.M{"code": criteriaid, "descr": descr, "point": point, "criptype": critype},
-		"issdate":  issdate,
+		"issdate":  primitive.NewDateTimeFromTime(issdate),
 	})
 
 	template.Must(template.ParseFiles("templates/pages/score/score4.html")).Execute(w, nil)
+}
+
+// /////////////////////////////////////////////////////////////////////
+//
+//	"/character/admin - get page admin of incentive
+//
+// /////////////////////////////////////////////////////////////////////
+func (s *Server) cadmin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get data for table of Incentive
+	filter := bson.M{"type": "2"}
+	cur, err := s.mgdb.Collection("character").Find(context.Background(), filter)
+	if err != nil {
+		log.Println("loi truy xuat database", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+	var criteira []Critera
+	if err = cur.All(context.Background(), &criteira); err != nil {
+		log.Println("loi decode criteria", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode criteria"))
+		return
+	}
+
+	var data = map[string]interface{}{
+		"criteria": criteira,
+	}
+	template.Must(template.ParseFiles(
+		"templates/pages/incentive/admin/inc_admin.html",
+		"templates/pages/incentive/admin/criteria.html",
+		"templates/shared/navbar.html")).Execute(w, data)
 }
 
 // /////

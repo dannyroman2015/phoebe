@@ -33,6 +33,8 @@ func (s *Server) routes() http.Handler {
 	router.POST("/character/score/c/:id", s.cscore_cp)
 	router.POST("/character/score/d", s.cscore_dp)
 
+	router.GET("/character/admin", s.cadmin)
+
 	router.GET("/sections/cutting", s.cuttingSection)
 
 	router.GET("/footer", s.footer)
