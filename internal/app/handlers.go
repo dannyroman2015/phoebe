@@ -507,6 +507,12 @@ func (s *Server) cadmin(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		"templates/shared/navbar.html")).Execute(w, data)
 }
 
+func (s *Server) cacreate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	code := r.FormValue("criteriaid")
+	log.Println("sfsdfd", code)
+	w.Write([]byte("SDFHKSD"))
+}
+
 // /////
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)

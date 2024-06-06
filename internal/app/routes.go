@@ -34,6 +34,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/character/score/d", s.cscore_dp)
 
 	router.GET("/character/admin", s.cadmin)
+	router.POST("/character/admin/create", s.cacreate)
 
 	router.GET("/sections/cutting", s.cuttingSection)
 
