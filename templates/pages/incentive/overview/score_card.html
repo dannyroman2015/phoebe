@@ -1,0 +1,41 @@
+<nav class="panel is-light">
+  <p class="panel-heading p-3">Scores</p>
+  <div class="panel-block">
+    <p class="control has-icons-left">
+      <!-- staff score search -->
+      <input hx-post="/incentive/overview/scoresearch" hx-target="#staffpoint" hx-swap="outerHTML" hx-trigger="input changed delay:500ms, search"
+             name="scoreSearch" class="input" type="text" placeholder="Search" />
+      <span class="icon is-left">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </span>
+    </p>
+  </div>
+
+  <div class="panel-block">
+    <table class="table w-full">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Staff</th>
+          <th>Point</th>
+        </tr>
+      </thead>
+    
+      <tbody id="staffpoint">
+        {{range .}}
+        <tr>
+          <td>{{.EmpId}}</td>
+          <td>{{.EmpName}}</td>
+          <td>{{.PointTotal}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</nav>
+
+<style>
+  .w-full {
+    width: 100%;
+  }
+</style>

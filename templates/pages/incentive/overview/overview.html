@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <link rel="stylesheet" href="/static/css/style.css"> -->
+  <link rel="stylesheet" href="/static/css/bulma.min.css">
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/htmx.min.js"></script>
+  <script src="https://kit.fontawesome.com/e1c3f8092c.js" crossorigin="anonymous"></script>
+  <title>Incentive Overview</title>
+</head>
+<body>
+  {{ template "blnavbar" }}
+
+ 
+    <div class="fixed-grid p-3 has-1-cols  has-4-cols-desktop has-6-cols-widescreen">
+      <div class="grid">
+        <div class="cell is-col-span-2">
+          <div hx-get="/incentive/overview/loadscores" hx-target="this" hx-trigger="load" hx-swap="outerHTML"></div>
+        </div>
+
+        <div class="cell ">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-header-title">
+                Top of Last Month
+              </div>
+            </div>
+
+            <div class="card-content">
+              <div class="media">
+                <div class="media-content">
+                  <p class="title is-6">{{.highest.EmpName}}</p>
+                  <p class="subtitle is-7">{{.highest.EmpId}} - {{.highest.EmpSection}}</p>
+                </div>
+                <div class="media-right">
+                  <p class="title is-4">{{.highest.PointTotal}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cell">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-header-title">
+                Bottom of Last Month
+              </div>
+            </div>
+
+            <div class="card-content">
+              <div class="media">
+                <div class="media-content">
+                  <p class="title is-6">{{.lowest.EmpName}}</p>
+                  <p class="subtitle is-7">{{.lowest.EmpId}} - {{.lowest.EmpSection}}</p>
+                </div>
+                <div class="media-right">
+                  <p class="title is-4">{{.lowest.PointTotal}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cell">4</div>
+      </div>
+    </div>
+
+</body>
+</html>
+

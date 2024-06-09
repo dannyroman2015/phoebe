@@ -31,9 +31,16 @@ type PackingRecord struct {
 	Currency string    `bson:"currency"`
 }
 
-type Critera struct {
-	Code        string `bson:"criteriaid"`
-	Description string `bson:"descr"`
+type Criterion struct {
+	Id          string `bson:"id"`
+	Description string `bson:"description"`
 	Point       int    `bson:"point"`
-	Critype     string `bson:"critype"`
+	Kind        string `bson:"kind"`
+}
+
+type Score struct {
+	EmpId      string `bson:"empid"`
+	EmpName    string `bson:"empname"`
+	EmpSection string `bson:"empsection"`
+	PointTotal int    `bson:"point_total"`
 }

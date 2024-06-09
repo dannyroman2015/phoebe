@@ -27,14 +27,25 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 
-	router.GET("/character/score", s.cscore)
-	router.POST("/character/score/a", s.cscore_ap)
-	router.GET("/character/score/b/:id", s.cscore_b)
-	router.POST("/character/score/c/:id", s.cscore_cp)
-	router.POST("/character/score/d", s.cscore_dp)
+	router.GET("/incentive/admin", s.iadmin)
+	router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
+	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
+	router.DELETE("/incentive/admin/deletecriteria/:criteriaid", s.deletecriteria)
+	router.POST("/incentive/admin/searchcriterion", s.ia_searchcriterion)
+	router.GET("/incentive/admin/loadevaltable", s.loadevaltable)
+	router.DELETE("/incentive/admin/deleteevaluate/:evaluateid", s.deleteevaluate)
+	router.POST("/incentive/admin/searchevaluate", s.ia_searchevaluate)
 
-	router.GET("/character/admin", s.cadmin)
-	router.POST("/character/admin/create", s.cacreate)
+	router.GET("/incentive/evaluate", s.evaluate)
+	router.POST("/incentive/evaluate/searchstaff", s.searchstaff)
+	router.POST("/incentive/evaluate/searchcriterion", s.searchcriterion)
+	router.POST("/incentive/evaluate/sendevaluate", s.sendevaluate)
+
+	router.GET("/incentive/overview", s.ioverview)
+	router.GET("/incentive/overview/loadscores", s.io_loadscores)
+	router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
+
+	router.GET("/hr/admin", s.hradmin)
 
 	router.GET("/sections/cutting", s.cuttingSection)
 

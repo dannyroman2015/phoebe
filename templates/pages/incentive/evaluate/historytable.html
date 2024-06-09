@@ -1,0 +1,46 @@
+<h2 class="text-lg font-medium text-gray-800 dark:text-white">Lịch sử chấm tiêu chí gần đây</h2>
+<div  class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+  <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+    <thead class="bg-gray-50 dark:bg-gray-800">
+      <tr>
+        <th scope="col" class="px-4 py-2  text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+          Ngày
+        </th>
+  
+        <th scope="col" class="px-4 py-2 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+          Tiêu chí
+        </th>
+  
+        <th scope="col" class="px-4 py-2 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+          Điểm
+        </th>
+            
+        <th scope="col" class="px-4 py-2 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+          Loại
+        </th>
+      </tr>
+    </thead>
+    
+    <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+      {{range .evalsByiD}}
+      <tr>
+        <td class="px-4 py-2 text-sm font-medium whitespace-nowrap">
+            <h2 class="font-medium text-gray-800 dark:text-white ">{{.StrOccurDate}}</h2>
+        </td>
+  
+        <td class="px-4 py-2 text-sm whitespace-nowrap">
+          <p class="text-gray-500 dark:text-gray-400">{{.Criterion.Description}}</p>
+        </td>
+  
+        <td class="px-4 py-2 text-sm whitespace-nowrap">
+          <p class="text-gray-500 dark:text-gray-400">{{.Criterion.Point}}</p>
+        </td>
+  
+        <td class="px-4 py-2 text-sm whitespace-nowrap">
+          <p class="text-gray-500 dark:text-gray-400">{{.Criterion.Kind}}</p>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>                
+</div>
