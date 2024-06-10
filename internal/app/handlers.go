@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -818,7 +819,7 @@ func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httpr
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) hradmin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get list data for employee table
-	cur, err := s.mgdb.Collection("employee").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}).SetLimit(5))
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}))
 	if err != nil {
 		log.Println("hradmin: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -836,9 +837,9 @@ func (s *Server) hradmin(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	}
 
 	data := map[string]interface{}{
-		"employees":      employees,
+		"employees":      employees[:10],
 		"numberOfMember": len(employees),
-		"numberOfPages":  len(employees)/5 + 1,
+		"numberOfPages":  len(employees)/10 + 1,
 	}
 
 	template.Must(template.ParseFiles(
@@ -876,11 +877,18 @@ func (s *Server) ha_searchemployee(w http.ResponseWriter, r *http.Request, ps ht
 		w.Write([]byte("Failed to decode"))
 		return
 	}
+	var femployees []Employee
+	if len(employees) >= 10 {
+		femployees = employees[:10]
+	} else {
+		femployees = employees
+	}
 
 	data := map[string]interface{}{
-		"employees": employees,
+		"employees":     femployees,
+		"numberOfPages": len(employees)/10 + 1,
 	}
-	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_table.html")).Execute(w, data)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -927,6 +935,17 @@ func (s *Server) ha_upsertemployee(w http.ResponseWriter, r *http.Request, ps ht
 		"employees": employees,
 	}
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
+}
+
+func (s *Server) ha_nextpage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println("skdhfkh")
+	var data struct {
+		Myval string `json:"myval"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		log.Println(err)
+	}
+	log.Println(r.URL.Query().Get("myval"))
 }
 
 // /////

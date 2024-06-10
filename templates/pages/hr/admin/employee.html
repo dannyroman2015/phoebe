@@ -1,5 +1,6 @@
 {{define "employee"}}
 <section x-data="{
+  page: 2,
   openAddForm: false,
   message: 'Giao tiếp, hướng dẫn xuất hiện ở đây.',
   empId: '',
@@ -94,12 +95,13 @@
         </svg>
       </span>
       <!-- Search employee -->
-      <input hx-post="/hr/admin/searchemployee" hx-target="#emp_tbody" hx-trigger="input changed delay:500ms, search"
+      <input hx-post="/hr/admin/searchemployee" hx-swap="outerHTML" hx-target="#emp_table" hx-trigger="input changed delay:500ms, search"
              name="empSearch" type="text" value="" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
   </div>
 
-  <div class="flex flex-col mt-6">
+  <div x-data="{currentPage: 1,}" 
+        id="emp_table" class="flex flex-col mt-6">
     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
         <div id="emptbl-container" class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
@@ -164,7 +166,7 @@
                     </div>
                   </div>
                 </td>
-
+  
                 <td class="px-12 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                   <div class="inline-flex items-center px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -172,7 +174,7 @@
                     <h2 class="text-sm font-normal text-emerald-500">Active</h2>
                   </div>
                 </td>
-
+  
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <h2 class="font-medium text-gray-800 dark:text-white ">(job position)</h2>
@@ -197,7 +199,7 @@
                       0879023423</p>
                   </div>
                 </td>
-
+  
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-6">
                     <button class="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none">
@@ -214,7 +216,7 @@
                     </button>
                   </div>
                 </td>
-
+  
               </tr>
               {{end}}
             </tbody>
@@ -222,34 +224,43 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="mt-6 sm:flex sm:items-center sm:justify-between ">
+  
+    <div class="mt-6 sm:flex sm:items-center sm:justify-between ">
       <div class="text-sm text-gray-500 dark:text-gray-400">
-          Page <span class="font-medium text-gray-700 dark:text-gray-100">1 of {{.numberOfPages}}</span> 
+        Page 
+        <span x-text="currentPage" id="curpage" class="font-medium text-gray-700 dark:text-gray-100"></span>
+        of 
+        <span id="maxpage" class="font-medium text-gray-700 dark:text-gray-100">{{.numberOfPages}}</span>
       </div>
-
+  
       <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-          <a href="#" class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
+          <a class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"
+            x-show="currentPage!=1" @click="currentPage--"
+          >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
               </svg>
-
+  
               <span>
                   previous
               </span>
           </a>
-
-          <a href="#" class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
+  
+          <a x-show="currentPage!={{.numberOfPages}}" @click="currentPage++"
+            class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
               <span>
                   Next
               </span>
-
+  
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
               </svg>
           </a>
       </div>
+    </div>
   </div>
+
+  
 </section>
+
 {{end}}
