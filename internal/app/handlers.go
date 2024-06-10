@@ -813,12 +813,120 @@ func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httpr
 	template.Must(template.ParseFiles("templates/pages/incentive/overview/point_tbody.html")).Execute(w, results)
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /hr/admin - load page admin of HR
+// ///////////////////////////////////////////////////////////////////////
 func (s *Server) hradmin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get list data for employee table
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}).SetLimit(5))
+	if err != nil {
+		log.Println("hradmin: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var employees = []Employee{}
+	if err = cur.All(context.Background(), &employees); err != nil {
+		log.Println("hradmin: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+		return
+	}
+
+	data := map[string]interface{}{
+		"employees":      employees,
+		"numberOfMember": len(employees),
+		"numberOfPages":  len(employees)/5 + 1,
+	}
 
 	template.Must(template.ParseFiles(
 		"templates/pages/hr/admin/admin.html",
 		"templates/pages/hr/admin/employee.html",
-		"templates/shared/navbar.html")).Execute(w, nil)
+		"templates/shared/navbar.html")).Execute(w, data)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /hr/admin/searchemployee - search employee in hr admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) ha_searchemployee(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	empSearch := r.FormValue("empSearch")
+	searchRegex := ".*" + empSearch + ".*"
+
+	filter := bson.M{"$or": bson.A{
+		bson.M{"id": bson.M{"$regex": searchRegex, "$options": "i"}},
+		bson.M{"name": bson.M{"$regex": searchRegex, "$options": "i"}},
+		bson.M{"section": bson.M{"$regex": searchRegex, "$options": "i"}},
+	}}
+
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), filter, options.Find().SetSort(bson.M{"name": -1}))
+	if err != nil {
+		log.Println("ha_searchemployee: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var employees = []Employee{}
+	if err = cur.All(context.Background(), &employees); err != nil {
+		log.Println("ha_searchemployee: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+		return
+	}
+
+	data := map[string]interface{}{
+		"employees": employees,
+	}
+	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /hr/admin/upsertemployee - update or insert employee into database
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) ha_upsertemployee(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	empId := r.FormValue("empId")
+	empName := r.FormValue("empName")
+	empSection := r.FormValue("empSection")
+
+	_, err := s.mgdb.Collection("employee").UpdateOne(context.Background(),
+		bson.M{"id": empId},
+		bson.M{"$set": bson.M{
+			"name":    empName,
+			"section": empSection,
+		}},
+		options.Update().SetUpsert(true),
+	)
+	if err != nil {
+		log.Println("ha_upsertemployee: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}))
+	if err != nil {
+		log.Println("ha_upsertemployee: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var employees = []Employee{}
+	if err = cur.All(context.Background(), &employees); err != nil {
+		log.Println("ha_upsertemployee: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+		return
+	}
+
+	data := map[string]interface{}{
+		"employees": employees,
+	}
+	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
 }
 
 // /////

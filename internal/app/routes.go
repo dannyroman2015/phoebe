@@ -46,6 +46,8 @@ func (s *Server) routes() http.Handler {
 	router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
 
 	router.GET("/hr/admin", s.hradmin)
+	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
+	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
 
 	router.GET("/sections/cutting", s.cuttingSection)
 

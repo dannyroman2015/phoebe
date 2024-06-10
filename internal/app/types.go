@@ -44,3 +44,9 @@ type Score struct {
 	EmpSection string `bson:"empsection"`
 	PointTotal int    `bson:"point_total"`
 }
+
+type Employee struct {
+	Id      string `bson:"id"`
+	Name    string `bson:"name"`
+	Section string `bson:"section"`
+}
