@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -937,15 +936,11 @@ func (s *Server) ha_upsertemployee(w http.ResponseWriter, r *http.Request, ps ht
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
 }
 
-func (s *Server) ha_nextpage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	log.Println("skdhfkh")
-	var data struct {
-		Myval string `json:"myval"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Println(err)
-	}
-	log.Println(r.URL.Query().Get("myval"))
+// ///////////////////////////////////////////////////////////////////////
+// /hr/admin/prevnext - get employee list when click previous, next page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) ha_prevnext(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 }
 
 // /////
