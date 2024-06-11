@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -230,10 +232,10 @@ func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Write([]byte("Successful!!! Request sent to admin. Please wait for the response"))
 }
 
-// //////////////////////////////////////////////////////////
-// /sections/cutting
-// //////////////////////////////////////////////////////////
-func (s *Server) cuttingSection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview - get page overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{})
 	if err != nil {
 		log.Println(err)
@@ -838,6 +840,7 @@ func (s *Server) hradmin(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	data := map[string]interface{}{
 		"employees":      employees[:10],
 		"numberOfMember": len(employees),
+		"currentPage":    1,
 		"numberOfPages":  len(employees)/10 + 1,
 	}
 
@@ -885,6 +888,7 @@ func (s *Server) ha_searchemployee(w http.ResponseWriter, r *http.Request, ps ht
 
 	data := map[string]interface{}{
 		"employees":     femployees,
+		"currentPage":   1,
 		"numberOfPages": len(employees)/10 + 1,
 	}
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_table.html")).Execute(w, data)
@@ -936,14 +940,129 @@ func (s *Server) ha_upsertemployee(w http.ResponseWriter, r *http.Request, ps ht
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
 }
 
+func (s *Server) ha_exportempexcel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": 1}))
+	if err != nil {
+		log.Println("ha_exportempexcel: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access employee database"))
+		return
+	}
+
+	var employees []Employee
+	if err = cur.All(context.Background(), &employees); err != nil {
+		log.Println("ha_exportempexcel: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+		return
+	}
+
+	//set header
+	// val := reflect.ValueOf(&Employee{}).Elem()
+	// for i := 0; i < val.NumField(); i++ {
+	// 	log.Println(val.Type().Field(i).Name)
+	// }
+	f.NewSheet("Employees")
+	f.SetCellValue("Employees", "A2", "ID")
+	f.SetCellValue("Employees", "B2", "Name")
+	f.SetCellValue("Employees", "C2", "Section")
+	for i := 0; i < len(employees); i++ {
+		f.SetCellValue("Employees", fmt.Sprintf("A%d", i+2), employees[i].Id)
+		f.SetCellValue("Employees", fmt.Sprintf("B%d", i+2), employees[i].Name)
+		f.SetCellValue("Employees", fmt.Sprintf("C%d", i+2), employees[i].Section)
+	}
+
+	if err := f.SaveAs("./static/uploads/employeelist.xlsx"); err != nil {
+		fmt.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/hr/admin/download_btn.html")).Execute(w, nil)
+	// http.Redirect(w, r, "/static/uploads/employeelist.xlsx", http.StatusSeeOther)
+	// http.ServeFile(w, r, "/static/uploads/employeelist.xlsx")
+}
+
 // ///////////////////////////////////////////////////////////////////////
 // /hr/admin/prevnext - get employee list when click previous, next page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) ha_prevnext(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println("dfgdg")
+	rawCurrentPage := ps.ByName("currentPage")
+	prevnext := ps.ByName("prevnext")
+	currentPage, _ := strconv.ParseInt(rawCurrentPage, 10, 64)
+	var targetPage int64
+	if prevnext == "previous" {
+		targetPage = currentPage - 1
+		log.Println(targetPage)
+	} else {
+		targetPage = currentPage + 1
+		log.Println(targetPage)
+	}
+	nSkip := (targetPage - 1) * 10
 
+	empSearch := r.FormValue("empSearch")
+	filter := bson.M{}
+	if empSearch != "" {
+		searchRegex := ".*" + empSearch + ".*"
+		filter = bson.M{"$or": bson.A{
+			bson.M{"id": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"name": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"section": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}
+	}
+
+	cur, err := s.mgdb.Collection("employee").Find(context.Background(), filter, options.Find().SetSort(bson.M{"name": -1}).SetSkip(nSkip).SetLimit(10))
+	if err != nil {
+		log.Println("ha_prevnext: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var employees = []Employee{}
+	if err = cur.All(context.Background(), &employees); err != nil {
+		log.Println("ha_prevnext: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+		return
+	}
+	var femployees []Employee
+	if len(employees) >= 10 {
+		femployees = employees[:10]
+	} else {
+		femployees = employees
+	}
+
+	data := map[string]interface{}{
+		"employees":     femployees,
+		"currentPage":   targetPage,
+		"numberOfPages": r.URL.Query().Get("numberOfPages"),
+	}
+	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_table.html")).Execute(w, data)
 }
 
-// /////
+func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/cutting/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////// /////
+// ////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)
 }

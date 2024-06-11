@@ -48,9 +48,14 @@ func (s *Server) routes() http.Handler {
 	router.GET("/hr/admin", s.hradmin)
 	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
 	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
-	router.POST("/hr/admin/prevnext", s.ha_prevnext)
+	router.GET("/hr/admin/exportempexcel", s.ha_exportempexcel)
+	router.GET("/hr/admin/prevnext/:currentPage/:prevnext", s.ha_prevnext)
 
-	router.GET("/sections/cutting", s.cuttingSection)
+	// Cuttting ////////////////////////////////////////////////////////
+	router.GET("/sections/cutting/overview", s.sc_overview)
+
+	router.GET("/sections/cutting/entry", s.sc_entry)
+	// end /////////////////////////////////////////////////////////////
 
 	router.GET("/footer", s.footer)
 	router.GET("/test", s.handleGetTest)
