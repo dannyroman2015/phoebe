@@ -54,7 +54,8 @@ func (s *Server) routes() http.Handler {
 	// Cuttting ////////////////////////////////////////////////////////
 	router.GET("/sections/cutting/overview", s.sc_overview)
 
-	router.GET("/sections/cutting/entry", s.sc_entry)
+	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
+	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
 	// end /////////////////////////////////////////////////////////////
 
 	router.GET("/footer", s.footer)

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"dannyroman2015/phoebe/internal/models"
 	"fmt"
 	"html/template"
 	"log"
@@ -940,6 +941,9 @@ func (s *Server) ha_upsertemployee(w http.ResponseWriter, r *http.Request, ps ht
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_tbody.html")).Execute(w, data)
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /hr/admin/ha_exportempexcel - create employee list excel file
+// ///////////////////////////////////////////////////////////////////////
 func (s *Server) ha_exportempexcel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	f := excelize.NewFile()
 	defer func() {
@@ -1048,12 +1052,51 @@ func (s *Server) ha_prevnext(w http.ResponseWriter, r *http.Request, ps httprout
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_table.html")).Execute(w, data)
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/cutting/entry - get entry page
+// ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/cutting/entry/entry.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/cutting/sendentry - post entry to database
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	stroccurdate := r.FormValue("occurdate")
+	occurdate, _ := time.Parse("2006-01-02", stroccurdate)
+	woodtype := r.FormValue("woodtype")
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
+	wrnote := r.FormValue("wrnote")
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+
+	report := models.CuttingReport{
+		Date:             occurdate,
+		WoodType:         woodtype,
+		Qtycbm:           qty,
+		Thickness:        thickness,
+		WoodRecievedNote: wrnote,
+		Reporter:         usernameToken.Value,
+		CreatedDate:      time.Now(),
+	}
+	log.Println(occurdate, woodtype, qty, thickness, wrnote, usernameToken.Value)
+
+	if err := models.NewCuttingModel(s.mgdb).InsertOne(report); err != nil {
+		log.Println("sc_sendentry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to create new report"))
+		return
+	}
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////// /////
