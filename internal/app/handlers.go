@@ -1114,6 +1114,9 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin - get page admin of cutting section
+// ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	model := models.NewCuttingModel(s.mgdb)
 	cuttingReports, err := model.FindAllReportsSortDateDesc()
@@ -1124,10 +1127,48 @@ func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
+	// chỗ này sao này làm next prev sửa lại sau
+	var n int
+	if len(cuttingReports) > 20 {
+		n = 20
+	} else {
+		n = len(cuttingReports)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/admin.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-		"cuttingReports":  cuttingReports,
+		"cuttingReports":  cuttingReports[:n],
 		"numberOfReports": len(cuttingReports),
 	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/deletereport/:reportid - delete a report on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rawreportid := ps.ByName("reportid")
+	reportid, _ := primitive.ObjectIDFromHex(rawreportid)
+
+	_, err := s.mgdb.Collection("cutting").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println("sca_deletereport: ", err)
+		w.Write([]byte("Failed to access database"))
+		return
+	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/searchreport - search reports on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	results := models.NewCuttingModel(s.mgdb).Search(r.FormValue("reportSearch"))
+	// chỗ này sao này làm next prev sửa lại sau
+	var n int
+	if len(results) > 20 {
+		n = 20
+	} else {
+		n = len(results)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, results[:n])
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////

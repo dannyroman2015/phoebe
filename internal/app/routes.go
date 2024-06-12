@@ -58,6 +58,8 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
 
 	router.GET("/sections/cutting/admin", withAuth(s.sc_admin))
+	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
+	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	// end /////////////////////////////////////////////////////////////
 
 	router.GET("/footer", s.footer)

@@ -42,6 +42,38 @@ func (m *CuttingModel) PartalUpdate(cuttingReport *CuttingReport) error {
 	return nil
 }
 
+func (m *CuttingModel) Search(searchWord string) []CuttingReport {
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"woodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		s := primitive.NewDateTimeFromTime(dateSearch)
+		filter = bson.M{"date": s}
+	}
+
+	cur, err := m.mgdb.Collection("cutting").Find(context.Background(), filter, options.Find().SetSort(bson.M{"occurdate": -1}))
+	if err != nil {
+		log.Println("failed to access databa cutting at search of model cutting", err)
+		return nil
+	}
+	defer cur.Close(context.Background())
+
+	var results []CuttingReport
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println("faild to decode", err)
+		return nil
+	}
+
+	return results
+}
+
 func (m *CuttingModel) FindAllReportsSortDateDesc() ([]CuttingReport, error) {
 	cur, err := m.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "report"}, options.Find().SetSort(bson.M{"occurdate": -1}))
 	if err != nil {
