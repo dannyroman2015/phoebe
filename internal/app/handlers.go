@@ -1056,11 +1056,13 @@ func (s *Server) ha_prevnext(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/cutting/entry - get entry page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
+	data := map[string]interface{}{
+		"showSuccessDialog": false,
+	}
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/cutting/entry/entry.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, nil)
+	)).Execute(w, data)
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -1080,6 +1082,14 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
+	if qty == 0 || thickness == 0 || wrnote == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showMissingDialog": true,
+		})
+		return
+	}
+
 	report := models.CuttingReport{
 		Date:             occurdate,
 		WoodType:         woodtype,
@@ -1088,8 +1098,8 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		WoodRecievedNote: wrnote,
 		Reporter:         usernameToken.Value,
 		CreatedDate:      time.Now(),
+		LastModified:     time.Now(),
 	}
-	log.Println(occurdate, woodtype, qty, thickness, wrnote, usernameToken.Value)
 
 	if err := models.NewCuttingModel(s.mgdb).InsertOne(report); err != nil {
 		log.Println("sc_sendentry: ", err)
@@ -1097,9 +1107,30 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		w.Write([]byte("failed to create new report"))
 		return
 	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"showMissingDialog": false,
+	})
 }
 
-// //////////////////////////////////////////////////////////////////////////////////////// /////
+func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	model := models.NewCuttingModel(s.mgdb)
+	cuttingReports, err := model.FindAllReportsSortDateDesc()
+	if err != nil {
+		log.Println("sc_admin: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to access cutting database"))
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/admin.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"cuttingReports":  cuttingReports,
+		"numberOfReports": len(cuttingReports),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////
 // ////////////////////////////////////////////////////////////////////////////////////////

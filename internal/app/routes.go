@@ -56,6 +56,8 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
 	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
+
+	router.GET("/sections/cutting/admin", withAuth(s.sc_admin))
 	// end /////////////////////////////////////////////////////////////
 
 	router.GET("/footer", s.footer)
