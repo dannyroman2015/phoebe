@@ -50,3 +50,8 @@ type Employee struct {
 	Name    string `bson:"name"`
 	Section string `bson:"section"`
 }
+
+type CuttingQty struct {
+	Date time.Time `bson:"date"`
+	Qty  float64   `bson:"qty_total"`
+}

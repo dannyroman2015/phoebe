@@ -31,6 +31,7 @@ type CuttingModel struct {
 	mgdb *mongo.Database
 }
 
+// Create instance of CuttingModel
 func NewCuttingModel(mgdb *mongo.Database) *CuttingModel {
 	return &CuttingModel{mgdb: mgdb}
 }

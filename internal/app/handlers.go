@@ -184,29 +184,51 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // /dashboard
 // //////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var data = map[string]interface{}{}
+	// var data = map[string]interface{}{}
 
-	// get data for provalchart
-	var pacRecords = []PackingRecord{}
-	cur, err := s.mgdb.Collection("packing").Find(context.Background(), bson.M{})
+	// // get data for provalchart
+	// var pacRecords = []PackingRecord{}
+	// cur, err := s.mgdb.Collection("packing").Find(context.Background(), bson.M{})
+	// if err != nil {
+	// 	log.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer cur.Close(context.Background())
+
+	// if err := cur.All(context.Background(), &pacRecords); err != nil {
+	// 	log.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// get data for cutting chart
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"date": "$_id"}}},
+		{{"$unset", "_id"}},
+	}
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("failed to access database at GetQtyTotalsByDate: ", err)
 		return
 	}
-	defer cur.Close(context.Background())
-
-	if err := cur.All(context.Background(), &pacRecords); err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var results []struct {
+		Date time.Time `bson:"date"`
+		Qty  float64   `bson:"qty_total"`
+	}
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println("failed to decode at GetQtyTotalsByDate: ", err)
 		return
 	}
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
+		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, data)
+	)).Execute(w, results)
 }
 
 // //////////////////////////////////////////////////////////
@@ -257,8 +279,8 @@ func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	template.Must(template.ParseFiles(
-		"templates/pages/sections/cutting/cutting.html",
-		"templates/pages/sections/cutting/reptbl.html",
+		"templates/pages/sections/cutting/overview/overview.html",
+		"templates/pages/sections/cutting/overview/reptbl.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, data)
 }
