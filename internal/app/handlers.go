@@ -227,9 +227,10 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		Date string
 		Qty  float64
 	}, len(results))
+
 	for i := 0; i < len(results); i++ {
-		fresults[i].Date = results[i].Date.Format("2006-01-02")
-		log.Println(fresults[i])
+		fresults[i].Date = results[i].Date.Format("2 Jan")
+		fresults[i].Qty = results[i].Qty
 	}
 
 	template.Must(template.ParseFiles(
@@ -237,7 +238,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, results)
+	)).Execute(w, fresults)
 }
 
 // //////////////////////////////////////////////////////////
