@@ -223,6 +223,15 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
+	var fresults = make([]struct {
+		Date string
+		Qty  float64
+	}, len(results))
+	for i := 0; i < len(results); i++ {
+		fresults[i].Date = results[i].Date.Format("2006-01-02")
+		log.Println(fresults[i])
+	}
+
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
 		"templates/pages/dashboard/cuttingchart.html",

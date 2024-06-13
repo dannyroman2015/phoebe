@@ -331,7 +331,7 @@ function chart1(data) {
     .call(g => g.append("text")
       .text("Daily close")
       .attr("text-anchor", "start")
-      .attr("x", -margin.left)
+      .attr("x", - margin.left)
       .attr("y", 15)
       .attr("fill", "black")
       .attr("font-size", "14px")
