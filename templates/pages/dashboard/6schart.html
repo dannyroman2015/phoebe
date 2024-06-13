@@ -30,6 +30,22 @@
 
   const yScale = d3.scaleband()
     .domain([myGroups])
-    .range([])
+    .range([height6s, 0])
+    .padding(0.01);
+
+  const yAxis = d3.axisLeft(yScale)
+
+  innerChart6s.append("g")
+    .call(yAxis)
+
+  const color6s = d3.scaleLinear()
+    .domain([1, 100])
+    .range(["white", "#69b3a2"]);
+
+  d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/heatmap_data.csv")
+    .then( (data) => {
+    
+  });
+
 </script>
 {{end}}
