@@ -236,6 +236,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
 		"templates/pages/dashboard/cuttingchart.html",
+		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, fresults)

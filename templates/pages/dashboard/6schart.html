@@ -1,0 +1,35 @@
+{{define "6schart"}}
+<div id="6schart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+
+<script>
+  const margin6s = {top: 30, right: 30, bottom: 30, left: 30}
+  const width6s = 900
+  const height6s = 350
+  const innerWidth6s = width6s - margin6s.left - margin6s.right
+  const innerHeight6s = height6s - margin6s.top - margin6s.bottom
+
+  const svg6s = d3.select("#6schart").append("svg")
+    .attr("viewBox", [0, 0, width6s, height6s])
+
+  const innerChart6s = svg6s.append("g")
+    .attr("transform", `translate(${margin6s.left}, ${margin6s.top})`)
+
+  var myGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+  var myVars = ["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10"]
+
+  const xScale = d3.scaleBand()
+    .domain([myVars])
+    .range([0, width6s])
+    .padding(0.01);
+
+  const xAxis = d3.axisBottom(xScale)
+
+  innerChart6s.append("g")
+    .attr("tranform", `translate(0, ${innerHeight6s})`)
+    .call(xAxis)
+
+  const yScale = d3.scaleband()
+    .domain([myGroups])
+    .range([])
+</script>
+{{end}}
