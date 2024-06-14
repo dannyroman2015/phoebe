@@ -237,7 +237,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// get data for 6S chart
-	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"date": 1, "area": 1}))
+	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.D{{"date": 1, "area": 1}}))
 	if err != nil {
 		log.Println("dashboard: ", err)
 	}
