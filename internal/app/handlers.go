@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -237,17 +238,32 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// get data for 6S chart
-	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.D{{"date": 1, "area": 1}}))
+	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"datestr": 1}))
 	if err != nil {
 		log.Println("dashboard: ", err)
 	}
 
-	var s6Data []interface{}
-	if err = cur.All(context.Background(), &s6Data); err != nil {
-		log.Println("dashboard: ", err)
+	type ScoreReport struct {
+		Area  string `bson:"area"`
+		Date  string `bson:"datestr"`
+		Score int    `bson:"score"`
 	}
-
-	log.Println(s6Data)
+	var s6Data []ScoreReport
+	var s6areas []string
+	var s6dates []string
+	for cur.Next(context.Background()) {
+		var a ScoreReport
+		cur.Decode(&a)
+		t, _ := time.Parse("2006-01-02", a.Date)
+		a.Date = t.Format("2 Jan")
+		if !slices.Contains(s6areas, a.Area) {
+			s6areas = append(s6areas, a.Area)
+		}
+		if !slices.Contains(s6dates, a.Date) {
+			s6dates = append(s6dates, a.Date)
+		}
+		s6Data = append(s6Data, a)
+	}
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
@@ -255,7 +271,12 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, cuttingData)
+	)).Execute(w, map[string]interface{}{
+		"cuttingData": cuttingData,
+		"s6areas":     s6areas,
+		"s6dates":     s6dates,
+		"s6data":      s6Data,
+	})
 }
 
 // //////////////////////////////////////////////////////////
