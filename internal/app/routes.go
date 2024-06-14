@@ -45,11 +45,22 @@ func (s *Server) routes() http.Handler {
 	router.GET("/incentive/overview/loadscores", s.io_loadscores)
 	router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
 
+	// HR //////////////////////////////////////////////////////////////
 	router.GET("/hr/admin", s.hradmin)
 	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
 	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
 	router.GET("/hr/admin/exportempexcel", s.ha_exportempexcel)
 	router.GET("/hr/admin/prevnext/:currentPage/:prevnext", s.ha_prevnext)
+	// end /////////////////////////////////////////////////////////////
+
+	// 6S //////////////////////////////////////////////////////////////
+	router.GET("/6s/overview", s.s_overview)
+
+	router.GET("/6s/entry", s.s_entry)
+	router.POST("/6s/entry", s.s_sendentry)
+
+	router.GET("/6s/admin", s.s_admin)
+	// end 6S //////////////////////////////////////////////////////////////
 
 	// Cuttting ////////////////////////////////////////////////////////
 	router.GET("/sections/cutting/overview", s.sc_overview)
@@ -60,7 +71,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/cutting/admin", withAuth(s.sc_admin))
 	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
-	// end /////////////////////////////////////////////////////////////
+	// end Cuttting/////////////////////////////////////////////////////////////
 
 	router.GET("/footer", s.footer)
 	router.GET("/test", s.handleGetTest)

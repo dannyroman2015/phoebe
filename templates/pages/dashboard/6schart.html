@@ -1,5 +1,5 @@
 {{define "6schart"}}
-<div id="6schart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+<div id="chart6s" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
 
 <script>
   const margin6s = {top: 30, right: 30, bottom: 30, left: 30}
@@ -8,7 +8,8 @@
   const innerWidth6s = width6s - margin6s.left - margin6s.right
   const innerHeight6s = height6s - margin6s.top - margin6s.bottom
 
-  const svg6s = d3.select("#6schart").append("svg")
+  const svg6s = d3.select("#chart6s")
+    .append("svg")
     .attr("viewBox", [0, 0, width6s, height6s])
 
   const innerChart6s = svg6s.append("g")
@@ -17,34 +18,70 @@
   var myGroups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
   var myVars = ["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10"]
 
-  const xScale = d3.scaleBand()
-    .domain([myVars])
-    .range([0, width6s])
+  const xScale6s = d3.scaleBand()
+    .domain(myGroups)
+    .range([0, innerWidth6s])
     .padding(0.01);
 
-  const xAxis = d3.axisBottom(xScale)
+  const xAxis = d3.axisBottom(xScale6s)
 
   innerChart6s.append("g")
-    .attr("tranform", `translate(0, ${innerHeight6s})`)
+    .attr("transform", `translate(0, ${innerHeight6s})`)
     .call(xAxis)
 
-  const yScale = d3.scaleband()
-    .domain([myGroups])
-    .range([height6s, 0])
+  const yScale6s = d3.scaleBand()
+    .domain(myVars)
+    .range([innerHeight6s, 0])
     .padding(0.01);
 
-  const yAxis = d3.axisLeft(yScale)
+  const yAxis = d3.axisLeft(yScale6s)
 
   innerChart6s.append("g")
     .call(yAxis)
 
-  const color6s = d3.scaleLinear()
+  const colorScale6s = d3.scaleLinear()
     .domain([1, 100])
     .range(["white", "#69b3a2"]);
 
   d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/heatmap_data.csv")
     .then( (data) => {
-    
+    const tooltip = d3.select("#chart6s")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0)
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "2px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+
+    const mouseover = (e, d) => {
+      tooltip.style("opacity", 1)
+    }
+
+    const mousemove = (e, d) => {
+      tooltip
+        .html("The exact value of <br>this cell is: " + d.value)
+        .style("left", (e.x)/2 + "px")
+        .style("top", (e.y)/2 + "px")
+    }
+
+    const mouseleave = (d) => {
+      tooltip.style("opacity", 0)
+    }
+
+    innerChart6s
+      .selectAll()
+      .data(data, d => {return d.group+':'+d.variable;})
+      .join("rect")
+        .attr("x", d => xScale6s(d.group))
+        .attr("y", d => yScale6s(d.variable))
+        .attr("width", xScale6s.bandwidth())
+        .attr("height", yScale6s.bandwidth())
+        .style("fill", d => colorScale6s(d.value))
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
   });
 
 </script>

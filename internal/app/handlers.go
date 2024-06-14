@@ -209,29 +209,45 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		{{"$set", bson.M{"date": "$_id"}}},
 		{{"$unset", "_id"}},
 	}
+
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
 	if err != nil {
 		log.Println("failed to access database at GetQtyTotalsByDate: ", err)
 		return
 	}
-	var results []struct {
+	defer cur.Close(context.Background())
+
+	var cuttingResults []struct {
 		Date time.Time `bson:"date"`
 		Qty  float64   `bson:"qty_total"`
 	}
-	if err = cur.All(context.Background(), &results); err != nil {
+	if err = cur.All(context.Background(), &cuttingResults); err != nil {
 		log.Println("failed to decode at GetQtyTotalsByDate: ", err)
 		return
 	}
 
-	var fresults = make([]struct {
+	var cuttingData = make([]struct {
 		Date string
 		Qty  float64
-	}, len(results))
+	}, len(cuttingResults))
 
-	for i := 0; i < len(results); i++ {
-		fresults[i].Date = results[i].Date.Format("2 Jan")
-		fresults[i].Qty = results[i].Qty
+	for i := 0; i < len(cuttingResults); i++ {
+		cuttingData[i].Date = cuttingResults[i].Date.Format("2 Jan")
+		cuttingData[i].Qty = cuttingResults[i].Qty
 	}
+
+	// get data for 6S chart
+	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"date": 1, "area": 1}))
+	if err != nil {
+		log.Println("dashboard: ", err)
+	}
+
+	var s6Data []interface{}
+	if err = cur.All(context.Background(), &s6Data); err != nil {
+		log.Println("dashboard: ", err)
+	}
+
+	log.Println(s6Data)
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
@@ -239,7 +255,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, fresults)
+	)).Execute(w, cuttingData)
 }
 
 // //////////////////////////////////////////////////////////
@@ -1202,6 +1218,78 @@ func (s *Server) sca_searchreport(w http.ResponseWriter, r *http.Request, ps htt
 		n = len(results)
 	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, results[:n])
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /6s/overview - get page overview of 6S
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/6s/overview/overview.html",
+		"templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /6s/entry - get page entry of 6S
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/6s/entry/entry.html",
+		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": false,
+		"showErrorDialog":   false,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /6s/entry - send fast entry of 6S
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rawdate := r.FormValue("occurdate")
+	date, _ := time.Parse("Jan 02, 2006", rawdate)
+	strdate := date.Format("2006-01-02")
+
+	rawscorelist := r.FormValue("scorelist")
+	scores := strings.Fields(rawscorelist)
+
+	if len(scores)%2 != 0 {
+		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+		})
+		return
+	}
+
+	// convert to json string
+	var jsonStr = `[`
+	for i := 0; i < len(scores); i += 2 {
+		scores[i] = strings.ToLower(strings.Replace(scores[i], "_", " ", -1))
+		jsonStr += `{"area":"` + scores[i] + `", "score":` + scores[i+1] + `,"datestr":"` + strdate + `"},`
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	model := models.NewSixSModel(s.mgdb)
+	if err := model.InsertMany(jsonStr); err != nil {
+		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"showErrorDialog":   false,
+	})
+}
+
+func (s *Server) s_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/6s/admin/admin.html",
+		"templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////
