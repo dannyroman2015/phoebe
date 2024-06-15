@@ -35,13 +35,13 @@ const drawProductionChart = (data) => {
     .attr("style", "max-width: 100%; height: auto;");
   
   svg.append("rect")
-  .attr("class", "background")
-  .attr("fill", "none")
-  .attr("pointer-events", "all")
-  .attr("width", width)
-  .attr("height", height)
-  .attr("cursor", "pointer")
-  .on("click", (event, d) => up(svg, d));
+    .attr("class", "background")
+    .attr("fill", "none")
+    .attr("pointer-events", "all")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("cursor", "pointer")
+    .on("click", (event, d) => up(svg, d));
 
   svg.append("g")
     .call(xAxis);
