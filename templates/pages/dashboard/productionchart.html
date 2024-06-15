@@ -1,0 +1,16 @@
+{{define "productionchart"}}
+<div id="productionchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+
+<script src="/static/js/charts/productionchart.js"></script>
+<script>
+  // drawProductionChart({{.}});
+  console.log("skdfhkh")
+//   d3.json("/static/flare-2.json", function(error, data) {
+//     console.log(data); // this is your data
+// });
+d3.json("/static/flare-2.json", d3.autoType).then(data => {
+  console.log(data)
+  productionchart.append(drawProductionChart(data));
+})
+</script>
+{{end}}

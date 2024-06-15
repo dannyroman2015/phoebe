@@ -1,8 +1,3 @@
-d3.csv("/static/data.csv", d3.autoType).then(data => {
-  console.log("temperature data", data);
-  drawChart(data);
-});
-
 const drawChart = (data) => {
   const formatsInfo = [
   {id: "vinyl", label: "Vinyl", color: "#76B6C2"},

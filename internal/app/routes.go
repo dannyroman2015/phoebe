@@ -73,11 +73,7 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	// end Cuttting/////////////////////////////////////////////////////////////
 
-	router.GET("/footer", s.footer)
 	router.GET("/test", s.handleGetTest)
-	router.GET("/testalpinejs", s.handleAlpine)
-	router.GET("/test2", s.handletestgojs)
-	router.GET("/test3", s.handletest3)
 
 	return router
 }

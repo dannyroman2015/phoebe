@@ -1,4 +1,4 @@
-const dr = (data) => {
+const drawCuttingChart = (data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 30, left: 40};
@@ -23,16 +23,6 @@ const dr = (data) => {
     .range([innerHeight, 0])
     .nice();
 
-    innerChart
-      .selectAll(`rect`)
-      .data(data)
-      .join("rect")
-        .attr("x", d => xScale(d.Date))
-        .attr("y", d => yScale(d.Qty))
-        .attr("width", xScale.bandwidth())
-        .attr("height", d => yScale(0) - yScale(d.Qty))
-        .attr("fill", "#76B6C2");
-
   const bottomAxis = d3.axisBottom(xScale)
     .tickSizeOuter(0)
 
@@ -46,5 +36,34 @@ const dr = (data) => {
   innerChart
     .append("g")
       .call(leftAxis)
+      .call(g => g.select(".domain").remove())
+      .call(g => g.selectAll(".tick line").clone()
+        .attr("x2", width - margin.left - margin.right)
+        .attr("stroke-opacity", 0.15))
+      .call(g => g.selectAll(".tick text")
+        .attr("font-size", "12px"))
+
+  innerChart
+    .selectAll(`rect`)
+    .data(data)
+    .join("rect")
+      .attr("x", d => xScale(d.Date))
+      .attr("y", d => yScale(d.Qty))
+      .attr("width", xScale.bandwidth())
+      .attr("height", d => yScale(0) - yScale(d.Qty))
+      .attr("fill", "#76B6C2");
+
+  svg.append("g")
+      .attr("font-family", "san-serif")
+      .attr("font-size", 16)
+    .selectAll()
+    .data(data)
+    .join("text")
+      .text(d => d.Qty)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", d => margin.left + xScale(d.Date) + xScale.bandwidth()/2)
+      .attr("y", d => yScale(d.Qty) + 15)
+      .attr("fill", "black")
   return svg.node();
 }

@@ -185,24 +185,6 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // /dashboard
 // //////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var data = map[string]interface{}{}
-
-	// // get data for provalchart
-	// var pacRecords = []PackingRecord{}
-	// cur, err := s.mgdb.Collection("packing").Find(context.Background(), bson.M{})
-	// if err != nil {
-	// 	log.Println(err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	// defer cur.Close(context.Background())
-
-	// if err := cur.All(context.Background(), &pacRecords); err != nil {
-	// 	log.Println(err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
 		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
@@ -267,15 +249,17 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
+		"templates/pages/dashboard/productionchart.html",
 		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
-		"cuttingData": cuttingData,
-		"s6areas":     s6areas,
-		"s6dates":     s6dates,
-		"s6data":      s6Data,
+		"productiondata": "placeholder for production data",
+		"cuttingData":    cuttingData,
+		"s6areas":        s6areas,
+		"s6dates":        s6dates,
+		"s6data":         s6Data,
 	})
 }
 
@@ -442,7 +426,7 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	rawOccurDate := r.FormValue("occurdate")
-	occurdate, _ := time.Parse("2006-01-02", rawOccurDate)
+	occurdate, _ := time.Parse("Jan 02, 2006", rawOccurDate)
 	point, _ := strconv.Atoi(id_des_p_kind[2])
 
 	_, err := s.mgdb.Collection("evaluation").InsertOne(context.Background(), bson.M{
@@ -1322,20 +1306,4 @@ func (s *Server) s_admin(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)
-}
-
-func (s *Server) handleAlpine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/testalpine.html")).Execute(w, nil)
-}
-
-func (s *Server) footer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/footer.html", "templates/shared/navbar.html")).Execute(w, nil)
-}
-
-func (s *Server) handletestgojs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/testgojs.html", "templates/shared/navbar.html")).Execute(w, nil)
-}
-
-func (s *Server) handletest3(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/test/test3.html")).Execute(w, nil)
 }
