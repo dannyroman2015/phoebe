@@ -247,6 +247,63 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		s6Data = append(s6Data, a)
 	}
 
+	// get data for production value
+	// cur, err = s.mgdb.Collection("prodvalue").Find(context.Background(), bson.M{})
+	// if err != nil {
+	// 	log.Println("dashboard: ", err)
+	// }
+	// var provals []struct {
+	// 	Name     string `json:"name"`
+	// 	Children []struct {
+	// 		Name     string `json:"name"`
+	// 		Children []struct {
+	// 			Name     string `json:"name"`
+	// 			Children []struct {
+	// 				Name  string  `json:"name"`
+	// 				Value float64 `json:"value"`
+	// 			} `json:"children"`
+	// 		} `json:"children"`
+	// 	} `json:"children"`
+	// }
+	// if err = cur.All(context.Background(), &provals); err != nil {
+	// 	log.Println("dashboard: ", err)
+	// }
+
+	// prdata := map[string]interface{}{
+	// 	"name":     "prodval",
+	// 	"children": provals,
+	// }
+	// log.Println(provals)
+	// reee, err := json.Marshal(prdata)
+	// log.Println(string(reee))
+
+	pipe := mongo.Pipeline{
+		{{"$group", bson.M{
+			"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
+			"total": bson.M{"$sum": "$value"},
+		}}},
+	}
+	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pipe)
+	if err != nil {
+		log.Println(err)
+	}
+	type F struct {
+		ID struct {
+			Date    string `bson:"date"`
+			Factory string `bson:"factory"`
+			Type    string `bson:"prodtype"`
+			Item    string `bson:"item"`
+		} `bson:"_id"`
+		Value float64 `bson:"total"`
+	}
+	var ff []F
+	for cur.Next(context.Background()) {
+		var a F
+		cur.Decode(&a)
+		log.Println(a)
+	}
+	log.Println(ff)
+
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
 		"templates/pages/dashboard/productionchart.html",
@@ -255,7 +312,8 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
-		"productiondata": "placeholder for production data",
+		// "productiondata": "string(reee)",
+		"productiondata": "strasdf",
 		"cuttingData":    cuttingData,
 		"s6areas":        s6areas,
 		"s6dates":        s6dates,

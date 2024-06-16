@@ -1,29 +1,3 @@
-const margin = {top: 30, right: 10, bottom: 10, left: 30};
-const width = 900;
-const height = 350;
-
-const barStep = 27;
-const barPadding = 3 / barStep;
-const duration = 750;
-
-const x = d3.scaleLinear().range([margin.left, width - margin.right]);
-
-const xAxis = g => g
-  .attr("class", "x-axis")
-  .attr("transform", `translate(0,${margin.top})`)
-  .call(d3.axisTop(x).ticks(width / 80, "s"))
-  .call(g => (g.selection ? g.selection() : g).select(".domain").remove())
-
-const yAxis = g => g
-  .attr("class", "y-axis")
-  .attr("transform", `translate(${margin.left + 0.5},0)`)
-  .call(g => g.append("line")
-    .attr("stroke", "currentColor")
-    .attr("y1", margin.top)
-    .attr("y2", height - margin.bottom))
-
-const color = d3.scaleOrdinal([true, false], ["steelblue", "#aaa"]);
-
 const drawProductionChart = (data) => {
   const root = d3.hierarchy(data)
     .sum(d => d.value)
@@ -34,6 +8,8 @@ const drawProductionChart = (data) => {
     .attr("viewBox", [0, 0, width, height])
     .attr("style", "max-width: 100%; height: auto;");
   
+  x.domain([0, root.value]);
+
   svg.append("rect")
     .attr("class", "background")
     .attr("fill", "none")
@@ -93,7 +69,7 @@ function up(svg, d) {
 
   x.domain([0, d3.max(d.parent.children, d => d.value)]);
 
-  svg.selectAll(".x-axis").transition(transition1)
+  svg.selectAll(".x-axis").transition(transition1).call(xAxis);
 
   exit.selectAll("g").transition(transition1)
       .attr("transform", stagger());
@@ -211,3 +187,29 @@ function down(svg, d) {
       .attr("fill", d => color(!!d.children))
       .attr("width", d => x(d.value) - x(0));
 }
+
+const margin = {top: 30, right: 10, bottom: 10, left: 80};
+const width = 900;
+const height = 350;
+
+const barStep = 27;
+const barPadding = 3 / barStep;
+const duration = 750;
+
+const x = d3.scaleLinear().range([margin.left, width - margin.right]);
+
+const xAxis = g => g
+  .attr("class", "x-axis")
+  .attr("transform", `translate(0,${margin.top})`)
+  .call(d3.axisTop(x).ticks(width / 80, "s"))
+  .call(g => (g.selection ? g.selection() : g).select(".domain").remove())
+
+const yAxis = g => g
+  .attr("class", "y-axis")
+  .attr("transform", `translate(${margin.left + 0.5},0)`)
+  .call(g => g.append("line")
+    .attr("stroke", "currentColor")
+    .attr("y1", margin.top)
+    .attr("y2", height - margin.bottom))
+
+const color = d3.scaleOrdinal([true, false], ["steelblue", "#aaa"]);
