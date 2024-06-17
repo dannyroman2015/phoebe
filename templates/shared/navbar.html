@@ -150,7 +150,7 @@
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='6S', 'hover:bg-neutral-100' : navigationMenu!='6S' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='6S'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
-                        <span>6S</span> 
+                        <span>6S</span>
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == '6S' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li>

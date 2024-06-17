@@ -1302,7 +1302,7 @@ func (s *Server) s6_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	rawscorelist := r.FormValue("scorelist")
 	scores := strings.Fields(rawscorelist)
 
-	if len(scores)%2 != 0 {
+	if len(scores)%2 != 0 || len(scores) == 0 {
 		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
 			"showSuccessDialog": false,
 			"showErrorDialog":   true,

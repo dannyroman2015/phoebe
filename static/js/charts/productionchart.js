@@ -47,6 +47,7 @@ function bar(svg, down, d, selector) {
       .attr("x", margin.left - 6)
       .attr("y", barStep * (1 - barPadding) / 2)
       .attr("dy", ".35em")
+      .attr("font-size", "10px")
       .text(d => d.data.name);
 
   bar.append("rect")
@@ -207,9 +208,9 @@ const xAxis = g => g
 const yAxis = g => g
   .attr("class", "y-axis")
   .attr("transform", `translate(${margin.left + 0.5},0)`)
-  .call(g => g.append("line")
-    .attr("stroke", "currentColor")
-    .attr("y1", margin.top)
-    .attr("y2", height - margin.bottom))
-
+  // .call(g => g.append("line")
+  //   .attr("stroke", "currentColor")
+  //   .attr("y1", margin.top)
+  //   .attr("y2", height - margin.bottom))
+  
 const color = d3.scaleOrdinal([true, false], ["steelblue", "#aaa"]);
