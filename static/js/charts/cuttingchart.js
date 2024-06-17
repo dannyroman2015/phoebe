@@ -6,8 +6,7 @@ const drawCuttingChart = (data) => {
   const innerHeight = height - margin.top - margin.bottom;
 
   const svg = d3.create("svg")
-    .append("svg")
-      .attr("viewBox", [0, 0, width, height]);
+    .attr("viewBox", [0, 0, width, height]);
   
   const innerChart = svg
     .append("g")
@@ -66,4 +65,5 @@ const drawCuttingChart = (data) => {
       .attr("y", d => yScale(d.Qty) + 15)
       .attr("fill", "black")
   return svg.node();
+
 }
