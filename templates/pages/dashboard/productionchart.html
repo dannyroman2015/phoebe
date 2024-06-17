@@ -3,50 +3,32 @@
 
 <script src="/static/js/charts/productionchart.js"></script>
 <script>
+var newData = { name :"root", children : [] },
+    levels = ["date","factory", "prodtype"];
+// For each data row, loop through the expected levels traversing the output tree
+{{.}}.forEach(function(d){
+    // Keep this as a reference to the current level
+    var depthCursor = newData.children;
+    // Go down one level at a time
+    levels.forEach(function( property, depth ){
 
-const t = {
-  "name": "production",
-  "children": [
-    {
-      "name": "14-06-2024",
-      "children": [
-        {
-          "name": "xuong 1",
-          "children": [
-            {
-              "name": "TEA01",
-              "value": 350000,
-            },
-            {
-              "name": "TEA02",
-              "value": 200000,
-            },
-          ]
-        },
-        {
-          "name": "xuong 2",
-          "children": [
-            {
-              "name": "TEA05",
-              "value": 50000,
-            },
-            {
-              "name": "TEA06",
-              "value": 100000,
-            },
-          ]
-        },
-      ]
-    },
+        // Look to see if a branch has already been created
+        var index;
+        depthCursor.forEach(function(child,i){
+            if ( d[property] == child.name ) index = i;
+        });
+        // Add a branch if it isn't there
+        if ( isNaN(index) ) {
+            depthCursor.push({ name : d[property], children : []});
+            index = depthCursor.length - 1;
+        }
+        // Now reference the new child array as we go deeper into the tree
+        depthCursor = depthCursor[index].children;
+        // This is a leaf, so add the last element to the specified branch
+        if ( depth === levels.length - 1 ) depthCursor.push({ name : d.item, value : d.value });
+    });
+});
 
-  ]
-}
-productionchart.append(drawProductionChart(t));
-
-const temp = [
-  {"date": "01-05-2000", "fac": "xuong 1", "type": "RH", "item": "Tea", "value": 2000},
-  {"date": "01-05-2000", "fac": "xuong 1", "type": "RH", "item": "CEA", "value": 1000},
-]
-
+productionchart.append(drawProductionChart(newData))
 </script>
 {{end}}

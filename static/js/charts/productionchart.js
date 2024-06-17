@@ -1,7 +1,7 @@
 const drawProductionChart = (data) => {
   const root = d3.hierarchy(data)
     .sum(d => d.value)
-    .sort((a, b) => b.value - a.value)
+    // .sort((a, b) => b.value - a.value)
     .eachAfter(d => d.index = d.parent ? d.parent.index = d.parent.index + 1 || 0 : 0);
   
   const svg = d3.create("svg")
@@ -188,7 +188,7 @@ function down(svg, d) {
       .attr("width", d => x(d.value) - x(0));
 }
 
-const margin = {top: 30, right: 10, bottom: 10, left: 80};
+const margin = {top: 30, right: 10, bottom: 10, left: 50};
 const width = 900;
 const height = 350;
 

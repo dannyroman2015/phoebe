@@ -248,46 +248,18 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// get data for production value
-	// cur, err = s.mgdb.Collection("prodvalue").Find(context.Background(), bson.M{})
-	// if err != nil {
-	// 	log.Println("dashboard: ", err)
-	// }
-	// var provals []struct {
-	// 	Name     string `json:"name"`
-	// 	Children []struct {
-	// 		Name     string `json:"name"`
-	// 		Children []struct {
-	// 			Name     string `json:"name"`
-	// 			Children []struct {
-	// 				Name  string  `json:"name"`
-	// 				Value float64 `json:"value"`
-	// 			} `json:"children"`
-	// 		} `json:"children"`
-	// 	} `json:"children"`
-	// }
-	// if err = cur.All(context.Background(), &provals); err != nil {
-	// 	log.Println("dashboard: ", err)
-	// }
-
-	// prdata := map[string]interface{}{
-	// 	"name":     "prodval",
-	// 	"children": provals,
-	// }
-	// log.Println(provals)
-	// reee, err := json.Marshal(prdata)
-	// log.Println(string(reee))
-
-	pipe := mongo.Pipeline{
+	pvPipeline := mongo.Pipeline{
 		{{"$group", bson.M{
 			"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
 			"total": bson.M{"$sum": "$value"},
 		}}},
+		{{"$sort", bson.M{"_id.date": -1}}},
 	}
-	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pipe)
+	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pvPipeline)
 	if err != nil {
 		log.Println(err)
 	}
-	type F struct {
+	type ProdRecord struct {
 		ID struct {
 			Date    string `bson:"date"`
 			Factory string `bson:"factory"`
@@ -296,13 +268,27 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		} `bson:"_id"`
 		Value float64 `bson:"total"`
 	}
-	var ff []F
-	for cur.Next(context.Background()) {
-		var a F
-		cur.Decode(&a)
-		log.Println(a)
+	type ProdValue struct {
+		Date    string  `json:"date"`
+		Factory string  `json:"factory"`
+		Type    string  `json:"prodtype"`
+		Item    string  `json:"item"`
+		Value   float64 `json:"value"`
 	}
-	log.Println(ff)
+	var productiondata []ProdValue
+	for cur.Next(context.Background()) {
+		var a ProdRecord
+		cur.Decode(&a)
+		t, _ := time.Parse("2006-01-02", a.ID.Date)
+		a.ID.Date = t.Format("2 Jan")
+		productiondata = append(productiondata, ProdValue{
+			Date:    a.ID.Date,
+			Factory: a.ID.Factory,
+			Type:    a.ID.Type,
+			Item:    a.ID.Item,
+			Value:   a.Value,
+		})
+	}
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
@@ -312,8 +298,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
-		// "productiondata": "string(reee)",
-		"productiondata": "strasdf",
+		"productiondata": productiondata,
 		"cuttingData":    cuttingData,
 		"s6areas":        s6areas,
 		"s6dates":        s6dates,
