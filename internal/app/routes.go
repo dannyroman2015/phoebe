@@ -56,10 +56,10 @@ func (s *Server) routes() http.Handler {
 	// 6S //////////////////////////////////////////////////////////////
 	router.GET("/6s/overview", s.s_overview)
 
-	router.GET("/6s/entry", s.s_entry)
-	router.POST("/6s/entry", s.s_sendentry)
+	router.GET("/6s/entry", s.s6_entry)
+	router.POST("/6s/entry", s.s6_sendentry)
 
-	router.GET("/6s/admin", s.s_admin)
+	router.GET("/6s/admin", s.s6_admin)
 	// end 6S //////////////////////////////////////////////////////////////
 
 	// Cuttting ////////////////////////////////////////////////////////
@@ -72,6 +72,16 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	// end Cuttting/////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////
+	// packing ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/sections/packing/overview", s.sp_overview)
+
+	router.GET("/sections/packing/entry", s.sp_entry)
+
+	router.GET("/sections/packing/admin", s.sp_admin)
+	// end packing/////////////////////////////////////////////////////
 
 	router.GET("/test", s.handleGetTest)
 

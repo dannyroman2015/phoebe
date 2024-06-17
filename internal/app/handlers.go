@@ -1281,7 +1281,7 @@ func (s *Server) s_overview(w http.ResponseWriter, r *http.Request, ps httproute
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /6s/entry - get page entry of 6S
 // ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) s_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Server) s6_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	template.Must(template.ParseFiles(
 		"templates/pages/6s/entry/entry.html",
@@ -1294,7 +1294,7 @@ func (s *Server) s_entry(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /6s/entry - send fast entry of 6S
 // ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) s_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (s *Server) s6_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	rawdate := r.FormValue("occurdate")
 	date, _ := time.Parse("Jan 02, 2006", rawdate)
 	strdate := date.Format("2006-01-02")
@@ -1333,11 +1333,37 @@ func (s *Server) s_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 	})
 }
 
-func (s *Server) s_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /6s/admin - get admin page of 6S
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s6_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	template.Must(template.ParseFiles(
 		"templates/pages/6s/admin/admin.html",
 		"templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/overview - get overview page of packing
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/sections/packing/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry - get entry page of packing
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/sections/packing/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/admin - get admin page of packing
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/packing/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////
