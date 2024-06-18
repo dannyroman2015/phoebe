@@ -1355,8 +1355,52 @@ func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/packing/entry - get entry page of packing
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	filter := bson.M{
+		"status": bson.M{"$ne": "done"},
+	}
+	cur, err := s.mgdb.Collection("motracking").Find(context.Background(), filter, options.Find().SetLimit(5))
+	if err != nil {
+		log.Println("sp_entry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to access mo collection"))
+		return
+	}
+	var results []struct {
+		Mo   string `bson:"mo"`
+		Item struct {
+			Id   string `bson:"id"`
+			Name string `bson:"name"`
+		} `bson:"item"`
+		Needqty     int    `bson:"needqty"`
+		Doneqty     int    `bson:"doneqty"`
+		Status      string `bson:"status"`
+		PI          string `bson:"pi"`
+		Note        string `bson:"note"`
+		DonePercent float64
+	}
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println("sp_entry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to decode"))
+		return
+	}
+	for i := 0; i < len(results); i++ {
+		results[i].DonePercent = float64(results[i].Doneqty) / float64(results[i].Needqty) * 100
+	}
 
-	template.Must(template.ParseFiles("templates/pages/sections/packing/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/packing/entry/entry.html",
+		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"results": results,
+	})
+}
+
+func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
+		"results": results,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

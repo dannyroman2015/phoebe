@@ -79,6 +79,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/packing/overview", s.sp_overview)
 
 	router.GET("/sections/packing/entry", s.sp_entry)
+	router.GET("/sections/packing/entry/itemparts/:mo/:itemid", s.sp_itemparts)
 
 	router.GET("/sections/packing/admin", s.sp_admin)
 	// end packing/////////////////////////////////////////////////////
