@@ -1395,12 +1395,68 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	})
 }
 
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry/itemparts/:mo/:itemid - get form input when choose item
+// ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	itemid := ps.ByName("itemid")
+	mo := ps.ByName("mo")
+
+	var result struct {
+		Mo      string `bson:"mo"`
+		NeedQty int    `bson:"needqty"`
+		DoneQty int    `bson:"doneqty"`
+		Item    struct {
+			Id    string `bson:"id"`
+			Parts []struct {
+				Id      string `bson:"id"`
+				Name    string `bson:"name"`
+				NeedQty int    `bson:"needqty"`
+				DoneQty int    `bson:"doneqty"`
+			} `bson:"parts"`
+		} `bson:"item"`
+	}
+
+	if err := s.mgdb.Collection("motracking").FindOne(context.Background(), bson.M{"item.id": itemid, "mo": mo}).Decode(&result); err != nil {
+		log.Println("sp_itemparts: ", err)
+		w.Write([]byte("failed to access motracking collection"))
+		return
+	}
+
+	var doneQtyStrArray = []int{}
+	for _, a := range result.Item.Parts {
+		doneQtyStrArray = append(doneQtyStrArray, a.DoneQty)
+	}
+	log.Println(doneQtyStrArray)
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
-		"results": results,
+		"mo":              result.Mo,
+		"itemid":          result.Item.Id,
+		"itemNeedQty":     result.NeedQty,
+		"itemDoneQty":     result.DoneQty,
+		"parts":           result.Item.Parts,
+		"doneQtyStrArray": doneQtyStrArray,
 	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/sendentry - create packing report, update motracking, check and create production value report
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	rawstr := r.FormValue("data")
+	log.Println(rawstr)
+	rawarray := strings.Split(rawstr, "---")
+	log.Println(rawarray[len(rawarray)-1][1 : len(rawarray)-1])
+
+	change := r.FormValue("itempart")
+	changearray := strings.Split(change, "---")
+	log.Println(changearray[len(changearray)-1])
+	// mo := rawarray[0]
+	// itemcode := rawarray[1]
+	// itemNeedQty := rawarray[2]
+	// itemDoneQty := rawarray[3]
+
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

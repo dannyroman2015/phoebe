@@ -6,13 +6,14 @@
   <link rel="stylesheet" href="/static/css/style.css">
   <script defer src="/static/js/alpinejs_focus.min.js"></script>
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/htmx.min.js"></script>
   <title>Packing Entry</title>
 </head>
 <body class="bg-gray-100">
   {{template "navbar"}}
   
-  <section class="px-4 py-6 mx-auto">
-    <div class="max-w-6xl bg-white border rounded-lg shadow-sm p-7 border-neutral-200/60">
+  <section id="entry-container" class="px-4 py-6 mx-auto">
+    <div class="max-w-8xl bg-white border rounded-lg shadow-sm p-7 border-neutral-200/60">
       <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <div class="flex items-center gap-x-3">
@@ -89,7 +90,7 @@
                         <tbody 
                             class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                             {{range .results}}
-                            <tr hx-get="/sections/packing/entry/itemparts/{{.Mo}}/{{.Item.Id}}" hx-target="#table-container"
+                            <tr hx-get="/sections/packing/entry/itemparts/{{.Mo}}/{{.Item.Id}}" hx-target="#entry-container" hx-swap="outerHTML"
                               class="hover:bg-neutral-100 cursor-pointer">
             
                                 <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">
