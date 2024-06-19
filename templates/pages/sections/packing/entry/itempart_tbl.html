@@ -3,8 +3,8 @@
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
       <div class="rounded-lg bg-white p-8 shadow-lg lg:p-12">
         <form class="space-y-4" action="/sections/packing/sendentry" method="post">
-          <input type="text" name="data" value="{{.mo}}---{{.itemid}}---{{.itemNeedQty}}---{{.itemDoneQty}}---{{.doneQtyStrArray}}" hidden>
-   
+          <!-- <input type="text" name="data" value="{{.mo}}---{{.itemid}}---{{.itemNeedQty}}---{{.itemDoneQty}}---{{.doneQtyStrArray}}" hidden> -->
+          <input type="text" name="resultJson" value="{{.resultJson}}" hidden>
           <h1 class="pb-4 text-center text-2xl font-bold sm:text-3xl">Nhập liệu Packing</h1>
                
           <div class="grid grid-cols-2 gap-4 text-center sm:grid-cols-2">
@@ -45,10 +45,11 @@
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>   
-              <select name="itempart" id="itempart" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <select hx-post="/sections/packing/entry/maxpartqtyinput" hx-target="#slider-container" 
+                name="itempart" id="itempart" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
                 <option value="" disabled selected>Please select</option>
                 {{range .parts}}
-                <option value="{{.Id}}---{{.DoneQty}}">{{.Name}}</option>
+                <option value="{{.Id}}">{{.Name}}</option>
                 {{end}}
               </select>
             </div>
@@ -63,14 +64,7 @@
             </div>
           </div>
 
-          <div class="pt-20">
-            <div>
-              <label class="slider-label relative block">
-                <input class="slider-input" name="partqty" type="range" id="one" min="0" max="120" step="1" value="20">
-                <output class="slider-output" for="one" style="--min: 0;--max: 120"></output>
-              </label> 
-            </div>
-
+          <div id="slider-container" class="pt-20">
             <!-- <div>
               <label for="qty" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
                 <input type="number" id="qty" name="qty" placeholder="Số lượng" min="0"

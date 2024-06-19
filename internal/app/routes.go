@@ -81,6 +81,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/packing/entry", s.sp_entry)
 	router.GET("/sections/packing/entry/itemparts/:mo/:itemid", s.sp_itemparts)
 	router.POST("/sections/packing/sendentry", s.sp_sendentry)
+	router.POST("/sections/packing/entry/maxpartqtyinput", s.sp_getinputmax)
 
 	router.GET("/sections/packing/admin", s.sp_admin)
 	// end packing/////////////////////////////////////////////////////

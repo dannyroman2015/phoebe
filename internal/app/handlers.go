@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"dannyroman2015/phoebe/internal/models"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -1355,37 +1356,11 @@ func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/packing/entry - get entry page of packing
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	filter := bson.M{
-		"status": bson.M{"$ne": "done"},
-	}
-	cur, err := s.mgdb.Collection("motracking").Find(context.Background(), filter, options.Find().SetLimit(5))
-	if err != nil {
-		log.Println("sp_entry: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to access mo collection"))
-		return
-	}
-	var results []struct {
-		Mo   string `bson:"mo"`
-		Item struct {
-			Id   string `bson:"id"`
-			Name string `bson:"name"`
-		} `bson:"item"`
-		Needqty     int    `bson:"needqty"`
-		Doneqty     int    `bson:"doneqty"`
-		Status      string `bson:"status"`
-		PI          string `bson:"pi"`
-		Note        string `bson:"note"`
-		DonePercent float64
-	}
-	if err = cur.All(context.Background(), &results); err != nil {
-		log.Println("sp_entry: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to decode"))
-		return
-	}
+	model := models.NewMoModel(s.mgdb)
+	results := model.FindNotDone()
+
 	for i := 0; i < len(results); i++ {
-		results[i].DonePercent = float64(results[i].Doneqty) / float64(results[i].Needqty) * 100
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].NeedQty) * 100
 	}
 
 	template.Must(template.ParseFiles(
@@ -1402,41 +1377,44 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 	itemid := ps.ByName("itemid")
 	mo := ps.ByName("mo")
 
-	var result struct {
-		Mo      string `bson:"mo"`
-		NeedQty int    `bson:"needqty"`
-		DoneQty int    `bson:"doneqty"`
-		Item    struct {
-			Id    string `bson:"id"`
-			Parts []struct {
-				Id      string `bson:"id"`
-				Name    string `bson:"name"`
-				NeedQty int    `bson:"needqty"`
-				DoneQty int    `bson:"doneqty"`
-			} `bson:"parts"`
-		} `bson:"item"`
-	}
+	model := models.NewMoModel(s.mgdb)
+	result := model.FindByMoItem(mo, itemid)
 
-	if err := s.mgdb.Collection("motracking").FindOne(context.Background(), bson.M{"item.id": itemid, "mo": mo}).Decode(&result); err != nil {
-		log.Println("sp_itemparts: ", err)
-		w.Write([]byte("failed to access motracking collection"))
-		return
+	resultJson, err := json.Marshal(result)
+	if err != nil {
+		log.Println(err)
 	}
-
-	var doneQtyStrArray = []int{}
-	for _, a := range result.Item.Parts {
-		doneQtyStrArray = append(doneQtyStrArray, a.DoneQty)
-	}
-	log.Println(doneQtyStrArray)
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
-		"mo":              result.Mo,
-		"itemid":          result.Item.Id,
-		"itemNeedQty":     result.NeedQty,
-		"itemDoneQty":     result.DoneQty,
-		"parts":           result.Item.Parts,
-		"doneQtyStrArray": doneQtyStrArray,
+		"mo":          result.Mo,
+		"itemid":      result.Item.Id,
+		"itemNeedQty": result.NeedQty,
+		"itemDoneQty": result.DoneQty,
+		"parts":       result.Item.Parts,
+		// "doneQtyStrArray": doneQtyStrArray,
+		"resultJson": string(resultJson),
+	})
+}
+
+func (s *Server) sp_getinputmax(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// tính max value của thanh slider
+	var result models.MoRecord
+
+	if err := json.Unmarshal([]byte(r.FormValue("resultJson")), &result); err != nil {
+		log.Println("sp_getinputmax: ", err)
+	}
+
+	var maxInputQty int
+	for _, p := range result.Item.Parts {
+		if r.FormValue("itempart") == p.Id {
+			maxInputQty = p.NeedQty - p.DoneQty
+		}
+	}
+
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/packing/entry/qtyinput_slider.html")).Execute(w, map[string]interface{}{
+		"maxInputQty": maxInputQty,
 	})
 }
 
@@ -1444,19 +1422,110 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 // /sections/packing/sendentry - create packing report, update motracking, check and create production value report
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rawstr := r.FormValue("data")
-	log.Println(rawstr)
-	rawarray := strings.Split(rawstr, "---")
-	log.Println(rawarray[len(rawarray)-1][1 : len(rawarray)-1])
+	var result models.MoRecord
+	json.Unmarshal([]byte(r.FormValue("resultJson")), &result)
+	// log.Println(result)
 
-	change := r.FormValue("itempart")
-	changearray := strings.Split(change, "---")
-	log.Println(changearray[len(changearray)-1])
-	// mo := rawarray[0]
-	// itemcode := rawarray[1]
-	// itemNeedQty := rawarray[2]
-	// itemDoneQty := rawarray[3]
+	// dataRaw := r.FormValue("data")
+	// partsDoneQtyRaw := strings.Split(dataRaw, "---")
+	// mo := partsDoneQtyRaw[0]
+	// itemcode := partsDoneQtyRaw[1]
+	// // itemNeedQty := partsDoneQtyRaw[2]
+	// itemDoneQty, _ := strconv.Atoi(partsDoneQtyRaw[3])
 
+	// log.Println(dataRaw)
+	// log.Println(partsDoneQtyRaw[len(partsDoneQtyRaw)-1])
+
+	// itempartRaw := r.FormValue("itempart")
+	// itempart := strings.Split(itempartRaw, "---")
+	// beforeUpdatePartDoneQty, _ := strconv.Atoi(itempart[len(itempart)-1])
+	// updatePartId := itempart[0]
+
+	// partQtyInput, _ := strconv.Atoi(r.FormValue("partqtyInput"))
+	// newPartDoneQty := strings.Fields(strings.Replace(partsDoneQtyRaw[len(partsDoneQtyRaw)-1], itempart[len(itempart)-1], string(partQtyInput), 1))
+	// minPartDoneQty, _ := strconv.Atoi(newPartDoneQty[0])
+	// for _, i := range newPartDoneQty {
+	// 	a, _ := strconv.Atoi(i)
+	// 	if a < minPartDoneQty {
+	// 		minPartDoneQty = a
+	// 	}
+	// }
+
+	// log.Println(partQtyInput, minPartDoneQty)
+	//// số bộ sản phẩm mới hoàn thành nếu sau khi cập nhập số part done mới
+	// newItemsDoneQty := minPartDoneQty - itemDoneQty
+
+	// // cập nhật số part mới, doneqty của item vào motracking
+	// log.Println(updatePartId, newItemsDoneQty)
+	// afterUpdatePartDoneQty := beforeUpdatePartDoneQty + partQtyInput
+	// filter := bson.M{
+	// 	"mo":            mo,
+	// 	"item.id":       itemcode,
+	// 	"item.parts.id": updatePartId,
+	// }
+	// update := bson.M{
+	// 	"$set": bson.M{"item.parts.$.doneqty": afterUpdatePartDoneQty},
+	// }
+	// _, err := s.mgdb.Collection("motracking").UpdateOne(context.Background(), filter, update)
+	// if err != nil {
+	// 	log.Println("failed to update", err)
+	// }
+	///////
+	updatedPartId := r.FormValue("itempart")
+	var beforeUpdatedDoneQty int
+	minRemainPartDoneQty := 1000000
+	for _, p := range result.Item.Parts {
+		if updatedPartId == p.Id {
+			beforeUpdatedDoneQty = p.DoneQty
+		} else { /// chỗ này sai
+			if minRemainPartDoneQty >= p.DoneQty {
+				minRemainPartDoneQty = p.DoneQty
+			}
+		}
+	}
+	doneQtyInput, _ := strconv.Atoi(r.FormValue("partqtyInput"))
+	newDoneQty := beforeUpdatedDoneQty + doneQtyInput
+
+	// số bộ mới sinh ra sau khi cập nhật số lượng part
+	var addedItemDoneQTY int
+	var newItemDoneQty int
+	if newDoneQty >= minRemainPartDoneQty {
+		newItemDoneQty = minRemainPartDoneQty
+		addedItemDoneQTY = newDoneQty - minRemainPartDoneQty
+	} else {
+		newItemDoneQty = newDoneQty
+		addedItemDoneQTY = minRemainPartDoneQty - newDoneQty
+	}
+	log.Println("min", minRemainPartDoneQty)
+	log.Println("added:", addedItemDoneQTY)
+	model := models.NewMoModel(s.mgdb)
+	if err := model.UpdatePartDoneQty(result.Mo, result.Item.Id, updatedPartId, newDoneQty, newItemDoneQty); err != nil {
+		log.Println("sp_sendentry: ", err)
+		return
+	}
+
+	// create report for collection packing
+	// newPackingReport := models.PackingRecord{}
+	// model = models.NewPackingModel(s.mgdb)
+	// model.InsertNewReport()
+
+	// create report for collection production value
+	if addedItemDoneQTY == 0 {
+		return
+	}
+
+	inputDate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+	strDate := inputDate.Format("2006-01-02")
+	prodvalRecord := models.ProValRecord{
+		Date:     strDate,
+		Factory:  r.FormValue("factory"),
+		ProdType: r.FormValue("prodtype"),
+		Item:     result.Item.Id,
+		Value:    result.Price * float64(addedItemDoneQTY),
+	}
+	if err := models.NewProValModel(s.mgdb).Create(prodvalRecord); err != nil {
+		log.Println("sp_sendentry: ", err)
+	}
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
