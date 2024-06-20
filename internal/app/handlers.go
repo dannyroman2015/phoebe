@@ -291,9 +291,33 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		})
 	}
 
+	// get data for Packing Chart
+	pipeline = mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$set", bson.M{"date": "$_id.date", "id": bson.M{"$concat": bson.A{"$_id.factory", "-", "$_id.prodtype"}}}}},
+		{{"$unset", "_id"}},
+		{{"$sort", bson.M{"date": 1}}},
+	}
+	cur, err = s.mgdb.Collection("packing").Aggregate(context.Background(), pipeline)
+	var packingData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Id       string  `bson:"id" json:"id"`
+		Factory  string  `bson:"factory" json:"factory"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Value    float64 `bson:"value" json:"value"`
+	}
+	//dang loi cho nay
+	// if err := cur.All(context.Background(), &packingData); err != nil {
+	// 	log.Println("dashboard: ", err)
+	// }
+	// for _, p := range packingData {
+	// 	log.Println(p)
+	// }
+
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
 		"templates/pages/dashboard/productionchart.html",
+		"templates/pages/dashboard/packingchart.html",
 		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
@@ -304,6 +328,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"s6areas":        s6areas,
 		"s6dates":        s6dates,
 		"s6data":         s6Data,
+		"packingData":    packingData,
 	})
 }
 
@@ -1421,6 +1446,13 @@ func (s *Server) sp_getinputmax(w http.ResponseWriter, r *http.Request, ps httpr
 // /sections/packing/sendentry - create packing report, update motracking, check and create production value report
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameTk, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
 	var result models.MoRecord
 	json.Unmarshal([]byte(r.FormValue("resultJson")), &result)
 
@@ -1460,12 +1492,6 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// create report for collection packing
-	usernameTk, err := r.Cookie("username")
-	if err != nil {
-		log.Println(err)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
 	var newPackRecord = models.PackingRecord{
 		Date:     inputDate,
 		Mo:       result.Mo,
@@ -1510,6 +1536,7 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		Factory:  r.FormValue("factory"),
 		ProdType: r.FormValue("prodtype"),
 		Item:     result.Item.Id,
+		Qty:      incDoneItemQty,
 		Value:    result.Price * float64(incDoneItemQty),
 	}
 

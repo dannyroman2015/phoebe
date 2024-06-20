@@ -15,6 +15,7 @@ type ProValRecord struct {
 	Factory  string  `bson:"factory"`
 	ProdType string  `bson:"prodtype"`
 	Item     string  `bson:"item"`
+	Qty      int     `bson:"qty"`
 	Value    float64 `bson:"value"`
 }
 
@@ -32,6 +33,7 @@ func (m *ProValModel) Create(pvr ProValRecord) error {
 		"factory":  pvr.Factory,
 		"prodtype": pvr.ProdType,
 		"item":     pvr.Item,
+		"qty":      pvr.Qty,
 		"value":    pvr.Value,
 	})
 	return err

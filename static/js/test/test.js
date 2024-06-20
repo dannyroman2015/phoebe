@@ -135,6 +135,7 @@ const drawStreamGraph = (data) => {
 }
 
 const drawStackedBars = (data) => {
+  
   const svg = d3.select("#bars")
     .append("svg")
       .attr("viewBox", [0, 0, width, height]);
