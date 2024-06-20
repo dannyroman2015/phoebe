@@ -292,20 +292,38 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// get data for Packing Chart
-	pipeline = mongo.Pipeline{
-		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-		{{"$set", bson.M{"date": "$_id.date", "id": bson.M{"$concat": bson.A{"$_id.factory", "-", "$_id.prodtype"}}}}},
-		{{"$unset", "_id"}},
+	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"of": "packchart"}}},
 		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println("failed to get data from packchart", err)
 	}
-	cur, err = s.mgdb.Collection("packing").Aggregate(context.Background(), pipeline)
-	var packingData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Id       string  `bson:"id" json:"id"`
-		Factory  string  `bson:"factory" json:"factory"`
-		Prodtype string  `bson:"prodtype" json:"prodtype"`
-		Value    float64 `bson:"value" json:"value"`
+	var packchartData []struct {
+		Date  string `bson:"date" json:"date"`
+		BRAND int    `bson:"BRAND" json:"BRAND"`
+		RH    int    `bson:"RH" json:"RH"`
+		OUT   int    `bson:"OUT" json:"OUT"`
 	}
+
+	cur.All(context.Background(), &packchartData)
+	log.Println(packchartData)
+
+	// pipeline = mongo.Pipeline{
+	// 	{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+	// 	{{"$set", bson.M{"date": "$_id.date", "id": bson.M{"$concat": bson.A{"$_id.factory", "-", "$_id.prodtype"}}}}},
+	// 	{{"$unset", "_id"}},
+	// 	{{"$sort", bson.M{"date": 1}}},
+	// }
+	// cur, err = s.mgdb.Collection("packing").Aggregate(context.Background(), pipeline)
+	// var packingData []struct {
+	// 	Date     string  `bson:"date" json:"date"`
+	// 	Id       string  `bson:"id" json:"id"`
+	// 	Factory  string  `bson:"factory" json:"factory"`
+	// 	Prodtype string  `bson:"prodtype" json:"prodtype"`
+	// 	Value    float64 `bson:"value" json:"value"`
+	// }
 	//dang loi cho nay
 	// if err := cur.All(context.Background(), &packingData); err != nil {
 	// 	log.Println("dashboard: ", err)
@@ -328,7 +346,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"s6areas":        s6areas,
 		"s6dates":        s6dates,
 		"s6data":         s6Data,
-		"packingData":    packingData,
+		"packingData":    packchartData,
 	})
 }
 
@@ -1488,6 +1506,8 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 
 	if err := models.NewMoModel(s.mgdb).UpdatePartDoneIncQty(result.Mo, result.Item.Id, updatedPartId, incDonePartQty, incDoneItemQty); err != nil {
 		log.Println("sp_sendentry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to update mo collection"))
 		return
 	}
 
@@ -1521,28 +1541,53 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		CreatedAt: time.Now(),
 	}
 
-	if err := models.NewPackingModel(s.mgdb).InsertNewReport(newPackRecord); err != nil {
+	sresult, err := models.NewPackingModel(s.mgdb).InsertNewReport(newPackRecord)
+	if err != nil {
 		log.Println("sp_sendentry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to update packing collection"))
 		return
 	}
 
+	//////////////////////////////////////////////
+	// update data for packchart in dashboard page
+	//////////////////////////////////////////////
+	xtype := r.FormValue("factory") + "-" + r.FormValue("prodtype")
+	_, err = s.mgdb.Collection("packchart").UpdateOne(context.Background(), bson.M{
+		"of": "packchart", "date": primitive.NewDateTimeFromTime(inputDate),
+	}, bson.M{
+		"$inc": bson.M{xtype: result.Price / float64(len(result.Item.Parts)) * float64(incDonePartQty)},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println("upsert packchart failed: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to update packchart collection"))
+		return
+	}
+
+	/////////////////////////////////////////////////
 	// create report for collection production value
-	if incDoneItemQty == 0 {
-		return
+	/////////////////////////////////////////////////
+	if incDoneItemQty > 0 {
+		prodvalRecord := models.ProValRecord{
+			Date:     strDate,
+			Factory:  r.FormValue("factory"),
+			ProdType: r.FormValue("prodtype"),
+			Item:     result.Item.Id,
+			Qty:      incDoneItemQty,
+			Value:    result.Price * float64(incDoneItemQty),
+			// IdFromOrigin: sresult.InsertedID,
+		}
+
+		if err := models.NewProValModel(s.mgdb).Create(prodvalRecord); err != nil {
+			log.Println("sp_sendentry: ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("failed to update prodvalue collection"))
+			return
+		}
 	}
 
-	prodvalRecord := models.ProValRecord{
-		Date:     strDate,
-		Factory:  r.FormValue("factory"),
-		ProdType: r.FormValue("prodtype"),
-		Item:     result.Item.Id,
-		Qty:      incDoneItemQty,
-		Value:    result.Price * float64(incDoneItemQty),
-	}
-
-	if err := models.NewProValModel(s.mgdb).Create(prodvalRecord); err != nil {
-		log.Println("sp_sendentry: ", err)
-	}
+	http.Redirect(w, r, "/sections/packing/entry", http.StatusSeeOther)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

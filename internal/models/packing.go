@@ -42,7 +42,7 @@ func NewPackingModel(mgdb *mongo.Database) *PackingModel {
 	return &PackingModel{mgdb: mgdb}
 }
 
-func (m *PackingModel) InsertNewReport(pr PackingRecord) error {
+func (m *PackingModel) InsertNewReport(pr PackingRecord) (*mongo.InsertOneResult, error) {
 	bdoc := bson.M{
 		"date":     primitive.NewDateTimeFromTime(pr.Date),
 		"mo":       pr.Mo,
@@ -63,9 +63,9 @@ func (m *PackingModel) InsertNewReport(pr PackingRecord) error {
 		"reporter":  pr.Reporter,
 		"createdat": primitive.NewDateTimeFromTime(pr.CreatedAt),
 	}
-	_, err := m.mgdb.Collection("packing").InsertOne(context.Background(), bdoc)
+	sresult, err := m.mgdb.Collection("packing").InsertOne(context.Background(), bdoc)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return sresult, nil
 }

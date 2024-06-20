@@ -17,6 +17,7 @@ type ProValRecord struct {
 	Item     string  `bson:"item"`
 	Qty      int     `bson:"qty"`
 	Value    float64 `bson:"value"`
+	// IdFromOriginPacking
 }
 
 type ProValModel struct {
