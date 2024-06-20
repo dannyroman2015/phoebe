@@ -67,14 +67,14 @@ func (m *MoModel) FindByMoItem(mo, itemid string) MoRecord {
 	return result
 }
 
-func (m *MoModel) UpdatePartDoneQty(mo, itemid, updatedPartId string, newDoneQty, newItemDoneQty int) error {
+func (m *MoModel) UpdatePartDoneIncQty(mo, itemid, updatedPartId string, incPartQty, incItemQty int) error {
 	filter := bson.M{
 		"mo":            mo,
 		"item.id":       itemid,
 		"item.parts.id": updatedPartId,
 	}
 	update := bson.M{
-		"$set": bson.M{"item.parts.$.doneqty": newDoneQty, "doneqty": newItemDoneQty},
+		"$inc": bson.M{"item.parts.$.doneqty": incPartQty, "doneqty": incItemQty},
 	}
 	_, err := m.mgdb.Collection("mo").UpdateOne(context.Background(), filter, update)
 	if err != nil {

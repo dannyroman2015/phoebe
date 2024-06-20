@@ -1392,8 +1392,7 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 		"itemNeedQty": result.NeedQty,
 		"itemDoneQty": result.DoneQty,
 		"parts":       result.Item.Parts,
-		// "doneQtyStrArray": doneQtyStrArray,
-		"resultJson": string(resultJson),
+		"resultJson":  string(resultJson),
 	})
 }
 
@@ -1424,105 +1423,96 @@ func (s *Server) sp_getinputmax(w http.ResponseWriter, r *http.Request, ps httpr
 func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var result models.MoRecord
 	json.Unmarshal([]byte(r.FormValue("resultJson")), &result)
-	// log.Println(result)
 
-	// dataRaw := r.FormValue("data")
-	// partsDoneQtyRaw := strings.Split(dataRaw, "---")
-	// mo := partsDoneQtyRaw[0]
-	// itemcode := partsDoneQtyRaw[1]
-	// // itemNeedQty := partsDoneQtyRaw[2]
-	// itemDoneQty, _ := strconv.Atoi(partsDoneQtyRaw[3])
+	inputDate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+	strDate := inputDate.Format("2006-01-02")
 
-	// log.Println(dataRaw)
-	// log.Println(partsDoneQtyRaw[len(partsDoneQtyRaw)-1])
-
-	// itempartRaw := r.FormValue("itempart")
-	// itempart := strings.Split(itempartRaw, "---")
-	// beforeUpdatePartDoneQty, _ := strconv.Atoi(itempart[len(itempart)-1])
-	// updatePartId := itempart[0]
-
-	// partQtyInput, _ := strconv.Atoi(r.FormValue("partqtyInput"))
-	// newPartDoneQty := strings.Fields(strings.Replace(partsDoneQtyRaw[len(partsDoneQtyRaw)-1], itempart[len(itempart)-1], string(partQtyInput), 1))
-	// minPartDoneQty, _ := strconv.Atoi(newPartDoneQty[0])
-	// for _, i := range newPartDoneQty {
-	// 	a, _ := strconv.Atoi(i)
-	// 	if a < minPartDoneQty {
-	// 		minPartDoneQty = a
-	// 	}
-	// }
-
-	// log.Println(partQtyInput, minPartDoneQty)
-	//// số bộ sản phẩm mới hoàn thành nếu sau khi cập nhập số part done mới
-	// newItemsDoneQty := minPartDoneQty - itemDoneQty
-
-	// // cập nhật số part mới, doneqty của item vào motracking
-	// log.Println(updatePartId, newItemsDoneQty)
-	// afterUpdatePartDoneQty := beforeUpdatePartDoneQty + partQtyInput
-	// filter := bson.M{
-	// 	"mo":            mo,
-	// 	"item.id":       itemcode,
-	// 	"item.parts.id": updatePartId,
-	// }
-	// update := bson.M{
-	// 	"$set": bson.M{"item.parts.$.doneqty": afterUpdatePartDoneQty},
-	// }
-	// _, err := s.mgdb.Collection("motracking").UpdateOne(context.Background(), filter, update)
-	// if err != nil {
-	// 	log.Println("failed to update", err)
-	// }
-	///////
 	updatedPartId := r.FormValue("itempart")
-	var beforeUpdatedDoneQty int
-	minRemainPartDoneQty := 1000000
+	incDonePartQty, _ := strconv.Atoi(r.FormValue("partqtyInput"))
+
+	var qtyArr = []int{}
+	var updatedPartName string
+
 	for _, p := range result.Item.Parts {
 		if updatedPartId == p.Id {
-			beforeUpdatedDoneQty = p.DoneQty
-		} else { /// chỗ này sai
-			if minRemainPartDoneQty >= p.DoneQty {
-				minRemainPartDoneQty = p.DoneQty
-			}
+			qtyArr = append(qtyArr, incDonePartQty+p.DoneQty)
+			updatedPartName = p.Name
+		} else {
+			qtyArr = append(qtyArr, p.DoneQty)
 		}
 	}
-	doneQtyInput, _ := strconv.Atoi(r.FormValue("partqtyInput"))
-	newDoneQty := beforeUpdatedDoneQty + doneQtyInput
 
 	// số bộ mới sinh ra sau khi cập nhật số lượng part
-	var addedItemDoneQTY int
-	var newItemDoneQty int
-	if newDoneQty >= minRemainPartDoneQty {
-		newItemDoneQty = minRemainPartDoneQty
-		addedItemDoneQTY = newDoneQty - minRemainPartDoneQty
-	} else {
-		newItemDoneQty = newDoneQty
-		addedItemDoneQTY = minRemainPartDoneQty - newDoneQty
+	theMin := qtyArr[0]
+	for _, i := range qtyArr {
+		if theMin >= i {
+			theMin = i
+		}
 	}
-	log.Println("min", minRemainPartDoneQty)
-	log.Println("added:", addedItemDoneQTY)
-	model := models.NewMoModel(s.mgdb)
-	if err := model.UpdatePartDoneQty(result.Mo, result.Item.Id, updatedPartId, newDoneQty, newItemDoneQty); err != nil {
+	incDoneItemQty := theMin - result.DoneQty
+	if incDoneItemQty < 0 {
+		incDoneItemQty = 0
+	}
+
+	if err := models.NewMoModel(s.mgdb).UpdatePartDoneIncQty(result.Mo, result.Item.Id, updatedPartId, incDonePartQty, incDoneItemQty); err != nil {
 		log.Println("sp_sendentry: ", err)
 		return
 	}
 
 	// create report for collection packing
-	// newPackingReport := models.PackingRecord{}
-	// model = models.NewPackingModel(s.mgdb)
-	// model.InsertNewReport()
+	usernameTk, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	var newPackRecord = models.PackingRecord{
+		Date:     inputDate,
+		Mo:       result.Mo,
+		Factory:  r.FormValue("factory"),
+		ProdType: r.FormValue("prodtype"),
+		Product: struct {
+			Id   string "bson:\"id\" json:\"id\""
+			Name string "bson:\"name\" json:\"name\""
+		}{
+			Id:   updatedPartId,
+			Name: updatedPartName,
+		},
+		Parent: struct {
+			Id      string  "bson:\"id\" json:\"id\""
+			Name    string  "bson:\"name\" json:\"name\""
+			NoParts int     "bson:\"noparts\" json:\"noparts\""
+			Price   float64 "bson:\"price\" json:\"price\""
+		}{
+			Id:      result.Item.Id,
+			Name:    result.Item.Name,
+			NoParts: len(result.Item.Parts),
+			Price:   result.Price,
+		},
+		Qty:       incDonePartQty,
+		Value:     result.Price / float64(len(result.Item.Parts)) * float64(incDonePartQty),
+		Reporter:  usernameTk.Value,
+		CreatedAt: time.Now(),
+	}
 
-	// create report for collection production value
-	if addedItemDoneQTY == 0 {
+	if err := models.NewPackingModel(s.mgdb).InsertNewReport(newPackRecord); err != nil {
+		log.Println("sp_sendentry: ", err)
 		return
 	}
 
-	inputDate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
-	strDate := inputDate.Format("2006-01-02")
+	// create report for collection production value
+	if incDoneItemQty == 0 {
+		return
+	}
+
 	prodvalRecord := models.ProValRecord{
 		Date:     strDate,
 		Factory:  r.FormValue("factory"),
 		ProdType: r.FormValue("prodtype"),
 		Item:     result.Item.Id,
-		Value:    result.Price * float64(addedItemDoneQTY),
+		Value:    result.Price * float64(incDoneItemQty),
 	}
+
 	if err := models.NewProValModel(s.mgdb).Create(prodvalRecord); err != nil {
 		log.Println("sp_sendentry: ", err)
 	}
