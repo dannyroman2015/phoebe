@@ -686,12 +686,13 @@ func (s *Server) loadevaltable(w http.ResponseWriter, r *http.Request, ps httpro
 // then reload criteria table
 // //////////////////////////////////////////////////
 func (s *Server) caupsertcriteria(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	log.Println(r.FormValue("select1[]"))
 	criteriaid := r.FormValue("criteriaid")
 	description := r.FormValue("description")
 	criteriaKind := r.FormValue("critype")
-	rawpoint := r.FormValue("point")
-	point, _ := strconv.ParseInt(rawpoint, 10, 64)
+	point, _ := strconv.ParseInt(r.FormValue("point"), 10, 64)
+	applyon := r.FormValue("applyon")
+	authPositions := strings.Fields(r.FormValue("manager") + " " + r.FormValue("teamleader") + " " + r.FormValue("bod"))
+	evaluatedPositions := strings.Fields(r.FormValue("skilledworker") + " " + r.FormValue("unskilledworker") + " " + r.FormValue("supervisor"))
 
 	_, err := s.mgdb.Collection("criterion").UpdateOne(context.Background(),
 		bson.M{"id": criteriaid},
@@ -699,6 +700,9 @@ func (s *Server) caupsertcriteria(w http.ResponseWriter, r *http.Request, ps htt
 			"description": description,
 			"point":       point,
 			"kind":        criteriaKind,
+			"applyon":     applyon,
+			"authpos":     authPositions,
+			"evalpos":     evaluatedPositions,
 		}},
 		options.Update().SetUpsert(true),
 	)
