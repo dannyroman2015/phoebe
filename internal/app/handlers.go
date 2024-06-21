@@ -508,7 +508,12 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 	id_name_section := strings.Split(r.FormValue("staffsearch"), " * ")
 
 	if len(id_des_p_kind) != 4 || len(id_name_section) != 3 {
-		w.Write([]byte("Thông tin cung cấp không đúng định dạng"))
+
+		template.Must(template.ParseFiles("templates/pages/incentive/evaluate/message.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+			"dialogMessage":     "Thông tin cung cấp không đúng định dạng. Vui lòng kiểm tra lại.",
+		})
 		return
 	}
 
@@ -524,7 +529,11 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 	if err != nil {
 		log.Println("sendevaluate: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Tạo đánh giá thất bại"))
+		template.Must(template.ParseFiles("templates/pages/incentive/evaluate/message.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+			"dialogMessage":     "Cập nhật đánh giá vào database thất bại. Vui lòng thử lại hoặc liên hệ Admin.",
+		})
 		return
 	}
 
@@ -533,8 +542,11 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 		bson.M{"employee.id": id_name_section[0]}, options.Find().SetSort(bson.M{"occurdate": -1}).SetLimit(10))
 	if err != nil {
 		log.Println("sendevaluate: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Truy xuất lịch sử thất bại"))
+		template.Must(template.ParseFiles("templates/pages/incentive/evaluate/message.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+			"dialogMessage":     "Lấy dữ liệu từ database thất bại. Vui lòng báo cáo Admin.",
+		})
 		return
 	}
 	defer cur.Close(context.Background())
@@ -557,8 +569,11 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 
 	if err = cur.All(context.Background(), &evalsByiD); err != nil {
 		log.Println("sendevaluate: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Decode thất bại"))
+		template.Must(template.ParseFiles("templates/pages/incentive/evaluate/message.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+			"dialogMessage":     "Decode thất bại. Vui lòng báo cáo Admin.",
+		})
 		return
 	}
 
@@ -566,10 +581,12 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 		evalsByiD[i].StrOccurDate = evalsByiD[i].OccurDate.Format("02-01-2006")
 	}
 
-	var data = map[string]interface{}{
-		"evalsByiD": evalsByiD,
-	}
-	template.Must(template.ParseFiles("templates/pages/incentive/evaluate/historytable.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/incentive/evaluate/historytable.html")).Execute(w, map[string]interface{}{
+		"evalsByiD":         evalsByiD,
+		"showSuccessDialog": true,
+		"showErrorDialog":   false,
+		"dialogMessage":     "Có thể tiếp tực đánh giá tiếp.",
+	})
 }
 
 // //////////////////////////////////////////////////////////
@@ -580,7 +597,8 @@ func (s *Server) iadmin(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 		"templates/pages/incentive/admin/admin.html",
 		"templates/pages/incentive/admin/criteria.html",
 		"templates/pages/incentive/admin/evaluate.html",
-		"templates/shared/navbar.html")).Execute(w, nil)
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
 }
 
 // //////////////////////////////////////////////////////////
@@ -668,6 +686,7 @@ func (s *Server) loadevaltable(w http.ResponseWriter, r *http.Request, ps httpro
 // then reload criteria table
 // //////////////////////////////////////////////////
 func (s *Server) caupsertcriteria(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println(r.FormValue("select1[]"))
 	criteriaid := r.FormValue("criteriaid")
 	description := r.FormValue("description")
 	criteriaKind := r.FormValue("critype")
@@ -1541,7 +1560,7 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		CreatedAt: time.Now(),
 	}
 
-	sresult, err := models.NewPackingModel(s.mgdb).InsertNewReport(newPackRecord)
+	_, err = models.NewPackingModel(s.mgdb).InsertNewReport(newPackRecord)
 	if err != nil {
 		log.Println("sp_sendentry: ", err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -1,7 +1,7 @@
-<table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+<table x-data="{showTable:true}" x-show="showTable" class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
   <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
     {{range .critResults}}
-    <tr @click="criterionInfo='{{.Id}} * {{.Description}} * {{.Point}} * {{.Kind}}';"
+    <tr @click="criterionInfo='{{.Id}} * {{.Description}} * {{.Point}} * {{.Kind}}'; showTable=!showTable;"
         class="hover:bg-neutral-100 cursor-pointer">
       <td class="px-4 py-2 text-sm font-medium whitespace-nowrap">
           <h2 class="font-medium text-gray-800 dark:text-white ">{{.Id}}</h2>
