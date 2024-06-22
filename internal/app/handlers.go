@@ -607,27 +607,18 @@ func (s *Server) iadmin(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 // then load to criteria table
 // //////////////////////////////////////////////////////////
 func (s *Server) loadcrittable(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("criterion").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"id": -1}))
+	var criteria []models.Criterion
+	criteria, err := models.NewCriterionModel(s.mgdb).Find()
 	if err != nil {
-		log.Println("loi truy xuat database", err)
+		log.Println("loadcrittable: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to access database"))
-		return
-	}
-	defer cur.Close(context.Background())
-
-	var criteria []Criterion
-	if err = cur.All(context.Background(), &criteria); err != nil {
-		log.Println("loi decode criteria", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to decode criteria"))
+		w.Write([]byte("failed to access criterion collection"))
 		return
 	}
 
-	var data = map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/incentive/admin/crit_table.html")).Execute(w, map[string]interface{}{
 		"criteria": criteria,
-	}
-	template.Must(template.ParseFiles("templates/pages/incentive/admin/crit_table.html")).Execute(w, data)
+	})
 }
 
 // //////////////////////////////////////////////////////////
@@ -761,45 +752,17 @@ func (s *Server) evaluate(w http.ResponseWriter, r *http.Request, ps httprouter.
 // search criteria in admin page
 // //////////////////////////////////////////////////
 func (s *Server) ia_searchcriterion(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	criterionsearch := r.FormValue("criterionSearch")
-	searchRegex := ".*" + criterionsearch + ".*"
-	criterionsearchInt, _ := strconv.Atoi(criterionsearch)
-
-	filter := bson.M{"$or": bson.A{
-		bson.M{"id": bson.M{"$regex": searchRegex}},
-		bson.M{"description": bson.M{"$regex": searchRegex, "$options": "i"}},
-		bson.M{"kind": bson.M{"$regex": searchRegex, "$options": "i"}},
-		bson.M{"point": criterionsearchInt},
-	}}
-
-	cur, err := s.mgdb.Collection("criterion").Find(context.Background(), filter)
-
+	criteria, err := models.NewCriterionModel(s.mgdb).Search(r.FormValue("criterionSearch"))
 	if err != nil {
 		log.Println("ia_searchcriterion: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Truy xuất dữ liệu thất bại"))
-		return
-	}
-	defer cur.Close(context.Background())
-
-	var critResults []struct {
-		Id          string `bson:"id"`
-		Description string `bson:"description"`
-		Point       int    `bson:"point"`
-		Kind        string `bson:"kind"`
-	}
-	err = cur.All(context.Background(), &critResults)
-	if err != nil {
-		log.Println("ia_searchcriterion: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Decode thất bại"))
+		w.Write([]byte("fail to access criterion collection"))
 		return
 	}
 
-	var data = map[string]interface{}{
-		"criteria": critResults,
-	}
-	template.Must(template.ParseFiles("templates/pages/incentive/admin/crit_table.html")).Execute(w, data)
+	template.Must(template.ParseFiles("templates/pages/incentive/admin/crit_table.html")).Execute(w, map[string]interface{}{
+		"criteria": criteria,
+	})
 }
 
 // //////////////////////////////////////////////////
@@ -907,7 +870,9 @@ func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter
 		"lowest":          lastMonthScores[len(lastMonthScores)-1],
 	}
 
-	template.Must(template.ParseFiles("templates/pages/incentive/overview/overview.html", "templates/shared/blnavbar.html")).Execute(w, data)
+	template.Must(template.ParseFiles(
+		"templates/pages/incentive/overview/overview.html",
+		"templates/shared/navbar.html")).Execute(w, data)
 }
 
 // ///////////////////////////////////////////////////////////////////////

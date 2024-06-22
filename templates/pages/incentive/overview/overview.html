@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- <link rel="stylesheet" href="/static/css/style.css"> -->
-  <link rel="stylesheet" href="/static/css/bulma.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
   <script src="/static/js/htmx.min.js"></script>
   <script src="https://kit.fontawesome.com/e1c3f8092c.js" crossorigin="anonymous"></script>
   <title>Incentive Overview</title>
 </head>
 <body>
-  {{ template "blnavbar" }}
+  {{ template "navbar" }}
 
  
-    <div class="fixed-grid p-3 has-1-cols  has-4-cols-desktop has-6-cols-widescreen">
+    <!-- <div class="fixed-grid p-3 has-1-cols  has-4-cols-desktop has-6-cols-widescreen">
       <div class="grid">
         <div class="cell is-col-span-2">
           <div hx-get="/incentive/overview/loadscores" hx-target="this" hx-trigger="load" hx-swap="outerHTML"></div>
@@ -66,7 +65,7 @@
 
         <div class="cell">4</div>
       </div>
-    </div>
+    </div> -->
 
 </body>
 </html>

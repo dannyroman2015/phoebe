@@ -28,8 +28,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard", s.dashboard)
 
 	router.GET("/incentive/admin", s.iadmin)
-	router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
+	router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
 	router.DELETE("/incentive/admin/deletecriteria/:criteriaid", s.deletecriteria)
 	router.POST("/incentive/admin/searchcriterion", s.ia_searchcriterion)
 	router.GET("/incentive/admin/loadevaltable", s.loadevaltable)
