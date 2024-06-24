@@ -46,11 +46,14 @@ func (s *Server) routes() http.Handler {
 	router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
 
 	// HR //////////////////////////////////////////////////////////////
-	router.GET("/hr/admin", s.hradmin)
+	router.GET("/hr/admin", withAuth(s.hradmin))
 	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
 	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
 	router.GET("/hr/admin/exportempexcel", s.ha_exportempexcel)
 	router.GET("/hr/admin/prevnext/:currentPage/:prevnext", s.ha_prevnext)
+
+	router.GET("/hr/entry", withAuth(s.hr_entry))
+	router.POST("/hr/entry", s.hr_insertemplist)
 	// end /////////////////////////////////////////////////////////////
 
 	// 6S //////////////////////////////////////////////////////////////

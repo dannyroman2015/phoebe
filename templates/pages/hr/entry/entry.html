@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/sweetalert.min.js"></script>
+  <title>HR Entry</title>
+</head>
+<body class="bg-gray-100">
+  {{template "navbar"}}
+
+  <section>
+    <div class="mx-auto max-w-screen-md px-4 py-16 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 gap-x-16 gap-y-8">
+        <form class="space-y-4" action="/hr/entry" method="post" enctype="multipart/form-data">
+          <div class="mt-4 text-center">
+            <button type="submit" class="inline-block w-full rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+              Gửi</button>
+          </div>
+
+          <!-- <div class="relative w-full max-w-xs mx-auto">
+            <textarea x-data="{ 
+                    resize () { 
+                        $el.style.height = '0px'; 
+                        $el.style.height = $el.scrollHeight + 'px' 
+                    } 
+                }"
+                x-init="resize()"
+                @input="resize()"
+                type="text" name="emplist"
+                placeholder="Khung nhập nhanh điểm 6S. Copy 2 cột (tên khu vực + điểm) và paste vào đây. Hoặc nhập 'tên khu vực' + 'cách' + 'điểm' + 'enter'. Trường hợp muốn tên khu vực có dấu cách, vui lòng thay bằng dấu '_'. Vd: muốn lưu 'Panel CNC', nhập 'Panel_CNC'. PS: 1 khu vực trong 1 ngày chỉ chấm điểm 1 lần. Nếu sai sót, vui lòng vào trang managment để chỉnh sửa."
+                class="flex relative z-20 peer w-full h-auto min-h-[80px] px-3 py-2 text-sm bg-white border-2 border-neutral-900 placeholder:text-neutral-500 focus:text-neutral-800 focus:border-neutral-900 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+            ></textarea>
+            <div class="absolute inset-0 z-10 w-full h-full -m-1 duration-300 ease-out translate-x-2 translate-y-2 bg-black peer-focus:m-0 peer-focus:translate-x-0 peer-focus:translate-y-0"></div>
+          </div> -->
+
+          <div class="relative w-full max-w-xs mx-auto">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="inputfile">
+              Chọn file excel để insert nhanh employee</label>
+
+            <input class="block w-full text-md text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+           type="file" name="inputfile">
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>
+
+<script> 
+  if ({{.showSuccessDialog}}) {
+    swal("Thành công", "Báo cáo đã được cập nhật", "success")
+  }
+  if ({{.showErrorDialog}}) {
+    swal("Thất bại", "Dữ liệu nhập sai định dạng hoặc truy cập cơ sở dữ liệu bị lỗi, vui lòng nhập lại", "error")
+  }
+</script>

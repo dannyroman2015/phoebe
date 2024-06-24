@@ -96,6 +96,10 @@
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu 6S</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo chấm điểm 6S.</span>
                                                 </a>
+                                                <a href="/hr/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Nhập liệu HR</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang nhập liệu nhân sự.</span>
+                                                </a>
                                                 <a href="/login" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Đăng nhập</span>
                                                     <span class="block leading-5 opacity-50">Mô tả ngắn ngọn cho menu này.</span>
@@ -234,13 +238,13 @@
             <!-- HR -->
             <div x-show="navigationMenu == 'HR'" class="flex items-stretch justify-center w-full p-6">
                 <div class="w-72">
-                    <!-- <a href="/incentive/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                        <span class="block mb-1 font-medium text-black">Overview</span>
-                        <span class="block font-light leading-5 opacity-50">Trang tổng quan về điểm của nhân viên.</span>
-                    </a> -->
+                    <a href="/hr/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Entry</span>
+                        <span class="block font-light leading-5 opacity-50">Trang nhập liệu nhân sự.</span>
+                    </a>
                     <a href="/hr/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Manament</span>
-                        <span class="block font-light leading-5 opacity-50">Trang quản lý.</span>
+                        <span class="block font-light leading-5 opacity-50">Trang quản lý nhân sự.</span>
                     </a>        
                 </div>
             </div>

@@ -1,9 +1,21 @@
-<tbody id="staffpoint">
+<tbody id="staffpoint" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
   {{range .}}
   <tr>
-    <td>{{.EmpId}}</td>
-    <td>{{.EmpName}}</td>
-    <td>{{.PointTotal}}</td>
+    <td class="px-2 py-1 text-sm font-medium whitespace-nowrap">
+      <div>
+        <h2 class="font-medium text-gray-800 dark:text-white">{{.EmpId}}</h2>
+      </div>
+    </td>
+    <td class="px-2 py-1 text-sm font-medium whitespace-nowrap">
+      <div>
+        <h2 class="font-medium text-gray-800 dark:text-white">{{.EmpName}}</h2>
+      </div>
+    </td>
+    <td class="px-3 py-3 text-sm text-right font-medium whitespace-nowrap">
+      <div class="inline px-3 py-1 text-sm font-normal rounded-full text-emerald-500 gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
+        {{.PointTotal}}
+      </div>
+    </td>
   </tr>
   {{end}}
 </tbody>

@@ -105,6 +105,12 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
+		Name:    "staffid",
+		Value:   user.Info.StaffId,
+		Expires: time.Now().Add(2 * time.Hour),
+		Path:    "/",
+	})
+	http.SetCookie(w, &http.Cookie{
 		Name:    "defaulturl",
 		Value:   user.Defaulturl,
 		Expires: time.Now().Add(2 * time.Hour),
@@ -838,11 +844,13 @@ func (s *Server) ia_searchevaluate(w http.ResponseWriter, r *http.Request, ps ht
 // /incentive/overview - get page incentive overview
 // //////////////////////////////////////////////////
 func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	monthStart := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month()-1, 1, 0, 0, 0, 0, time.Local))
-	monthEnd := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
+	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
+	end := primitive.NewDateTimeFromTime(time.Now())
+	log.Println(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
+	log.Println(time.Now())
 
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": monthStart}}, bson.M{"occurdate": bson.M{"$lt": monthEnd}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": start}}, bson.M{"occurdate": bson.M{"$lt": end}}}}}},
 		{{"$group", bson.M{"_id": "$employee.id", "empname": bson.M{"$first": "$employee.name"}, "empsection": bson.M{"$first": "$employee.section"}, "point_total": bson.M{"$sum": "$criterion.point"}}}},
 		{{"$sort", bson.M{"point_total": -1}}},
 		{{"$set", bson.M{"empid": "$_id"}}},
@@ -857,17 +865,21 @@ func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	defer cur.Close(context.Background())
 
-	var lastMonthScores []Score
-	if err = cur.All(context.Background(), &lastMonthScores); err != nil {
+	var scores []Score
+	if err = cur.All(context.Background(), &scores); err != nil {
 		log.Println("ioverview: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to decode"))
+		return
+	}
+	for _, rr := range scores {
+		log.Println(rr)
 	}
 
 	data := map[string]interface{}{
-		"lastMonthScores": lastMonthScores,
-		"highest":         lastMonthScores[0],
-		"lowest":          lastMonthScores[len(lastMonthScores)-1],
+		"top5Scores": scores,
+		"highest":    scores[0],
+		"lowest":     scores[len(scores)-1],
 	}
 
 	template.Must(template.ParseFiles(
@@ -912,11 +924,16 @@ func (s *Server) io_loadscores(w http.ResponseWriter, r *http.Request, ps httpro
 // /incentive/overview/scoresearch - load point tbody when search
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
+	end := primitive.NewDateTimeFromTime(time.Now())
 	scoreSearch := r.FormValue("scoreSearch")
 	searchRegex := ".*" + scoreSearch + ".*"
+	log.Println(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
+	log.Println(time.Now())
 
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"$or": bson.A{bson.M{"employee.name": bson.M{"$regex": searchRegex, "$options": "i"}}, bson.M{"employee.id": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": start}}, bson.M{"occurdate": bson.M{"$lt": end}}}}}},
+		{{"$match", bson.M{"$or": bson.A{bson.M{"employee.name": bson.M{"$regex": searchRegex, "$options": "i"}}, bson.M{"employee.id": bson.M{"$regex": searchRegex, "$options": "i"}}, bson.M{"employee.section": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
 		{{"$group", bson.M{"_id": "$employee.id", "empname": bson.M{"$first": "$employee.name"}, "point_total": bson.M{"$sum": "$criterion.point"}}}},
 		{{"$sort", bson.M{"empname": -1}}},
 		{{"$set", bson.M{"empid": "$_id"}}},
@@ -1179,6 +1196,61 @@ func (s *Server) ha_prevnext(w http.ResponseWriter, r *http.Request, ps httprout
 		"numberOfPages": r.URL.Query().Get("numberOfPages"),
 	}
 	template.Must(template.ParseFiles("templates/pages/hr/admin/emp_table.html")).Execute(w, data)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /hr/entry - get entry page of HR
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) hr_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/hr/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /hr/entry - post to multibly upsert employee list
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("inputfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	rows, _ := f.Rows("Sheet1")
+
+	var jsonStr = `[`
+	for rows.Next() {
+		row, _ := rows.Columns()
+		jsonStr += `{"id":"` + row[0] + `", "name":"` + row[1] + `","section":"` + row[2] + `"},`
+
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	log.Println(jsonStr)
+	// if len(scores)%2 != 0 || len(scores) == 0 {
+	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 		"showSuccessDialog": false,
+	// 		"showErrorDialog":   true,
+	// 	})
+	// 	return
+	// }
+
+	model := models.NewEmployeeModel(s.mgdb)
+	if err := model.InsertMany(jsonStr); err != nil {
+		log.Println("success")
+		return
+	}
+
+	// template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 	"showSuccessDialog": true,
+	// 	"showErrorDialog":   false,
+	// })
 }
 
 // ///////////////////////////////////////////////////////////////////////
