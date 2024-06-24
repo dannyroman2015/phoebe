@@ -1,6 +1,6 @@
 <tbody id="staffpoint" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
   {{range .}}
-  <tr @click="document.getElementById('evalSearch').value = '{{.EmpId}}'; $el.dispatchEvent(new Event('doSearch'));" class="cursor-pointer">
+  <tr @click="document.getElementById('evalSearch').value = {{.EmpId}};" hx-post="/incentive/overview/evalsearch" hx-target="#staffevals" hx-trigger="click" hx-swap="outerHTML" hx-include="[name='evalSearch'],[name='evalSelectedMonth']" class="cursor-pointer">
     <td class="px-2 py-1 text-sm font-medium whitespace-nowrap">
       <div>
         <h2 class="font-medium text-gray-800 dark:text-white">{{.EmpId}}</h2>

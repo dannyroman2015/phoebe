@@ -133,7 +133,7 @@
 
               <tbody id="staffpoint" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                 {{range .top5Scores}}
-                <tr @click="document.getElementById('evalSearch').value = '{{.EmpId}}'; $el.dispatchEvent(new Event('doSearch'));" class="cursor-pointer">
+                <tr @click="document.getElementById('evalSearch').value = {{.EmpId}};" hx-post="/incentive/overview/evalsearch" hx-target="#staffevals" hx-trigger="click" hx-swap="outerHTML" hx-include="[name='evalSearch'],[name='evalSelectedMonth']" class="cursor-pointer">
                   <td class="px-2 py-1 text-sm font-medium whitespace-nowrap">
                     <div>
                       <h2 class="font-medium text-gray-800 dark:text-white">{{.EmpId}}</h2>
@@ -170,8 +170,7 @@
                 </svg>
               </span>
         
-              <input hx-post="/incentive/overview/evalsearch" hx-target="#staffevals" hx-trigger="input changed delay:500ms, doSearch from:(#staffpoint tr)" hx-swap="outerHTML" hx-include="#evalSelectedMonth"
-                
+              <input hx-post="/incentive/overview/evalsearch" hx-target="#staffevals" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML" hx-include="#evalSelectedMonth" 
                 name="evalSearch" id="evalSearch" type="text" value="" placeholder="Nhập thông tin để tìm kiếm" class="block min-w-full py-1.5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">         
             </div>
 
