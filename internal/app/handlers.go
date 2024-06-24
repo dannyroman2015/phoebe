@@ -846,8 +846,6 @@ func (s *Server) ia_searchevaluate(w http.ResponseWriter, r *http.Request, ps ht
 func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
 	end := primitive.NewDateTimeFromTime(time.Now())
-	log.Println(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
-	log.Println(time.Now())
 
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": start}}, bson.M{"occurdate": bson.M{"$lt": end}}}}}},
@@ -872,19 +870,21 @@ func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.Write([]byte("Failed to decode"))
 		return
 	}
-	for _, rr := range scores {
-		log.Println(rr)
-	}
 
-	data := map[string]interface{}{
-		"top5Scores": scores,
-		"highest":    scores[0],
-		"lowest":     scores[len(scores)-1],
+	var top5Scores []Score
+	if len(scores) >= 5 {
+		top5Scores = scores[0:5]
+	} else {
+		top5Scores = scores
 	}
 
 	template.Must(template.ParseFiles(
 		"templates/pages/incentive/overview/overview.html",
-		"templates/shared/navbar.html")).Execute(w, data)
+		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"top5Scores": top5Scores,
+		"highest":    scores[0],
+		"lowest":     scores[len(scores)-1],
+	})
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -924,12 +924,12 @@ func (s *Server) io_loadscores(w http.ResponseWriter, r *http.Request, ps httpro
 // /incentive/overview/scoresearch - load point tbody when search
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
-	end := primitive.NewDateTimeFromTime(time.Now())
+	selectedMonth, _ := strconv.Atoi(r.FormValue("selectedMonth"))
+	selectm := time.Month(selectedMonth)
+	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), selectm, 1, 0, 0, 0, 0, time.Local))
+	end := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), selectm+1, 1, 0, 0, 0, 0, time.Local))
 	scoreSearch := r.FormValue("scoreSearch")
 	searchRegex := ".*" + scoreSearch + ".*"
-	log.Println(time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local))
-	log.Println(time.Now())
 
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": start}}, bson.M{"occurdate": bson.M{"$lt": end}}}}}},

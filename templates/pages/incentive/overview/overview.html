@@ -7,7 +7,6 @@
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
   <script src="/static/js/alpinejs_focus.min.js"></script>
   <script src="/static/js/htmx.min.js"></script>
-  <script src="https://kit.fontawesome.com/e1c3f8092c.js" crossorigin="anonymous"></script>
   <title>Incentive Overview</title>
 </head>
 <body>
@@ -29,7 +28,7 @@
                 </svg>
               </span>
         
-              <input hx-post="/incentive/overview/scoresearch" hx-target="#staffpoint" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML"
+              <input hx-post="/incentive/overview/scoresearch" hx-target="#staffpoint" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML" hx-include="#selectedMonth"
                 name="scoreSearch" type="text" value="" placeholder="Nhập thông tin để tìm kiếm" class="block min-w-full py-1.5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">         
             </div>
 
@@ -92,10 +91,10 @@
                     </div>
                     <div class="grid gap-2">
                       <div class="grid items-center grid-cols-3 gap-4">
-                        <label  for="month" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        <label  for="selectedMonth" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                           Tháng
                         </label>
-                        <input type="number" id="month" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
+                        <input type="number" id="selectedMonth" name="selectedMonth" min="1" max="12" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
                       <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div> -->
                       <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div> -->
                     </div>
@@ -159,7 +158,7 @@
         </div>
 
         <div class="col-span-2">
-          aaaaaaaaaaaaaaa
+          
         </div>
 
       </div>
@@ -231,6 +230,6 @@
 </style>
 
 <script>
-  document.getElementById("month").value = new Date().getMonth() + 1
+  document.getElementById("selectedMonth").value = new Date().getMonth() + 1
 </script>
 
