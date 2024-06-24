@@ -1,19 +1,13 @@
 
-
-
-
 const drawPackingChart = (data) => {
   const formatsInfo = [
-    {id: "1-BRAND", label: "1-BRAND", color: "#76B6C2"},
-    {id: "1-RH", label: "1-RH", color: "#4CDDF7"},
-    {id: "2-BRAND", label: "2-BRAND", color: "#20B9BC"},
-    {id: "1-RH", label: "1-RH", color: "#2F8999"},
-    // {id: "download", label: "Download", color: "#E39F94"},
-    // {id: "streaming", label: "Streaming", color: "#ED7864"},
-    // {id: "other", label: "Other", color: "#ABABAB"},
+    {id: "1-brand", label: "1-brand", color: "#E39F94"},
+    {id: "1-rh", label: "1-RH", color: "#ABABAB"},
+    {id: "2-brand", label: "2-brand", color: "#E39F94"},
+    {id: "2-rh", label: "2-rh", color: "#2F8999"},
   ];
 
-  const margin = {top: 50, right: 30, bottom: 30, left: 70};
+  const margin = {top: 20, right: 20, bottom: 20, left: 40};
   const width = 900;
   const height = 350;
   const innerWidth = width - margin.left - margin.right
@@ -21,6 +15,9 @@ const drawPackingChart = (data) => {
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height]);
+
+  const innerChart = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
   const stackGenerator = d3.stack()
     .keys(formatsInfo.map(f => f.id));
@@ -40,6 +37,56 @@ const drawPackingChart = (data) => {
     .domain([0, d3.max(annotatedData[annotatedData.length-1], d => d[1])])
     .range([innerHeight, 0])
     .nice();
+
+  annotatedData.forEach(serie => {
+    innerChart
+      .selectAll(`bar-${serie.key}`)
+      .data(serie)
+      .join("rect")
+        .attr("class", d => `bar-${serie.key}`)
+        .attr("x", d => xScale(d.data.date))
+        .attr("y", d => yScale(d[1]))
+        .attr("width", xScale.bandwidth())
+        .attr("height", d => yScale(d[0]) - yScale(d[1]))
+        .attr("fill", colorScale(serie.key));
+  })
+
+  const bottomAxis = d3.axisBottom(xScale)
+    .tickSizeOuter(0)
+
+  innerChart.append("g")
+    .attr("transform", `translate(0, ${innerHeight})`)
+    .call(bottomAxis)
+    .call(g => g.select(".domain").remove())
+
+  const leftAxis = d3.axisLeft(yScale)
+    .ticks(width/80, "s")
+
+  innerChart.append("g")
+    .call(leftAxis)
+    .call(g => g.select(".domain").remove())
+    .call(g => g.selectAll(".tick line").clone()
+      .attr("x2", innerWidth)
+      .attr("stroke-opacity", 0.1))
+    
+  annotatedData.forEach(serie => {
+    console.log(serie)
+    innerChart.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
+      .selectAll()
+      .data(serie)
+      .join("text")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => xScale(d.data.date) + xScale.bandwidth()/2)
+        .attr("y", d => yScale(d[1]) + 2)
+        .attr("dy", "0.35em")
+        .text(d => {
+          if (d[1] - d[0] != 0) { return d3.format(".1s")(d[1]-d[0])}
+        })
+  })
+
 
   return svg.node();
 }

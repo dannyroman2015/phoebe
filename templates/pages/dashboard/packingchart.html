@@ -4,7 +4,7 @@
 <script src="/static/js/charts/packingchart.js"></script>
 <script>
   console.log({{.packingData}})
-
+  packingchart.append(drawPackingChart({{.packingData}})) 
   d3.csv("/static/data.csv", d3.autoType).then( data => {
     console.log(data)
 })

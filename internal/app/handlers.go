@@ -307,14 +307,15 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println("failed to get data from packchart", err)
 	}
 	var packchartData []struct {
-		Date  string `bson:"date" json:"date"`
-		BRAND int    `bson:"BRAND" json:"BRAND"`
-		RH    int    `bson:"RH" json:"RH"`
-		OUT   int    `bson:"OUT" json:"OUT"`
+		Date   string `bson:"date" json:"date"`
+		Brand1 int    `bson:"1-brand" json:"1-brand"`
+		Brand2 int    `bson:"2-brand" json:"2-brand"`
+		Rh1    int    `bson:"1-rh" json:"1-rh"`
+		Rh2    int    `bson:"2-rh" json:"2-rh"`
 	}
-
-	cur.All(context.Background(), &packchartData)
-	log.Println(packchartData)
+	if err := cur.All(context.Background(), &packchartData); err != nil {
+		log.Println("failed to decode", err)
+	}
 
 	// pipeline = mongo.Pipeline{
 	// 	{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
