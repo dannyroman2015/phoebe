@@ -27,7 +27,7 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 
-	router.GET("/incentive/admin", s.iadmin)
+	router.GET("/incentive/admin", withAuth(s.iadmin))
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
 	router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
 	router.DELETE("/incentive/admin/deletecriteria/:criteriaid", s.deletecriteria)
@@ -36,7 +36,7 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/incentive/admin/deleteevaluate/:evaluateid", s.deleteevaluate)
 	router.POST("/incentive/admin/searchevaluate", s.ia_searchevaluate)
 
-	router.GET("/incentive/evaluate", s.evaluate)
+	router.GET("/incentive/evaluate", withAuth(s.evaluate))
 	router.POST("/incentive/evaluate/searchstaff", s.searchstaff)
 	router.POST("/incentive/evaluate/searchcriterion", s.searchcriterion)
 	router.POST("/incentive/evaluate/sendevaluate", s.sendevaluate)
