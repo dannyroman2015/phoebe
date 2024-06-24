@@ -925,9 +925,8 @@ func (s *Server) io_loadscores(w http.ResponseWriter, r *http.Request, ps httpro
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	selectedMonth, _ := strconv.Atoi(r.FormValue("selectedMonth"))
-	selectm := time.Month(selectedMonth)
-	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), selectm, 1, 0, 0, 0, 0, time.Local))
-	end := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), selectm+1, 1, 0, 0, 0, 0, time.Local))
+	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Month(selectedMonth), 1, 0, 0, 0, 0, time.Local))
+	end := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Month(selectedMonth)+1, 1, 0, 0, 0, 0, time.Local))
 	scoreSearch := r.FormValue("scoreSearch")
 	searchRegex := ".*" + scoreSearch + ".*"
 
@@ -960,6 +959,55 @@ func (s *Server) io_scoresearch(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	template.Must(template.ParseFiles("templates/pages/incentive/overview/point_tbody.html")).Execute(w, results)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /incentive/overview/io_evalsearch - load evaluations tbody when search
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) io_evalsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	selectedMonth, _ := strconv.Atoi(r.FormValue("evalSelectedMonth"))
+	start := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Month(selectedMonth), 1, 0, 0, 0, 0, time.Local))
+	end := primitive.NewDateTimeFromTime(time.Date(time.Now().Year(), time.Month(selectedMonth)+1, 1, 0, 0, 0, 0, time.Local))
+	evalSearch := r.FormValue("evalSearch")
+	searchRegex := ".*" + evalSearch + ".*"
+
+	pipeline := mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"occurdate": bson.M{"$gte": start}}, bson.M{"occurdate": bson.M{"$lt": end}}}}}},
+		{{"$match", bson.M{"$or": bson.A{bson.M{"employee.id": bson.M{"$regex": searchRegex, "$options": "i"}}, bson.M{"employee.name": bson.M{"$regex": searchRegex, "$options": "i"}}, bson.M{"employee.section": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		{{"$sort", bson.M{"occurdate": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$occurdate"}}}}},
+	}
+
+	cur, err := s.mgdb.Collection("evaluation").Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Println("io_evalsearch: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to access evaluation"))
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var results []struct {
+		Date      string `bson:"date"`
+		Criterion struct {
+			Description string `bson:"description"`
+			Point       int    `bson:"point"`
+			Kind        string `bson:"kind"`
+		} `bson:"criterion"`
+		Employee struct {
+			Id      string `bson:"id"`
+			Name    string `bson:"name"`
+			Section string `bson:"section"`
+		} `bson:"employee"`
+	}
+
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println("io_evalsearch: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to decode"))
+	}
+
+	template.Must(template.ParseFiles("templates/pages/incentive/overview/eval_tbody.html")).Execute(w, results)
 }
 
 // ///////////////////////////////////////////////////////////////////////
