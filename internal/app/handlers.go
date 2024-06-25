@@ -1508,6 +1508,7 @@ func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/packing/entry - get entry page of packing
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// tìm những mo nào chưa done để hiện thị ra bảng
 	model := models.NewMoModel(s.mgdb)
 	results := model.FindNotDone()
 
@@ -1786,6 +1787,40 @@ func (s *Server) mo_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) i_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	template.Must(template.ParseFiles("templates/pages/item/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// /item/admin - get admin page of item
+// /////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) i_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("item").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer cur.Close(context.Background())
+
+	var results []struct {
+		Id    string `bson:"id"`
+		Name  string `bson:"name"`
+		Parts []struct {
+			Id   string `bson:"id"`
+			Name string `bson:"name"`
+			Qty  int    `bson:"qty"`
+		} `bson:"parts"`
+	}
+
+	if err := cur.All(context.Background(), &results); err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(results)
+	template.Must(template.ParseFiles(
+		"templates/pages/item/admin/admin.html",
+		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"itemList": results,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////

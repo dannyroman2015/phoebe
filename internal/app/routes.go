@@ -103,6 +103,8 @@ func (s *Server) routes() http.Handler {
 	// item ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	router.GET("/item/entry", withAuth(s.i_entry))
+
+	router.GET("/item/admin", s.i_admin)
 	// end item --------------------------------------------------------
 
 	router.GET("/test", s.handleGetTest)
