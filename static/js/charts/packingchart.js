@@ -80,8 +80,9 @@ const drawPackingChart = (data) => {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => xScale(d.data.date) + xScale.bandwidth()/2)
-        .attr("y", d => yScale(d[1]) + 2)
+        .attr("y", d => yScale(d[1]) - (yScale(d[1]) - yScale(d[0]))/2 )
         .attr("dy", "0.35em")
+        .attr("fill", "white")
         .text(d => {
           if (d[1] - d[0] != 0) { return d3.format(".1s")(d[1]-d[0])}
         })

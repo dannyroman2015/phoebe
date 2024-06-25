@@ -41,6 +41,23 @@ func NewMoModel(mgdb *mongo.Database) *MoModel {
 	return &MoModel{mgdb: mgdb}
 }
 
+func (m *MoModel) InsertMany(moStrJson string) error {
+	var bdoc []interface{}
+	err := bson.UnmarshalExtJSON([]byte(moStrJson), true, &bdoc)
+	if err != nil {
+		log.Print("failed to unmarshal json string", err)
+		return err
+	}
+
+	_, err = m.mgdb.Collection("mo").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println("failed to insert many to employee collection", err)
+		return err
+	}
+
+	return nil
+}
+
 func (m *MoModel) FindNotDone() []MoRecord {
 	var results []MoRecord
 	cur, err := m.mgdb.Collection("mo").Find(context.Background(), bson.M{"status": bson.M{"$ne": "done"}}, options.Find().SetLimit(5))

@@ -1522,9 +1522,9 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	})
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
 // /sections/packing/entry/itemparts/:mo/:itemid - get form input when choose item
-// ////////////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	itemid := ps.ByName("itemid")
 	mo := ps.ByName("mo")
@@ -1548,6 +1548,9 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 	})
 }
 
+// ////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry/maxpartqtyinput - get max quantity of parts of item
+// ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_getinputmax(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// tính max value của thanh slider
 	var result models.MoRecord
@@ -1704,6 +1707,85 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/sections/packing/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// /mo/entry - get entry page of mo
+// /////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mo_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/mo/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// /mo/entry - post entry page of mo
+// /////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mo_insertMoList(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("inputfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	rows, _ := f.Rows("Sheet1")
+
+	var jsonStr = `[`
+	rows.Next()
+	for rows.Next() {
+		row, _ := rows.Columns()
+		jsonStr += `{
+			"mo":"` + row[0] + `",
+			"item":{
+				"id":"` + row[1] + `",
+				"name":"` + row[2] + `"}, 
+			"pi":"` + row[3] + `", 
+			"needqty":` + row[4] + `, 
+			"finish_desc": "` + row[5] + `", 
+			"me_fib_finish": "` + row[6] + `", 
+			"note": "` + row[7] + `", 
+			"price": ` + row[8] + `, 
+			"doneqty": 0, 
+			"status": "raw"},`
+
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	// chưa xong để làm xong phần item rồi truy xuất colllection item để lấy parts
+
+	model := models.NewMoModel(s.mgdb)
+	if err := model.InsertMany(jsonStr); err != nil {
+		log.Println("success")
+		return
+	}
+
+	// template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 	"showSuccessDialog": true,
+	// 	"showErrorDialog":   false,
+	// })
+}
+
+func (s *Server) mo_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/mo/admin/admin.html",
+		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"moareaData": nil,
+	})
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// /item/entry - get entry page of item
+// /////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) i_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/item/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////

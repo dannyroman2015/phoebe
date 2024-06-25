@@ -1,5 +1,5 @@
 const drawSixSChart = (data, dates, areas) => {
-  const margin = {top: 30, right: 30, bottom: 30, left: 40}
+  const margin = {top: 0, right: 10, bottom: 20, left: 40}
   const width = 900
   const height = 300
   const innerWidth = width - margin.left - margin.right

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/sweetalert.min.js"></script>
+  <title>Mo Entry</title>
+</head>
+<body class="bg-gray-100">
+  {{template "navbar"}}
+
+  <section>
+    <div class="mx-auto max-w-screen-md px-4 py-16 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 gap-x-16 gap-y-8">
+        <form class="space-y-4" action="/mo/entry" method="post" enctype="multipart/form-data">
+          <div class="mt-4 text-center">
+            <button type="submit" class="inline-block w-full rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+              Gửi</button>
+          </div>
+
+          <div class="relative w-full max-w-xs mx-auto">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="inputfile">
+              Chọn file excel để insert nhanh MO</label>
+
+            <input class="block w-full text-md text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+           type="file" name="inputfile">
+           <a href="/static/uploads/mo_import_template.xlsx" class="text-blue-400">
+            Tải file mẫu excel trống</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>
+
+<script> 
+  if ({{.showSuccessDialog}}) {
+    swal("Thành công", "Báo cáo đã được cập nhật", "success")
+  }
+  if ({{.showErrorDialog}}) {
+    swal("Thất bại", "Dữ liệu nhập sai định dạng hoặc truy cập cơ sở dữ liệu bị lỗi, vui lòng nhập lại", "error")
+  }
+</script>

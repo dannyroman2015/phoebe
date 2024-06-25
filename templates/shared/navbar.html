@@ -96,6 +96,10 @@
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Cutting</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Cutting.</span>
                                                 </a>
+                                                <a href="/mo/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Nhập liệu Mo</span>
+                                                    <span class="block leading-5 opacity-50">Trang nhập liệu cho Mo.</span>
+                                                </a>
                                                 <a href="/6s/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu 6S</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo chấm điểm 6S.</span>
@@ -133,6 +137,20 @@
                     href="/home">Home</a></li> -->
                 <li><a class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none bg-background hover:bg-neutral-100 group w-max" 
                     href="/dashboard">Dashboard</a></li>
+                <li>
+                    <button
+                        :class="{ 'bg-neutral-100' : navigationMenu=='MO', 'hover:bg-neutral-100' : navigationMenu!='MO' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='MO'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
+                        <span>MO</span> 
+                        <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'MO' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
+                <li>
+                    <button
+                        :class="{ 'bg-neutral-100' : navigationMenu=='Item', 'hover:bg-neutral-100' : navigationMenu!='Item' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Item'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
+                        <span>Item</span> 
+                        <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Item' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='Sections', 'hover:bg-neutral-100' : navigationMenu!='Sections' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Sections'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
@@ -183,6 +201,44 @@
         class="absolute z-40 top-0 pt-3 duration-200 ease-out -translate-x-1/2 translate-y-11" x-cloak>
 
         <div class="flex justify-center w-auto h-auto overflow-hidden bg-white border rounded-md shadow-sm border-neutral-200/70">
+
+            <!-- Item -->
+            <div x-show="navigationMenu == 'Item'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
+                <div class="w-72">
+                    <a href="/item/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Tổng Quan</span>
+                        <span class="block font-light leading-5 opacity-50">Trang tổng quan theo dõi Item.</span>
+                    </a>
+                    <a href="/item/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
+                        <span class="block leading-5 opacity-50">Trang nhập liệu cho Item.</span>
+                    </a>
+                    <a href="/item/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Quản Lý</span>
+                        <span class="block leading-5 opacity-50">Trang quản lý chỉnh sửa Item.</span>
+                    </a>
+                </div>
+            </div>
+            <!-- end Item -->
+            
+            <!-- Mo -->
+            <div x-show="navigationMenu == 'MO'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
+                <div class="w-72">
+                    <a href="/mo/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Tổng Quan</span>
+                        <span class="block font-light leading-5 opacity-50">Trang tổng quan theo dõi MO.</span>
+                    </a>
+                    <a href="/mo/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
+                        <span class="block leading-5 opacity-50">Trang nhập liệu cho MO.</span>
+                    </a>
+                    <a href="/mo/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Quản Lý</span>
+                        <span class="block leading-5 opacity-50">Trang quản lý chỉnh sửa MO.</span>
+                    </a>
+                </div>
+            </div>
+            <!-- end MO -->
 
             <!-- Sections -->
             <div x-show="navigationMenu == 'Sections'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
