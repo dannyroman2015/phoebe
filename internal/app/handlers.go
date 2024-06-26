@@ -196,34 +196,23 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	pipeline := mongo.Pipeline{
 		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"date": "$_id"}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$limit", 20}},
 		{{"$unset", "_id"}},
 	}
-
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
 	if err != nil {
 		log.Println("failed to access database at GetQtyTotalsByDate: ", err)
 		return
 	}
 	defer cur.Close(context.Background())
-
-	var cuttingResults []struct {
-		Date time.Time `bson:"date"`
-		Qty  float64   `bson:"qty_total"`
+	var cuttingData []struct {
+		Date string  `bson:"date"`
+		Qty  float64 `bson:"qty_total"`
 	}
-	if err = cur.All(context.Background(), &cuttingResults); err != nil {
+	if err = cur.All(context.Background(), &cuttingData); err != nil {
 		log.Println("failed to decode at GetQtyTotalsByDate: ", err)
 		return
-	}
-
-	var cuttingData = make([]struct {
-		Date string
-		Qty  float64
-	}, len(cuttingResults))
-
-	for i := 0; i < len(cuttingResults); i++ {
-		cuttingData[i].Date = cuttingResults[i].Date.Format("2 Jan")
-		cuttingData[i].Qty = cuttingResults[i].Qty
 	}
 
 	// get data for 6S chart
@@ -1540,12 +1529,9 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
-		"mo":          result.Mo,
-		"itemid":      result.Item.Id,
-		"itemNeedQty": result.NeedQty,
-		"itemDoneQty": result.DoneQty,
-		"parts":       result.Item.Parts,
-		"resultJson":  string(resultJson),
+
+		"parts":      result.Item.Parts,
+		"resultJson": string(resultJson),
 	})
 }
 
@@ -1754,7 +1740,6 @@ func (s *Server) mo_insertMoList(w http.ResponseWriter, r *http.Request, ps http
 			"price": ` + row[8] + `, 
 			"doneqty": 0, 
 			"status": "raw"},`
-
 	}
 	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
 
@@ -1815,12 +1800,26 @@ func (s *Server) i_admin(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		return
 	}
 
-	log.Println(results)
 	template.Must(template.ParseFiles(
 		"templates/pages/item/admin/admin.html",
 		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
 		"itemList": results,
 	})
+}
+
+func (s *Server) i_additem(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	itemid := r.FormValue("itemid")
+	itemname := r.FormValue("itemname")
+
+	var item = models.Item{
+		Id:   itemid,
+		Name: itemname,
+	}
+
+	if err := models.NewItemModel(s.mgdb).InsertItem(item); err != nil {
+		log.Println(err)
+	}
+	// template.Must(template.ParseFiles("templates/pages/item/admin/item_tbody.html")).Execute(w, map[string]interface{}{})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////

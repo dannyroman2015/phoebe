@@ -13,8 +13,9 @@
 
   <section id="item" x-data="{
     openAddForm: false,
+    openPartForm: false,
     message: 'Giao tiếp, hướng dẫn xuất hiện ở đây.',
-    itemid:'', itemname: '', parts: [], critkind: '', critpoint: '',
+    itemid:'', itemname: '', parts: [],
   }"
       class="px-4 py-4 mx-auto">
     <div class="sm:flex sm:items-center sm:justify-between">
@@ -48,11 +49,20 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Add</span>
+          <span>Add Item</span>
+        </button>
+
+        <button @click="openPartForm=!openPartForm;"
+            class="flex items-center justify-center w-1/2 px-5 py-2 text-sm tracking-wide text-white transition-colors duration-200 bg-blue-500 rounded-lg shrink-0 sm:w-auto gap-x-2 hover:bg-blue-600 dark:hover:bg-blue-500 dark:bg-blue-600">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Add Part</span>
         </button>
       </div>
     </div>
   
+    <!-- form update item -->
     <section x-show="openAddForm">
       <div class="mx-auto max-w-screen-lg px-1 py-12 sm:px-4 lg:px-8">
         <div class="grid grid-cols-1 gap-x-16 gap-y-8 bg-white">
@@ -64,10 +74,10 @@
               <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <label for="itemid" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
-                    <input :value="itemid" type="text" id="itemid" name="itemid" placeholder="Mã tiêu chí"
+                    <input :value="itemid" type="text" id="itemid" name="itemid" placeholder="Item Code"
                       class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
                     <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                      Code</span>
+                      Item Code</span>
                   </label>
                 </div>       
           
@@ -76,13 +86,13 @@
                     <input :value="itemname" type="text" id="itemname" name="itemname" placeholder="Name"
                       class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
                     <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                      Name</span>
+                      Item Name</span>
                   </label>
                 </div>
   
               </div>
   
-              <div class="grid grid-cols-1 gap-4">
+              <!-- <div class="grid grid-cols-1 gap-4">
                 <div>
                   <label for="parts" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
                     <input :value="parts" type="text" id="parts" name="parts" placeholder="Description"
@@ -91,7 +101,7 @@
                       Description</span>
                   </label>
                 </div>       
-              </div>
+              </div> -->
   
               <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
       
@@ -99,7 +109,7 @@
     
               <div class="mt-6 text-center">
                 <button @click="openAddForm=!openAddForm;"
-                  hx-post="/incentive/admin/upsertcriteria" hx-target="#table-container"
+                  hx-post="/item/admin/additem" hx-target="#item_tbody" hx-swap="outerHTML"
                   type="submit" class="inline-block w-full rounded-lg bg-black px-5 py-3 font-medium text-white sm:w-auto">
                   Submit</button>
               </div>
@@ -108,6 +118,77 @@
         </div>
       </div>
     </section>
+    <!-- end form update item -->
+
+    <!-- form update part -->
+    <section x-show="openPartForm">
+      <div class="mx-auto max-w-screen-lg px-1 py-12 sm:px-4 lg:px-8">
+        <div class="grid grid-cols-1 gap-x-16 gap-y-8 bg-white">
+          <div class="rounded-lg bg-white p-8 shadow-lg lg:p-12">
+  
+            <form class="space-y-6" action="" method="post">
+              <h1 class="text-center text-2xl font-bold capitalize sm:text-3xl">Update Part</h1>
+  
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label for="pitemid" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
+                    <input type="text" id="pitemid" name="pitemid" placeholder="Part Code"
+                      class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
+                    <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                      Item Code</span>
+                  </label>
+                </div>       
+  
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label for="partid" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
+                    <input type="text" id="partid" name="partid" placeholder="Part Code"
+                      class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
+                    <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                      Part Code</span>
+                  </label>
+                </div>       
+          
+                <div class="col-span-2">
+                  <label for="partname" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
+                    <input type="text" id="partname" name="partname" placeholder="Part Name"
+                      class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
+                    <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                      Part Name</span>
+                  </label>
+                </div>
+  
+              </div>
+  
+              <!-- <div class="grid grid-cols-1 gap-4">
+                <div>
+                  <label for="parts" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
+                    <input :value="parts" type="text" id="parts" name="parts" placeholder="Description"
+                      class="w-full p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0"/>
+                    <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                      Description</span>
+                  </label>
+                </div>       
+              </div> -->
+  
+              <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      
+              </div>
+    
+              <div class="mt-6 text-center">
+                <button @click="openPartForm=!openPartForm;"
+                  hx-post="/item/admin/additem" hx-target="#item_tbody" hx-swap="outerHTML"
+                  type="submit" class="inline-block w-full rounded-lg bg-black px-5 py-3 font-medium text-white sm:w-auto">
+                  Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- end form update part -->
   
   
     <div class="mt-6 md:flex md:items-center md:justify-between">
@@ -168,7 +249,7 @@
                     </tr>
                   </thead>
               
-                  <tbody hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML swap:1s"
+                  <tbody id="item_tbody" hx-target="closest tr" hx-swap="outerHTML swap:1s"
                           class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                     {{range .itemList}}
                     <tr>
@@ -186,15 +267,13 @@
 
                       <td class="px-4 py-1 text-sm whitespace-nowrap">
                         <div>
-                          {{range .Parts}}
-                          <a href="">
+                          {{range .Parts}}    
                             <p class="text-gray-500 dark:text-gray-400">{{.Id}}</p>
-                          </a>
                           {{end}}
                         </div>
                       </td>
                 
-                      <td class="px-4 py-1 text-sm space-x-4 whitespace-nowrap">
+                      <td hx-confirm="Are you sure?" class="px-4 py-1 text-sm space-x-4 whitespace-nowrap">
                         <!-- click on delete icon -->
                         <button hx-delete="/incentive/admin/deletecriteria/{{.Id}}"
                                 class="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none">
@@ -205,6 +284,14 @@
                 
                         <!-- click on update icon -->
                         <button @click="openAddForm=!openAddForm; itemid='{{.Id}}'; itemname='{{.Name}}'; parts='{{.Parts}}';" 
+                            class="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                          </svg>
+                        </button>
+
+                        <!-- click on add update part icon -->
+                        <button @click="openPartForm=!openPartForm;" 
                             class="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />

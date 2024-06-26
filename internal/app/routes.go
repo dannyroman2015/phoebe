@@ -93,7 +93,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/mo/entry", withAuth(s.mo_entry))
+	router.GET("/mo/entry", s.mo_entry)
 	router.POST("/mo/entry", s.mo_insertMoList)
 
 	router.GET("/mo/admin", s.mo_admin)
@@ -105,6 +105,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/item/entry", withAuth(s.i_entry))
 
 	router.GET("/item/admin", s.i_admin)
+	router.POST("/item/admin/additem", s.i_additem)
 	// end item --------------------------------------------------------
 
 	router.GET("/test", s.handleGetTest)

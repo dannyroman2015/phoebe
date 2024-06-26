@@ -79,11 +79,14 @@
                                 </th>
 
                                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                                  Tên & Mô Tả
-                                </th>
+                                  Tên & Finishing Description
   
                                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                   PI
+                                </th>
+
+                                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                    Ghi Chú
                                 </th>
 
                             </tr>
@@ -118,12 +121,17 @@
                                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                                     <div>
                                         <h4 class="text-gray-700 dark:text-gray-200">{{.Item.Name}}</h4>
-                                        <p class="text-gray-500 dark:text-gray-400">{{.Note}}</p>
+                                        <p class="text-gray-500 dark:text-gray-400">{{.FinishDesc}}</p>
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                                     <div class="flex items-center">
-                                      <h4 class="text-gray-700 dark:text-gray-200">asdf</h4>
+                                      <h4 class="text-gray-700 dark:text-gray-200">{{.PI}}</h4>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-sm whitespace-nowrap">
+                                    <div class="flex items-center">
+                                      <h4 class="text-gray-700 dark:text-gray-200">{{.Note}}</h4>
                                     </div>
                                 </td>
                             </tr>

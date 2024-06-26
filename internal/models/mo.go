@@ -30,6 +30,7 @@ type MoRecord struct {
 	Price       float64 `bson:"price" json:"price"`
 	Status      string  `bson:"status" json:"status"`
 	Note        string  `bson:"note" json:"note"`
+	FinishDesc  string  `bson:"finish_desc" json:"finish_desc"`
 	DonePercent float64
 }
 
