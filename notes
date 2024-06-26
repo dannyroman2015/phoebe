@@ -101,3 +101,5 @@ dataaa.forEach(function(d){
         if ( depth === levels.length - 1 ) depthCursor.push({ name : d.model, value : d.size });
     });
 });
+
+db.mo.aggregate([{ "$match": { "status": "raw" } }, { "$lookup": { "from": "item", "localField": "item.id", "foreignField": "id", "as": "item.parts" } }, { "$merge": { "into": "mo", "whenMatched": "replace", "whenNotMatched": "discard" } }])

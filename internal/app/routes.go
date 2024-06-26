@@ -106,6 +106,7 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/item/admin", s.i_admin)
 	router.POST("/item/admin/additem", s.i_additem)
+	router.POST("/item/admin/addpart", s.i_addpart)
 	// end item --------------------------------------------------------
 
 	router.GET("/test", s.handleGetTest)

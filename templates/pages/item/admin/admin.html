@@ -178,8 +178,8 @@
               </div>
     
               <div class="mt-6 text-center">
-                <button @click="openPartForm=!openPartForm;"
-                  hx-post="/item/admin/additem" hx-target="#item_tbody" hx-swap="outerHTML"
+                <button
+                  hx-post="/item/admin/addpart" hx-target="#item_tbody" hx-swap="outerHTML"
                   type="submit" class="inline-block w-full rounded-lg bg-black px-5 py-3 font-medium text-white sm:w-auto">
                   Submit</button>
               </div>

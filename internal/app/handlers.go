@@ -296,11 +296,11 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println("failed to get data from packchart", err)
 	}
 	var packchartData []struct {
-		Date   string `bson:"date" json:"date"`
-		Brand1 int    `bson:"1-brand" json:"1-brand"`
-		Brand2 int    `bson:"2-brand" json:"2-brand"`
-		Rh1    int    `bson:"1-rh" json:"1-rh"`
-		Rh2    int    `bson:"2-rh" json:"2-rh"`
+		Date   string  `bson:"date" json:"date"`
+		Brand1 float64 `bson:"1-brand" json:"1-brand"`
+		Brand2 float64 `bson:"2-brand" json:"2-brand"`
+		Rh1    float64 `bson:"1-rh" json:"1-rh"`
+		Rh2    float64 `bson:"2-rh" json:"2-rh"`
 	}
 	if err := cur.All(context.Background(), &packchartData); err != nil {
 		log.Println("failed to decode", err)
@@ -1526,6 +1526,7 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println(result)
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
@@ -1549,7 +1550,7 @@ func (s *Server) sp_getinputmax(w http.ResponseWriter, r *http.Request, ps httpr
 	var maxInputQty int
 	for _, p := range result.Item.Parts {
 		if r.FormValue("itempart") == p.Id {
-			maxInputQty = p.NeedQty - p.DoneQty
+			maxInputQty = result.NeedQty - p.DoneQty
 		}
 	}
 
@@ -1820,6 +1821,33 @@ func (s *Server) i_additem(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println(err)
 	}
 	// template.Must(template.ParseFiles("templates/pages/item/admin/item_tbody.html")).Execute(w, map[string]interface{}{})
+}
+
+func (s *Server) i_addpart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pitemid := r.FormValue("pitemid")
+	partid := r.FormValue("partid")
+	partname := r.FormValue("partname")
+
+	filter := bson.M{
+		"id": pitemid,
+	}
+	update := bson.M{
+		"$push": bson.M{"parts": bson.M{"id": partid, "name": partname}},
+	}
+	_, err := s.mgdb.Collection("item").UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		log.Println(err)
+	}
+	cur, _ := s.mgdb.Collection("item").Find(context.Background(), bson.M{})
+	defer cur.Close(context.Background())
+
+	var itemList []models.Item
+	cur.All(context.Background(), &itemList)
+
+	template.Must(template.ParseFiles("templates/pages/item/admin/item_tbody.html")).Execute(w, map[string]interface{}{
+		"itemList": itemList,
+	})
+
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////

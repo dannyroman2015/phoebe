@@ -18,10 +18,10 @@ type MoRecord struct {
 		Id    string `bson:"id" json:"id"`
 		Name  string `bson:"name" json:"name"`
 		Parts []struct {
-			Id      string `bson:"id" json:"id"`
-			Name    string `bson:"name" json:"name"`
-			NeedQty int    `bson:"needqty" json:"needqty"`
-			DoneQty int    `bson:"doneqty" json:"doneqty"`
+			Id   string `bson:"id" json:"id"`
+			Name string `bson:"name" json:"name"`
+			// NeedQty int    `bson:"needqty" json:"needqty"`
+			DoneQty int `bson:"doneqty" json:"doneqty"`
 		} `bson:"parts" json:"parts"`
 	} `bson:"item" json:"item"`
 	NeedQty     int     `bson:"needqty" json:"needqty"`
