@@ -70,6 +70,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/cutting/overview", s.sc_overview)
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
+	router.GET("/sections/cutting/entry/wrnoteinput", s.sc_wrnoteinput)
+	router.POST("/sections/cutting/entry/createwrnote", s.sc_createwrnote)
 	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
 
 	router.GET("/sections/cutting/admin", withAuth(s.sc_admin))
@@ -103,6 +105,7 @@ func (s *Server) routes() http.Handler {
 	// item ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	router.GET("/item/entry", withAuth(s.i_entry))
+	router.POST("/item/entry", s.i_importitemlist)
 
 	router.GET("/item/admin", s.i_admin)
 	router.POST("/item/admin/additem", s.i_additem)

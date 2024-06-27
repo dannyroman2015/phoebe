@@ -101,25 +101,25 @@ func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprou
 	http.SetCookie(w, &http.Cookie{
 		Name:    "username",
 		Value:   user.Username,
-		Expires: time.Now().Add(2 * time.Hour),
+		Expires: time.Now().Add(720 * time.Hour),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "staffid",
 		Value:   user.Info.StaffId,
-		Expires: time.Now().Add(2 * time.Hour),
+		Expires: time.Now().Add(720 * time.Hour),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "defaulturl",
 		Value:   user.Defaulturl,
-		Expires: time.Now().Add(2 * time.Hour),
+		Expires: time.Now().Add(720 * time.Hour),
 		Path:    "/",
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "authurls",
 		Value:   strings.Join(user.Authurls, " "),
-		Expires: time.Now().Add(2 * time.Hour),
+		Expires: time.Now().Add(720 * time.Hour),
 		Path:    "/",
 	})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -194,6 +194,7 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
+		{{"$match", bson.M{"type": "report"}}},
 		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -1265,19 +1266,18 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 	var jsonStr = `[`
 	for rows.Next() {
 		row, _ := rows.Columns()
-		jsonStr += `{"id":"` + row[0] + `", "name":"` + row[1] + `","section":"` + row[2] + `"},`
+		jsonStr += `{
+		"id":"` + row[0] + `", 
+		"name":"` + row[1] + `",
+		"section":"` + row[2] + `",
+		"subsection":"` + row[3] + `",
+		"position":"` + row[4] + `",
+		"facno":"` + row[5] + `",
+		"status":"` + row[6] + `"
+		},`
 
 	}
 	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
-
-	log.Println(jsonStr)
-	// if len(scores)%2 != 0 || len(scores) == 0 {
-	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-	// 		"showSuccessDialog": false,
-	// 		"showErrorDialog":   true,
-	// 	})
-	// 	return
-	// }
 
 	model := models.NewEmployeeModel(s.mgdb)
 	if err := model.InsertMany(jsonStr); err != nil {
@@ -1295,13 +1295,55 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/entry - get entry page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	data := map[string]interface{}{
-		"showSuccessDialog": false,
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
+	if err != nil {
+		log.Println(err)
 	}
-	template.Must(template.ParseFiles(
-		"templates/pages/sections/cutting/entry/entry.html",
-		"templates/shared/navbar.html",
-	)).Execute(w, data)
+	defer cur.Close(context.Background())
+
+	var wrnotes []struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+	}
+	if err = cur.All(context.Background(), &wrnotes); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": false,
+		"wrnotes":           wrnotes,
+	})
+}
+
+func (s *Server) sc_wrnoteinput(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, nil)
+}
+
+func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnoteqty, _ := strconv.ParseFloat(r.FormValue("wrnoteqty"), 64)
+	_, err := s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
+		"type": "wrnote", "wrnotecode": r.FormValue("wrnotecode"), "wrnoteqty": wrnoteqty,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var wrnotes []struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+	}
+	if err = cur.All(context.Background(), &wrnotes); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteselect.html")).Execute(w, map[string]interface{}{
+		"wrnotes": wrnotes,
+	})
 }
 
 // ///////////////////////////////////////////////////////////////////////
@@ -1773,6 +1815,40 @@ func (s *Server) mo_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) i_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	template.Must(template.ParseFiles("templates/pages/item/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+func (s *Server) i_importitemlist(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("inputfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	rows, _ := f.Rows("Sheet1")
+
+	var jsonStr = `[`
+	for rows.Next() {
+		row, _ := rows.Columns()
+		jsonStr += `{
+		"id":"` + row[0] + `", 
+		"name":"` + row[1] + `"
+		},`
+
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	model := models.NewItemModel(s.mgdb)
+	if err := model.InsertByStringJson(jsonStr); err != nil {
+		log.Println("success")
+		return
+	}
 }
 
 // /////////////////////////////////////////////////////////////////////////////////////////

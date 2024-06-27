@@ -27,6 +27,23 @@ func NewItemModel(mgdb *mongo.Database) *ItemModel {
 	}
 }
 
+func (m *ItemModel) InsertByStringJson(strJson string) error {
+	var bdoc []interface{}
+	err := bson.UnmarshalExtJSON([]byte(strJson), true, &bdoc)
+	if err != nil {
+		log.Print("failed to unmarshal json string", err)
+		return err
+	}
+
+	_, err = m.mgdb.Collection("item").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println("failed to insert many to item collection", err)
+		return err
+	}
+
+	return nil
+}
+
 func (m *ItemModel) InsertItem(item Item) error {
 	_, err := m.mgdb.Collection("item").InsertOne(context.Background(), bson.M{
 		"id":   item.Id,
