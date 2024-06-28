@@ -94,7 +94,8 @@
                         <tbody 
                             class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                             {{range .results}}
-                            <tr hx-get="/sections/packing/entry/itemparts/{{.Mo}}/{{.Item.Id}}" hx-target="#entry-container" hx-swap="outerHTML"
+                            <tr hx-get="/sections/packing/entry/itemparts/{{.Mo}}/{{.Item.Id}}" hx-target="#entry-container" 
+                                hx-swap="outerHTML" hx-push-url="true"
                               class="hover:bg-neutral-100 cursor-pointer">
             
                                 <td class="px-4 py-4 text-sm font-medium whitespace-nowrap">

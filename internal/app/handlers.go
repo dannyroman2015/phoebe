@@ -1921,7 +1921,8 @@ func (s *Server) i_addpart(w http.ResponseWriter, r *http.Request, ps httprouter
 	cur.All(context.Background(), &itemList)
 
 	template.Must(template.ParseFiles("templates/pages/item/admin/item_tbody.html")).Execute(w, map[string]interface{}{
-		"itemList": itemList,
+		"itemList":          itemList,
+		"showSuccessDialog": true,
 	})
 
 }
