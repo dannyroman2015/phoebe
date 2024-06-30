@@ -515,14 +515,20 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+	}
+	username := usernameToken.Value
 	rawOccurDate := r.FormValue("occurdate")
 	occurdate, _ := time.Parse("Jan 02, 2006", rawOccurDate)
 	point, _ := strconv.Atoi(id_des_p_kind[2])
 
-	_, err := s.mgdb.Collection("evaluation").InsertOne(context.Background(), bson.M{
+	_, err = s.mgdb.Collection("evaluation").InsertOne(context.Background(), bson.M{
 		"employee":  bson.M{"id": id_name_section[0], "name": id_name_section[1], "section": id_name_section[2]},
 		"criterion": bson.M{"id": id_des_p_kind[0], "description": id_des_p_kind[1], "point": point, "kind": id_des_p_kind[3]},
 		"occurdate": primitive.NewDateTimeFromTime(occurdate),
+		"evaluator": username,
 	})
 	if err != nil {
 		log.Println("sendevaluate: ", err)
@@ -625,7 +631,7 @@ func (s *Server) loadcrittable(w http.ResponseWriter, r *http.Request, ps httpro
 // then load to evaluate table
 // //////////////////////////////////////////////////////////
 func (s *Server) loadevaltable(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("evaluation").Find(context.Background(), bson.M{})
+	cur, err := s.mgdb.Collection("evaluation").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"occurdate": -1}))
 	if err != nil {
 		log.Println("loadevaltable: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -649,6 +655,7 @@ func (s *Server) loadevaltable(w http.ResponseWriter, r *http.Request, ps httpro
 		OccurDate    time.Time `bson:"occurdate"`
 		StrOccurDate string
 		Id           string `bson:"_id"`
+		Evaluator    string `bson:"evaluator"`
 	}
 
 	if err = cur.All(context.Background(), &evalResults); err != nil {
@@ -787,8 +794,8 @@ func (s *Server) ia_searchevaluate(w http.ResponseWriter, r *http.Request, ps ht
 		bson.M{"employee.section": bson.M{"$regex": searchRegex, "$options": "i"}},
 		bson.M{"occurdate": evaluateSearchDate},
 	}}
-
 	cur, err := s.mgdb.Collection("evaluation").Find(context.Background(), filter, options.Find().SetSort(bson.M{"occurdate": -1}))
+
 	if err != nil {
 		log.Println("ia_searchevaluate: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -991,6 +998,7 @@ func (s *Server) io_evalsearch(w http.ResponseWriter, r *http.Request, ps httpro
 			Name    string `bson:"name"`
 			Section string `bson:"section"`
 		} `bson:"employee"`
+		Evaluator string `bson:"evaluator"`
 	}
 
 	if err = cur.All(context.Background(), &results); err != nil {
