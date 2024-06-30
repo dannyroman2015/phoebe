@@ -27,6 +27,15 @@ type CuttingReport struct {
 	LastModified     time.Time `bson:"lastmodified"`
 }
 
+type CuttingWrnote struct {
+	Code      string    `bson:"wrnotecode"`
+	Qty       float64   `bson:"wrnoteqty"`
+	WoodType  string    `bson:"woodtype"`
+	Thickness float64   `bson:"thickness"`
+	Date      string    `bson:"date"`
+	CreatedAt time.Time `bson:"createat"`
+}
+
 type CuttingModel struct {
 	mgdb *mongo.Database
 }
@@ -73,6 +82,23 @@ func (m *CuttingModel) Search(searchWord string) []CuttingReport {
 	}
 
 	return results
+}
+
+func (m *CuttingModel) FindAllWrnotes() ([]CuttingWrnote, error) {
+	cur, err := m.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer cur.Close(context.Background())
+
+	var results []CuttingWrnote
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (m *CuttingModel) FindAllReportsSortDateDesc() ([]CuttingReport, error) {

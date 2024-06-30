@@ -61,7 +61,7 @@ func (m *MoModel) InsertMany(moStrJson string) error {
 
 func (m *MoModel) FindNotDone() []MoRecord {
 	var results []MoRecord
-	cur, err := m.mgdb.Collection("mo").Find(context.Background(), bson.M{"status": bson.M{"$ne": "done"}}, options.Find().SetLimit(5))
+	cur, err := m.mgdb.Collection("mo").Find(context.Background(), bson.M{"status": bson.M{"$ne": "done"}}, options.Find())
 	if err != nil {
 		log.Println("FindNotDone: ", err)
 		return results

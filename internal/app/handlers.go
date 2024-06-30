@@ -196,7 +196,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"type": "report"}}},
 		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$sort", bson.M{"_id": 1}}},
+		{{"$sort", bson.M{"_id": -1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
 		{{"$limit", 20}},
 		{{"$unset", "_id"}},
@@ -215,6 +215,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println("failed to decode at GetQtyTotalsByDate: ", err)
 		return
 	}
+	slices.Reverse(cuttingData)
 
 	// get data for 6S chart
 	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"datestr": 1}))
@@ -1295,7 +1296,7 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/entry - get entry page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createat": -1}))
 	if err != nil {
 		log.Println(err)
 	}
@@ -1315,17 +1316,81 @@ func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	})
 }
 
-func (s *Server) sc_wrnoteinput(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/entry/wrnoteinfo - get wrnote info when select wrnote code
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sc_wrnoteinfo(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sresult := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "wrnote", "wrnotecode": r.FormValue("wrnote")})
+	if sresult.Err() != nil {
+		log.Println(sresult.Err())
+	}
+
+	var wrnoteinfo struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WoodType   string  `bson:"woodtype"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+		Thickness  float64 `bson:"thickness"`
+	}
+
+	if err := sresult.Decode(&wrnoteinfo); err != nil {
+		log.Println(err)
+	}
+
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "report", "wrnote": r.FormValue("wrnote")}}},
+		{{"$group", bson.M{"_id": "$wrnote", "total": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$set", bson.M{"wrnote": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var result []struct {
+		DoneQty float64 `bson:"total"`
+	}
+	cur.All(context.Background(), &result)
+	var remain float64
+	if len(result) == 0 {
+		remain = wrnoteinfo.WrnoteQty
+	} else {
+		remain = wrnoteinfo.WrnoteQty - result[0].DoneQty
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinfo.html")).Execute(w, map[string]interface{}{
+		"wrnoteinfo": wrnoteinfo,
+		"remain":     remain,
+	})
+}
+
+func (s *Server) sc_newwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, nil)
 }
 
 func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnotedate := r.FormValue("occurdate")
+	code := r.FormValue("wrnotecode")
+	woodtype := r.FormValue("woodtype")
+	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnoteqty, _ := strconv.ParseFloat(r.FormValue("wrnoteqty"), 64)
+	if wrnotedate == "" || code == "" || woodtype == "" || thickness == 0 || wrnoteqty == 0 {
+		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showMissingDialog": true,
+		})
+		return
+	}
+
 	_, err := s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type": "wrnote", "wrnotecode": r.FormValue("wrnotecode"), "wrnoteqty": wrnoteqty,
+		"type": "wrnote", "wrnotecode": code, "wrnoteqty": wrnoteqty, "woodtype": woodtype, "thickness": thickness, "date": wrnotedate, "createat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showMissingDialog": true,
+		})
+		return
 	}
 
 	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
@@ -1341,8 +1406,9 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 	if err = cur.All(context.Background(), &wrnotes); err != nil {
 		log.Println(err)
 	}
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteselect.html")).Execute(w, map[string]interface{}{
-		"wrnotes": wrnotes,
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/report_form.html")).Execute(w, map[string]interface{}{
+		"wrnotes":           wrnotes,
+		"showSuccessDialog": true,
 	})
 }
 
@@ -1350,10 +1416,11 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 // /sections/cutting/sendentry - post entry to database
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	remain, _ := strconv.ParseFloat(strings.Split(r.FormValue("wrnoteqty"), "/")[0], 64)
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
 	stroccurdate := r.FormValue("occurdate")
 	occurdate, _ := time.Parse("2006-01-02", stroccurdate)
 	woodtype := r.FormValue("woodtype")
-	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnote := r.FormValue("wrnote")
 	usernameToken, err := r.Cookie("username")
@@ -1363,11 +1430,8 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if qty == 0 || thickness == 0 || wrnote == "" {
-		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-			"showSuccessDialog": false,
-			"showMissingDialog": true,
-		})
+	if qty == 0 || thickness == 0 || wrnote == "" || qty > remain {
+		w.Write([]byte("Sai thông tin nhập liệu"))
 		return
 	}
 
@@ -1389,16 +1453,20 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-		"showSuccessDialog": true,
-		"showMissingDialog": false,
-	})
+	http.Redirect(w, r, "/sections/cutting/entry", http.StatusSeeOther)
 }
 
 // ///////////////////////////////////////////////////////////////////////
 // /sections/cutting/admin - get page admin of cutting section
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/loadreports - load report area on cutting admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	model := models.NewCuttingModel(s.mgdb)
 	cuttingReports, err := model.FindAllReportsSortDateDesc()
 	if err != nil {
@@ -1416,9 +1484,36 @@ func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 		n = len(cuttingReports)
 	}
 
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/admin.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/reports.html")).Execute(w, map[string]interface{}{
 		"cuttingReports":  cuttingReports[:n],
 		"numberOfReports": len(cuttingReports),
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/loadwrnote - load wrnote area on cutting admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	model := models.NewCuttingModel(s.mgdb)
+	cuttingWrnote, err := model.FindAllWrnotes()
+	if err != nil {
+		log.Println("sc_admin: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed to access cutting database"))
+		return
+	}
+
+	// chỗ này sao này làm next prev sửa lại sau
+	var n int
+	if len(cuttingWrnote) > 20 {
+		n = 20
+	} else {
+		n = len(cuttingWrnote)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnotes.html")).Execute(w, map[string]interface{}{
+		"cuttingWrnotes":  cuttingWrnote[:n],
+		"numberOfWrnotes": len(cuttingWrnote),
 	})
 }
 
@@ -1568,11 +1663,9 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println(result)
 
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
-
 		"parts":      result.Item.Parts,
 		"resultJson": string(resultJson),
 	})
@@ -1774,13 +1867,15 @@ func (s *Server) mo_insertMoList(w http.ResponseWriter, r *http.Request, ps http
 			"mo":"` + row[0] + `",
 			"item":{
 				"id":"` + row[1] + `",
-				"name":"` + row[2] + `"}, 
+				"name":"` + row[2] + `",
+				"parts":` + row[10] + `}, 
 			"pi":"` + row[3] + `", 
 			"needqty":` + row[4] + `, 
 			"finish_desc": "` + row[5] + `", 
 			"me_fib_finish": "` + row[6] + `", 
 			"note": "` + row[7] + `", 
 			"price": ` + row[8] + `, 
+			"customer": ` + row[9] + `, 
 			"doneqty": 0, 
 			"status": "raw"},`
 	}
@@ -1936,4 +2031,8 @@ func (s *Server) i_addpart(w http.ResponseWriter, r *http.Request, ps httprouter
 // ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) handleGetTest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/test/test.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+func (s *Server) testload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/packing/overview/testload.html")).Execute(w, nil)
 }

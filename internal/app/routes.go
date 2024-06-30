@@ -70,11 +70,14 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/cutting/overview", s.sc_overview)
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
-	router.GET("/sections/cutting/entry/wrnoteinput", s.sc_wrnoteinput)
+	router.POST("/sections/cutting/entry/wrnoteinfo", s.sc_wrnoteinfo)
+	router.GET("/sections/cutting/entry/newwrnote", s.sc_newwrnote)
 	router.POST("/sections/cutting/entry/createwrnote", s.sc_createwrnote)
 	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
 
 	router.GET("/sections/cutting/admin", withAuth(s.sc_admin))
+	router.GET("/sections/cutting/admin/loadreports", s.sc_loadreports)
+	router.GET("/sections/cutting/admin/loadwrnote", s.sc_loadwrnote)
 	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	// end Cuttting/////////////////////////////////////////////////////////////
@@ -113,6 +116,8 @@ func (s *Server) routes() http.Handler {
 	// end item --------------------------------------------------------
 
 	router.GET("/test", s.handleGetTest)
+
+	router.GET("/test/loadmain", s.testload)
 
 	return router
 }
