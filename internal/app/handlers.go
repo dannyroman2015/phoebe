@@ -881,8 +881,8 @@ func (s *Server) ioverview(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/incentive/overview/overview.html",
 		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
 		"top5Scores": top5Scores,
-		"highest":    scores[0],
-		"lowest":     scores[len(scores)-1],
+		// "highest":    highest,
+		// "lowest":     scores[len(scores)-1],
 	})
 }
 
