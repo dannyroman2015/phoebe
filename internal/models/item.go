@@ -27,6 +27,20 @@ func NewItemModel(mgdb *mongo.Database) *ItemModel {
 	}
 }
 
+func (m *ItemModel) UpdateParts(id, partString string) error {
+	var parts []interface{}
+	if err := bson.UnmarshalExtJSON([]byte(partString), true, &parts); err != nil {
+		log.Println("failed to unmarshalExJSON", err)
+		return err
+	}
+	_, err := m.mgdb.Collection("item").UpdateOne(context.Background(), bson.M{"id": id}, bson.M{"$set": bson.M{"parts": parts}})
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
 func (m *ItemModel) InsertByStringJson(strJson string) error {
 	var bdoc []interface{}
 	err := bson.UnmarshalExtJSON([]byte(strJson), true, &bdoc)

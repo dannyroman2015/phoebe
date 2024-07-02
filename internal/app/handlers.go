@@ -1697,18 +1697,18 @@ func (s *Server) sp_initparts(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	partStr := `[
-		{"id":"` + r.FormValue("partcode1") + `", "name":"` + r.FormValue("partname1") + `", "doneqty":0}`
+		{"id":"` + r.FormValue("partcode1") + `", "name":"` + r.FormValue("partname1") + `"}`
 
 	if r.FormValue("partcode2") != "" || r.FormValue("partname2") != "" {
-		partStr += `,{"id":"` + r.FormValue("partcode2") + `", "name":"` + r.FormValue("partname2") + `", "doneqty":0}`
+		partStr += `,{"id":"` + r.FormValue("partcode2") + `", "name":"` + r.FormValue("partname2") + `"}`
 	}
 
 	if r.FormValue("partcode3") != "" || r.FormValue("partname3") != "" {
-		partStr += `,{"id":"` + r.FormValue("partcode3") + `", "name":"` + r.FormValue("partname3") + `", "doneqty":0}`
+		partStr += `,{"id":"` + r.FormValue("partcode3") + `", "name":"` + r.FormValue("partname3") + `"}`
 	}
 
 	if r.FormValue("partcode4") != "" || r.FormValue("partname4") != "" {
-		partStr += `,{"id":"` + r.FormValue("partcode4") + `", "name":"` + r.FormValue("partname4") + `", "doneqty":0}`
+		partStr += `,{"id":"` + r.FormValue("partcode4") + `", "name":"` + r.FormValue("partname4") + `"}`
 	}
 	partStr += `]`
 
@@ -1718,7 +1718,14 @@ func (s *Server) sp_initparts(w http.ResponseWriter, r *http.Request, ps httprou
 		log.Println("sp_initparts: ", err)
 	}
 
+	// initialize parts on mo collection
 	if err := models.NewMoModel(s.mgdb).InitPart(result, partStr); err != nil {
+		log.Println(err)
+		return
+	}
+
+	// update on item collection
+	if err := models.NewItemModel(s.mgdb).UpdateParts(result.Item.Id, partStr); err != nil {
 		log.Println(err)
 		return
 	}
