@@ -36,7 +36,7 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/incentive/admin/deleteevaluate/:evaluateid", s.deleteevaluate)
 	router.POST("/incentive/admin/searchevaluate", s.ia_searchevaluate)
 
-	router.GET("/incentive/evaluate", withAuth(s.evaluate))
+	router.GET("/incentive/evaluate", withAuth(s.evaluate)) // use withAuth later
 	router.POST("/incentive/evaluate/searchstaff", s.searchstaff)
 	router.POST("/incentive/evaluate/searchcriterion", s.searchcriterion)
 	router.POST("/incentive/evaluate/sendevaluate", s.sendevaluate)
