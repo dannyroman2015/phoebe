@@ -42,6 +42,25 @@ func NewMoModel(mgdb *mongo.Database) *MoModel {
 	return &MoModel{mgdb: mgdb}
 }
 
+func (m *MoModel) InitPart(mr MoRecord, partStr string) error {
+	var parts []interface{}
+	err := bson.UnmarshalExtJSON([]byte(partStr), true, &parts)
+	if err != nil {
+		log.Print("failed to unmarshal json string", err)
+		return err
+	}
+	_, err = m.mgdb.Collection("mo").UpdateOne(context.Background(), bson.M{
+		"mo": mr.Mo, "pi": mr.PI, "item.id": mr.Item.Id,
+	}, bson.M{"$set": bson.M{"item.parts": parts}})
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
 func (m *MoModel) InsertMany(moStrJson string) error {
 	var bdoc []interface{}
 	err := bson.UnmarshalExtJSON([]byte(moStrJson), true, &bdoc)
@@ -75,9 +94,9 @@ func (m *MoModel) FindNotDone() []MoRecord {
 	return results
 }
 
-func (m *MoModel) FindByMoItem(mo, itemid string) MoRecord {
+func (m *MoModel) FindByMoItemPi(mo, itemid, pi string) MoRecord {
 	var result MoRecord
-	if err := m.mgdb.Collection("mo").FindOne(context.Background(), bson.M{"item.id": itemid, "mo": mo}).Decode(&result); err != nil {
+	if err := m.mgdb.Collection("mo").FindOne(context.Background(), bson.M{"item.id": itemid, "mo": mo, "pi": pi}).Decode(&result); err != nil {
 		log.Println("FindByMoItem: ", err)
 		return result
 	}

@@ -1663,19 +1663,70 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	itemid := ps.ByName("itemid")
 	mo := ps.ByName("mo")
+	pi := ps.ByName("pi")
 
 	model := models.NewMoModel(s.mgdb)
-	result := model.FindByMoItem(mo, itemid)
+	result := model.FindByMoItemPi(mo, itemid, pi)
 
 	resultJson, err := json.Marshal(result)
 	if err != nil {
 		log.Println(err)
 	}
 
+	// if item in mo don't have part, initialize parts
+	if len(result.Item.Parts) == 0 {
+		template.Must(template.ParseFiles("templates/pages/sections/packing/entry/initialparts.html")).Execute(w, map[string]interface{}{
+			"resultJson": string(resultJson),
+		})
+		return
+	}
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/itempart_tbl.html")).Execute(w, map[string]interface{}{
 		"parts":      result.Item.Parts,
 		"resultJson": string(resultJson),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry/initparts - initialize parts of item in mo
+// ////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_initparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.FormValue("partcode1") == "" || r.FormValue("partname1") == "" {
+		w.Write([]byte("Phải có ít nhất 1 part"))
+		return
+	}
+
+	partStr := `[
+		{"id":"` + r.FormValue("partcode1") + `", "name":"` + r.FormValue("partname1") + `", "doneqty":0}`
+
+	if r.FormValue("partcode2") != "" || r.FormValue("partname2") != "" {
+		partStr += `,{"id":"` + r.FormValue("partcode2") + `", "name":"` + r.FormValue("partname2") + `", "doneqty":0}`
+	}
+
+	if r.FormValue("partcode3") != "" || r.FormValue("partname3") != "" {
+		partStr += `,{"id":"` + r.FormValue("partcode3") + `", "name":"` + r.FormValue("partname3") + `", "doneqty":0}`
+	}
+
+	if r.FormValue("partcode4") != "" || r.FormValue("partname4") != "" {
+		partStr += `,{"id":"` + r.FormValue("partcode4") + `", "name":"` + r.FormValue("partname4") + `", "doneqty":0}`
+	}
+	partStr += `]`
+
+	var result models.MoRecord
+
+	if err := json.Unmarshal([]byte(r.FormValue("resultJson")), &result); err != nil {
+		log.Println("sp_initparts: ", err)
+	}
+
+	if err := models.NewMoModel(s.mgdb).InitPart(result, partStr); err != nil {
+		log.Println(err)
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/shared/dialog.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"dialogMessage":     "Cập nhật part sản phẩm thành công",
+		"dialogRedirectUrl": "/sections/packing/entry",
 	})
 }
 
