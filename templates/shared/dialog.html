@@ -6,8 +6,8 @@
     })
   }
   if ({{.showMissingDialog}}) {
-    swal("Thành công", {{.showMissingDialog}}, "success").then(() => {
-      window.location.href = {{.showMissingDialog}};
+    swal("Thất bại", {{.dialogMessage}}, "error").then(() => {
+      window.location.href = {{.dialogRedirectUrl}};
     })
   }
 </script>

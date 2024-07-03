@@ -1643,8 +1643,7 @@ func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// tìm những mo nào chưa done để hiện thị ra bảng
-	model := models.NewMoModel(s.mgdb)
-	results := model.FindNotDone()
+	results := models.NewMoModel(s.mgdb).FindNotDone()
 
 	for i := 0; i < len(results); i++ {
 		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].ProductQty) * 100
@@ -1653,6 +1652,19 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/packing/entry/entry.html",
 		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"results": results,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry/mosearch - search mo on packing entry page
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_mosearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	results := models.NewMoModel(s.mgdb).SeachMo(r.FormValue("moStatus"), r.FormValue("searchFilter"), r.FormValue("mosearch"))
+	for i := 0; i < len(results); i++ {
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].ProductQty) * 100
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/packing/entry/mo_tbl.html")).Execute(w, map[string]interface{}{
 		"results": results,
 	})
 }
@@ -1693,10 +1705,11 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) sp_itempart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.FormValue("partnumber") == "" {
 		template.Must(template.ParseFiles("templates/shared/dialog.html")).Execute(w, map[string]interface{}{
-			"showSuccessDialog": true,
-			"dialogMessage":     "Cập nhật part sản phẩm thành công",
+			"showMissingDialog": true,
+			"dialogMessage":     "Số lượng part chưa được chọn",
 			"dialogRedirectUrl": "/sections/packing/entry",
 		})
+		return
 	}
 	numberOfParts, _ := strconv.Atoi(r.FormValue("partnumber"))
 	var result models.MoRecord

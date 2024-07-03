@@ -44,6 +44,28 @@ func NewMoModel(mgdb *mongo.Database) *MoModel {
 	return &MoModel{mgdb: mgdb}
 }
 
+func (m *MoModel) SeachMo(status, searchFilter, searchWord string) []MoRecord {
+	regexWord := ".*" + searchWord + ".*"
+	var results []MoRecord
+	filter := bson.M{
+		searchFilter: bson.M{"$regex": regexWord, "$options": "i"},
+	}
+	cur, err := m.mgdb.Collection("mo").Find(context.Background(), filter, options.Find().SetSort(bson.M{"item.id": 1}))
+
+	if err != nil {
+		log.Println(err)
+		return results
+	}
+	defer cur.Close(context.Background())
+
+	if err = cur.All(context.Background(), &results); err != nil {
+		log.Println(err)
+		return results
+	}
+
+	return results
+}
+
 func (m *MoModel) InitPart(mr MoRecord, partStr string) error {
 	var parts []interface{}
 	err := bson.UnmarshalExtJSON([]byte(partStr), true, &parts)
