@@ -1688,6 +1688,50 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////
+// /sections/packing/entry/itempart - chỉ nhập số lượng để khởi tạo part
+// ////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sp_itempart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.FormValue("partnumber") == "" {
+		template.Must(template.ParseFiles("templates/shared/dialog.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": true,
+			"dialogMessage":     "Cập nhật part sản phẩm thành công",
+			"dialogRedirectUrl": "/sections/packing/entry",
+		})
+	}
+	numberOfParts, _ := strconv.Atoi(r.FormValue("partnumber"))
+	var result models.MoRecord
+
+	if err := json.Unmarshal([]byte(r.FormValue("resultJson")), &result); err != nil {
+		log.Println("sp_initparts: ", err)
+	}
+
+	partStr := `[
+		{"id":"` + result.Item.Id + `_P1", "name":"Part 1/` + strconv.Itoa(numberOfParts) + ` of ` + result.Item.Name + `"}`
+	for i := 1; i < numberOfParts; i++ {
+		partStr += `,{"id":"` + result.Item.Id + `_P` + strconv.Itoa(i+1) + `", "name":"Part ` + strconv.Itoa(i+1) + `/` + strconv.Itoa(numberOfParts) + ` of ` + result.Item.Name + `"}`
+	}
+	partStr += `]`
+
+	// initialize parts on mo collection
+	if err := models.NewMoModel(s.mgdb).InitPart(result, partStr); err != nil {
+		log.Println(err)
+		return
+	}
+
+	// update on item collection
+	if err := models.NewItemModel(s.mgdb).UpdateParts(result.Item.Id, partStr); err != nil {
+		log.Println(err)
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/shared/dialog.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"dialogMessage":     "Cập nhật part sản phẩm thành công",
+		"dialogRedirectUrl": "/sections/packing/entry",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////
 // /sections/packing/entry/initparts - initialize parts of item in mo
 // ////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_initparts(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

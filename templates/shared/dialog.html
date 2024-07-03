@@ -5,4 +5,9 @@
       window.location.href = {{.dialogRedirectUrl}};
     })
   }
+  if ({{.showMissingDialog}}) {
+    swal("Thành công", {{.showMissingDialog}}, "success").then(() => {
+      window.location.href = {{.showMissingDialog}};
+    })
+  }
 </script>

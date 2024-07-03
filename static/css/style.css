@@ -1009,10 +1009,6 @@ select {
   margin-top: 1px;
 }
 
-.mt-1\.5 {
-  margin-top: 0.375rem;
-}
-
 .block {
   display: block;
 }
@@ -1282,6 +1278,10 @@ select {
   max-width: 768px;
 }
 
+.max-w-screen-sm {
+  max-width: 640px;
+}
+
 .max-w-sm {
   max-width: 24rem;
 }
@@ -1454,10 +1454,6 @@ select {
 
 .grid-cols-7 {
   grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-
-.grid-cols-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .flex-col {
@@ -2014,11 +2010,6 @@ select {
 .py-6 {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
-}
-
-.py-0 {
-  padding-top: 0px;
-  padding-bottom: 0px;
 }
 
 .pb-0 {
