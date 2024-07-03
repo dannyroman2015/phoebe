@@ -1647,7 +1647,7 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	results := model.FindNotDone()
 
 	for i := 0; i < len(results); i++ {
-		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].NeedQty) * 100
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].ProductQty) * 100
 	}
 
 	template.Must(template.ParseFiles(
@@ -1933,15 +1933,15 @@ func (s *Server) mo_insertMoList(w http.ResponseWriter, r *http.Request, ps http
 			"mo":"` + row[0] + `",
 			"item":{
 				"id":"` + row[1] + `",
-				"name":"` + row[2] + `",
-				"parts":` + row[10] + `}, 
+				"name":"` + row[2] + `"},
 			"pi":"` + row[3] + `", 
-			"needqty":` + row[4] + `, 
+			"needqty":` + row[10] + `, 
 			"finish_desc": "` + row[5] + `", 
 			"me_fib_finish": "` + row[6] + `", 
 			"note": "` + row[7] + `", 
 			"price": ` + row[8] + `, 
-			"customer": ` + row[9] + `, 
+			"customer": "` + row[9] + `", 
+			"productqty":` + row[4] + `, 
 			"doneqty": 0, 
 			"status": "raw"},`
 	}
@@ -1999,15 +1999,13 @@ func (s *Server) i_importitemlist(w http.ResponseWriter, r *http.Request, ps htt
 		row, _ := rows.Columns()
 		jsonStr += `{
 		"id":"` + row[0] + `", 
-		"name":"` + row[1] + `"
-		},`
+		"name":"` + row[1] + `"},`
 
 	}
 	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
 
-	model := models.NewItemModel(s.mgdb)
-	if err := model.InsertByStringJson(jsonStr); err != nil {
-		log.Println("success")
+	if err := models.NewItemModel(s.mgdb).InsertByStringJson(jsonStr); err != nil {
+		log.Println(err)
 		return
 	}
 }

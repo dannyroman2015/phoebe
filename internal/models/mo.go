@@ -25,12 +25,14 @@ type MoRecord struct {
 		} `bson:"parts" json:"parts"`
 	} `bson:"item" json:"item"`
 	NeedQty     int     `bson:"needqty" json:"needqty"`
+	ProductQty  int     `bson:"productqty" json:"productqty"`
 	DoneQty     int     `bson:"doneqty" json:"doneqty"`
 	PI          string  `bson:"pi" json:"pi"`
 	Price       float64 `bson:"price" json:"price"`
 	Status      string  `bson:"status" json:"status"`
 	Note        string  `bson:"note" json:"note"`
 	FinishDesc  string  `bson:"finish_desc" json:"finish_desc"`
+	Customer    string  `bson:"customer" json:"customer"`
 	DonePercent float64
 }
 
