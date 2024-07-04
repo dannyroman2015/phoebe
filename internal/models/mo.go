@@ -44,12 +44,38 @@ func NewMoModel(mgdb *mongo.Database) *MoModel {
 	return &MoModel{mgdb: mgdb}
 }
 
+func (m *MoModel) UpdateMoStatus(mo, pi, itemid, newStatus string) error {
+	_, err := m.mgdb.Collection("mo").UpdateOne(context.Background(), bson.M{"mo": mo, "pi": pi, "item.id": itemid}, bson.M{"$set": bson.M{"status": newStatus}})
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
 func (m *MoModel) SeachMo(status, searchFilter, searchWord string) []MoRecord {
 	regexWord := ".*" + searchWord + ".*"
 	var results []MoRecord
-	filter := bson.M{
-		searchFilter: bson.M{"$regex": regexWord, "$options": "i"},
+	var filter bson.M
+
+	if status == "all" {
+		filter = bson.M{
+			searchFilter: bson.M{"$regex": regexWord, "$options": "i"},
+		}
 	}
+	if status == "undone" {
+		filter = bson.M{
+			"status":     bson.M{"$ne": "done"},
+			searchFilter: bson.M{"$regex": regexWord, "$options": "i"},
+		}
+	}
+	if status == "done" {
+		filter = bson.M{
+			"status":     "done",
+			searchFilter: bson.M{"$regex": regexWord, "$options": "i"},
+		}
+	}
+
 	cur, err := m.mgdb.Collection("mo").Find(context.Background(), filter, options.Find().SetSort(bson.M{"item.id": 1}))
 
 	if err != nil {
@@ -128,14 +154,16 @@ func (m *MoModel) FindByMoItemPi(mo, itemid, pi string) MoRecord {
 	return result
 }
 
-func (m *MoModel) UpdatePartDoneIncQty(mo, itemid, updatedPartId string, incPartQty, incItemQty int) error {
+func (m *MoModel) UpdatePartDoneIncQty(mo, pi, itemid, updatedPartId string, incPartQty, incItemQty int, newStatus string) error {
 	filter := bson.M{
 		"mo":            mo,
+		"pi":            pi,
 		"item.id":       itemid,
 		"item.parts.id": updatedPartId,
 	}
 	update := bson.M{
 		"$inc": bson.M{"item.parts.$.doneqty": incPartQty, "doneqty": incItemQty},
+		"$set": bson.M{"status": newStatus},
 	}
 	_, err := m.mgdb.Collection("mo").UpdateOne(context.Background(), filter, update)
 	if err != nil {

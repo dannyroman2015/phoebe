@@ -34,17 +34,17 @@
         class="mt-6 md:flex md:items-center md:justify-between">
         
         <div class="inline-flex overflow-hidden bg-white border divide-x rounded-lg dark:bg-gray-900 rtl:flex-row-reverse dark:border-gray-700 dark:divide-gray-700">
-            <button @click="status='all'"
+            <button @click="status='all'" hx-get="/selections/packing/entry/mo/all" hx-target="#table-container"
                 class="px-5 py-2 text-xs font-medium text-gray-600 transition-colors duration-200sm:text-sm dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">
                 Tất cả
             </button>
     
-            <button @click="status='undone'"
+            <button @click="status='undone'" hx-get="/selections/packing/entry/mo/undone" hx-target="#table-container"
                 class="px-5 py-2 text-xs font-medium text-gray-600 transition-colors duration-200 sm:text-sm dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">
                 Chưa hoàn thành
             </button>
 
-            <button @click="status='done'"
+            <button @click="status='done'" hx-get="/selections/packing/entry/mo/done" hx-target="#table-container"
                 class="px-5 py-2 text-xs font-medium text-gray-600 transition-colors duration-200 sm:text-sm dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">
                 Hoàn Thành
             </button>
@@ -74,12 +74,9 @@
                             Tên sản phẩm</button>
                     </li>
                     <li>
-                        <button type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Design</button>
+                        <button @click="showDropdown=!showDropdown; filter='mo'; filterLabel='MO'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                            MO</button>
                     </li>
-                    <li>
-                        <button type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Logos</button>
-                    </li>
-                    </ul>
                 </div>
                 <div class="relative w-full">
                     <input hx-post="/selections/packing/entry/mosearch" hx-target="#table-container" hx-trigger="input changed delay:500ms, search"
@@ -116,16 +113,16 @@
                                     </button>
                                 </th>
   
-                                <th scope="col" class="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
                                   Tình Trạng
                                 </th>
   
-                                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                                  Số lượng Sản Xuất
+                                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
+                                  Số lượng
                                 </th>
 
-                                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                                  Số lượng Tổng Đơn
+                                <th scope="col" class="whitespace-nowrap px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                  SL sản xuất
                                 </th>
 
                                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -162,7 +159,7 @@
 
                                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                                   <div class="flex items-center gap-x-2 ">
-                                    <span class="text-xs text-gray-500 dark:text-neutral-500">{{.DoneQty}}/{{.ProductQty}}</span>
+                                    <span class="text-xs text-gray-500 dark:text-neutral-500">{{.DoneQty}}/{{.NeedQty}}</span>
                                     <div class="w-20 h-1.5 bg-blue-200 overflow-hidden rounded-full">
                                       <div class="bg-blue-500 h-1.5" style="width: {{.DonePercent}}%;"></div>
                                     </div>
@@ -171,7 +168,7 @@
 
                                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                                     <div class="flex items-center">
-                                      <h4 class="text-gray-700 dark:text-gray-200">{{.NeedQty}}</h4>
+                                      <h4 class="text-gray-700 dark:text-gray-200">{{.ProductQty}}</h4>
                                     </div>
                                 </td>
 
@@ -197,34 +194,6 @@
                     </table>
                 </div>
             </div>
-        </div>
-    </div>
-  
-    <div class="mt-6 sm:flex sm:items-center sm:justify-between ">
-        <div class="text-sm text-gray-500 dark:text-gray-400">
-          1 kết quả <span class="font-medium text-gray-700 dark:text-gray-100"></span> 
-        </div>
-  
-        <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-            <a href="#" class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
-                </svg>
-  
-                <span>
-                    previous
-                </span>
-            </a>
-  
-            <a href="#" class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
-                <span>
-                    Next
-                </span>
-  
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-                </svg>
-            </a>
         </div>
     </div>
   

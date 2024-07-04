@@ -1656,13 +1656,23 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	})
 }
 
+func (s *Server) sp_mobystatus(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	results := models.NewMoModel(s.mgdb).SeachMo(ps.ByName("status"), "mo", "")
+	for i := 0; i < len(results); i++ {
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].NeedQty) * 100
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/packing/entry/mo_tbl.html")).Execute(w, map[string]interface{}{
+		"results": results,
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/packing/entry/mosearch - search mo on packing entry page
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_mosearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	results := models.NewMoModel(s.mgdb).SeachMo(r.FormValue("moStatus"), r.FormValue("searchFilter"), r.FormValue("mosearch"))
 	for i := 0; i < len(results); i++ {
-		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].ProductQty) * 100
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].NeedQty) * 100
 	}
 	template.Must(template.ParseFiles("templates/pages/sections/packing/entry/mo_tbl.html")).Execute(w, map[string]interface{}{
 		"results": results,
@@ -1677,9 +1687,15 @@ func (s *Server) sp_itemparts(w http.ResponseWriter, r *http.Request, ps httprou
 	mo := ps.ByName("mo")
 	pi := ps.ByName("pi")
 
-	model := models.NewMoModel(s.mgdb)
-	result := model.FindByMoItemPi(mo, itemid, pi)
-
+	result := models.NewMoModel(s.mgdb).FindByMoItemPi(mo, itemid, pi)
+	if result.DoneQty == result.NeedQty {
+		template.Must(template.ParseFiles("templates/shared/dialog.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"dialogMessage":     "Sản phẩm này đã đủ số lượng",
+			"dialogRedirectUrl": "/sections/packing/entry",
+		})
+		return
+	}
 	resultJson, err := json.Marshal(result)
 	if err != nil {
 		log.Println(err)
@@ -1862,7 +1878,15 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		incDoneItemQty = 0
 	}
 
-	if err := models.NewMoModel(s.mgdb).UpdatePartDoneIncQty(result.Mo, result.Item.Id, updatedPartId, incDonePartQty, incDoneItemQty); err != nil {
+	/////////////////////////////////////////////////
+	// update mo with status of mo in 'mo' collection
+	/////////////////////////////////////////////////
+	newStatus := result.Status
+	if result.NeedQty == result.DoneQty+incDoneItemQty {
+		newStatus = "done"
+	}
+
+	if err := models.NewMoModel(s.mgdb).UpdatePartDoneIncQty(result.Mo, result.PI, result.Item.Id, updatedPartId, incDonePartQty, incDoneItemQty, newStatus); err != nil {
 		log.Println("sp_sendentry: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to update mo collection"))
