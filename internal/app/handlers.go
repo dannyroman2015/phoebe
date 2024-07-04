@@ -1642,6 +1642,13 @@ func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/packing/entry - get entry page of packing
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/packing/entry/entry.html",
+		"templates/shared/navbar.html")).Execute(w, nil)
+}
+
+func (s *Server) sp_loadentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// tìm những mo nào chưa done để hiện thị ra bảng
 	results := models.NewMoModel(s.mgdb).FindNotDone()
 
@@ -1650,9 +1657,9 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 
 	template.Must(template.ParseFiles(
-		"templates/pages/sections/packing/entry/entry.html",
-		"templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-		"results": results,
+		"templates/pages/sections/packing/entry/main.html")).Execute(w, map[string]interface{}{
+		"maxpage": len(results)/5 + 1,
+		"results": results[0:5],
 	})
 }
 

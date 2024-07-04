@@ -88,6 +88,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/packing/overview", s.sp_overview)
 
 	router.GET("/sections/packing/entry", withAuth(s.sp_entry))
+	router.GET("/sections/packing/entry/loadentry", s.sp_loadentry)
 	router.GET("/selections/packing/entry/mo/:status", s.sp_mobystatus)
 	router.POST("/selections/packing/entry/mosearch", s.sp_mosearch)
 	router.GET("/sections/packing/entry/itemparts/:mo/:itemid/:pi", s.sp_itemparts)
