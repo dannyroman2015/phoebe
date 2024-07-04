@@ -195,7 +195,7 @@ const height = 350;
 
 const barStep = 27;
 const barPadding = 3 / barStep;
-const duration = 750;
+const duration = 100;
 
 const x = d3.scaleLinear().range([margin.left, width - margin.right]);
 

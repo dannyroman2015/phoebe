@@ -525,7 +525,7 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 	point, _ := strconv.Atoi(id_des_p_kind[2])
 
 	_, err = s.mgdb.Collection("evaluation").InsertOne(context.Background(), bson.M{
-		"employee":  bson.M{"id": id_name_section[0], "name": id_name_section[1], "section": id_name_section[2]},
+		"employee":  bson.M{"id": id_name_section[0], "name": strings.ToLower(id_name_section[1]), "section": id_name_section[2]},
 		"criterion": bson.M{"id": id_des_p_kind[0], "description": id_des_p_kind[1], "point": point, "kind": id_des_p_kind[3]},
 		"occurdate": primitive.NewDateTimeFromTime(occurdate),
 		"evaluator": username,
@@ -1646,7 +1646,7 @@ func (s *Server) sp_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 	results := models.NewMoModel(s.mgdb).FindNotDone()
 
 	for i := 0; i < len(results); i++ {
-		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].ProductQty) * 100
+		results[i].DonePercent = float64(results[i].DoneQty) / float64(results[i].NeedQty) * 100
 	}
 
 	template.Must(template.ParseFiles(
