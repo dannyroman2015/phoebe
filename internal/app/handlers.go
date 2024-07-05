@@ -66,7 +66,7 @@ func (s *Server) home(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 // //////////////////////////////////////////////////////////
 func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	data := map[string]string{
-		"msg": "Login with your account. If you do not have account, click Request",
+		"msg": "Login as guest if you do not have account. Want an account, click Request",
 	}
 
 	template.Must(template.ParseFiles("templates/pages/login/login.html")).Execute(w, data)
@@ -78,6 +78,10 @@ func (s *Server) serveLogin(w http.ResponseWriter, r *http.Request, ps httproute
 func (s *Server) requestLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
+	if username == "" && password == "" {
+		username = "guest"
+		password = "guest"
+	}
 	user := User{}
 
 	if err := s.mgdb.Collection("user").FindOne(context.Background(), bson.M{"username": username}).Decode(&user); err != nil {
@@ -349,6 +353,35 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // //////////////////////////////////////////////////////////
+// /dashboard/loadpanelcnc - load panelcnc area in dashboard
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "machine": "$machine"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.machine": 1}}},
+		{{"$set", bson.M{"date": "$_id.date", "machine": "$_id.machine"}}},
+		{{"$unset", "_id"}},
+	}
+	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Println(err)
+	}
+	var panelChartData []struct {
+		Date    string  `bson:"date" json:"date"`
+		Machine string  `bson:"machine" json:"machine"`
+		Qty     float64 `bson:"qty" json:"qty"`
+	}
+
+	if err := cur.All(context.Background(), &panelChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/panelcncchart.html")).Execute(w, map[string]interface{}{
+		"panelChartData": panelChartData,
+	})
+}
+
+// //////////////////////////////////////////////////////////
 // /request
 // //////////////////////////////////////////////////////////
 func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -525,7 +558,7 @@ func (s *Server) sendevaluate(w http.ResponseWriter, r *http.Request, ps httprou
 	point, _ := strconv.Atoi(id_des_p_kind[2])
 
 	_, err = s.mgdb.Collection("evaluation").InsertOne(context.Background(), bson.M{
-		"employee":  bson.M{"id": id_name_section[0], "name": strings.ToLower(id_name_section[1]), "section": id_name_section[2]},
+		"employee":  bson.M{"id": id_name_section[0], "name": id_name_section[1], "section": id_name_section[2]},
 		"criterion": bson.M{"id": id_des_p_kind[0], "description": id_des_p_kind[1], "point": point, "kind": id_des_p_kind[3]},
 		"occurdate": primitive.NewDateTimeFromTime(occurdate),
 		"evaluator": username,
