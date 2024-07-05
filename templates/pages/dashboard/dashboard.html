@@ -453,7 +453,7 @@
         <!-- end Safety Chart -->
 
         <!-- Panelcnc -->
-        <div hx-get="/dashboard/loadpanelcnc" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+        <div hx-get="/dashboard/loadpanelcnc" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end Panelcnc -->
 
           <!-- <div class="col-span-full sm:col-span-3 lg:col-span-2 overflow-hidden relative p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
@@ -477,7 +477,7 @@
 </html>
 
 <style>
-  .fade-in.htmx-added{
+  .fade-in.htmx-added {
     opacity: 0;
   }
   .fade-in {
