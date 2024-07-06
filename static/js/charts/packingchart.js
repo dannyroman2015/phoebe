@@ -70,7 +70,6 @@ const drawPackingChart = (data) => {
       .attr("stroke-opacity", 0.1))
     
   annotatedData.forEach(serie => {
-    console.log(serie)
     innerChart.append("g")
         .attr("font-family", "sans-serif")
         .attr("font-size", 12)

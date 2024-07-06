@@ -381,6 +381,61 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
+func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.URL.Query().Get("panelcnccharttype")
+
+	switch pickedChart {
+	case "machinechart":
+		pipeline := mongo.Pipeline{
+			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "machine": "$machine"}, "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id.date": 1, "_id.machine": 1}}},
+			{{"$set", bson.M{"date": "$_id.date", "machine": "$_id.machine"}}},
+			{{"$unset", "_id"}},
+		}
+		cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
+		if err != nil {
+			log.Println(err)
+		}
+		var panelChartData []struct {
+			Date    string  `bson:"date" json:"date"`
+			Machine string  `bson:"machine" json:"machine"`
+			Qty     float64 `bson:"qty" json:"qty"`
+		}
+
+		if err := cur.All(context.Background(), &panelChartData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_machinechart.html")).Execute(w, map[string]interface{}{
+			"panelChartData": panelChartData,
+		})
+
+	case "totalchart":
+		pipeline := mongo.Pipeline{
+			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id.date": 1}}},
+			{{"$set", bson.M{"date": "$_id.date"}}},
+			{{"$unset", "_id"}},
+		}
+		cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
+		if err != nil {
+			log.Println(err)
+		}
+		var panelChartData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+
+		if err := cur.All(context.Background(), &panelChartData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_totalchart.html")).Execute(w, map[string]interface{}{
+			"panelChartData": panelChartData,
+		})
+	}
+}
+
 // //////////////////////////////////////////////////////////
 // /request
 // //////////////////////////////////////////////////////////
