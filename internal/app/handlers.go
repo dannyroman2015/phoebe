@@ -249,49 +249,6 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		s6Data = append(s6Data, a)
 	}
 
-	// get data for production value
-	pvPipeline := mongo.Pipeline{
-		{{"$group", bson.M{
-			"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
-			"total": bson.M{"$sum": "$value"},
-		}}},
-		{{"$sort", bson.M{"_id.date": -1}}},
-	}
-	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pvPipeline)
-	if err != nil {
-		log.Println(err)
-	}
-	type ProdRecord struct {
-		ID struct {
-			Date    string `bson:"date"`
-			Factory string `bson:"factory"`
-			Type    string `bson:"prodtype"`
-			Item    string `bson:"item"`
-		} `bson:"_id"`
-		Value float64 `bson:"total"`
-	}
-	type ProdValue struct {
-		Date    string  `json:"date"`
-		Factory string  `json:"factory"`
-		Type    string  `json:"prodtype"`
-		Item    string  `json:"item"`
-		Value   float64 `json:"value"`
-	}
-	var productiondata []ProdValue
-	for cur.Next(context.Background()) {
-		var a ProdRecord
-		cur.Decode(&a)
-		t, _ := time.Parse("2006-01-02", a.ID.Date)
-		a.ID.Date = t.Format("2 Jan")
-		productiondata = append(productiondata, ProdValue{
-			Date:    a.ID.Date,
-			Factory: a.ID.Factory,
-			Type:    a.ID.Type,
-			Item:    a.ID.Item,
-			Value:   a.Value,
-		})
-	}
-
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"of": "packchart"}}},
@@ -336,20 +293,149 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
-		"templates/pages/dashboard/productionchart.html",
 		"templates/pages/dashboard/packingchart.html",
 		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
-		"productiondata": productiondata,
-		"cuttingData":    cuttingData,
-		"s6areas":        s6areas,
-		"s6dates":        s6dates,
-		"s6data":         s6Data,
-		"packingData":    packchartData,
+		"cuttingData": cuttingData,
+		"s6areas":     s6areas,
+		"s6dates":     s6dates,
+		"s6data":      s6Data,
+		"packingData": packchartData,
 	})
+}
+
+// //////////////////////////////////////////////////////////
+// /dashboard/loadproduction - load production area in dashboard
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get data for production value
+	pvPipeline := mongo.Pipeline{
+		{{"$group", bson.M{
+			"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
+			"value": bson.M{"$sum": "$value"},
+		}}},
+		{{"$sort", bson.M{"_id.date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": "$_id.factory", "type": "$_id.prodtype", "item": "$_id.item"}}},
+		{{"$unset", "_id"}},
+	}
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pvPipeline)
+	if err != nil {
+		log.Println(err)
+	}
+
+	type ProdValue struct {
+		Date    string  `json:"date"`
+		Factory string  `json:"factory"`
+		Type    string  `json:"prodtype"`
+		Item    string  `json:"item"`
+		Value   float64 `json:"value"`
+	}
+	var productiondata []ProdValue
+
+	if err := cur.All(context.Background(), &productiondata); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/productionchart.html")).Execute(w, map[string]interface{}{
+		"productiondata": productiondata,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/production/getchart - change chart of production area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.URL.Query().Get("productioncharttype")
+
+	switch pickedChart {
+	case "value":
+		pvPipeline := mongo.Pipeline{
+			{{"$group", bson.M{
+				"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
+				"value": bson.M{"$sum": "$value"},
+			}}},
+			{{"$sort", bson.M{"_id.date": -1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": "$_id.factory", "type": "$_id.prodtype", "item": "$_id.item"}}},
+			{{"$unset", "_id"}},
+		}
+		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pvPipeline)
+		if err != nil {
+			log.Println(err)
+		}
+
+		type ProdValue struct {
+			Date    string  `json:"date"`
+			Factory string  `json:"factory"`
+			Type    string  `json:"prodtype"`
+			Item    string  `json:"item"`
+			Value   float64 `json:"value"`
+		}
+		var productiondata []ProdValue
+
+		if err := cur.All(context.Background(), &productiondata); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/productionchart.html")).Execute(w, map[string]interface{}{
+			"productiondata": productiondata,
+		})
+
+	case "mtd":
+		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$group", bson.M{"_id": bson.M{"$month": "$date"}, "value": bson.M{"$push": "$value"}}}},
+			{{"$set", bson.M{"month": "$_id"}}},
+			{{"$unset", "_id"}},
+			{{"$sort", bson.M{"month": 1}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+
+		var resu []struct {
+			Month int       `bson:"month" json:"month"`
+			Value []float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &resu); err != nil {
+			log.Println(err)
+		}
+		log.Println(resu)
+		type PP struct {
+			Month int `json:"month"`
+			Data  []struct {
+				Days     int     `json:"days"`
+				AccValue float64 `json:"value"`
+			} `json:"dat"`
+		}
+
+		var kk []PP
+		for _, re := range resu {
+			var a PP
+			a.Month = re.Month
+			for i := 0; i < len(re.Value); i++ {
+				if i == 0 {
+					a.Data = append(a.Data, struct {
+						Days     int     `json:"days"`
+						AccValue float64 `json:"value"`
+					}{Days: i + 1, AccValue: re.Value[i]})
+				} else {
+					a.Data = append(a.Data, struct {
+						Days     int     `json:"days"`
+						AccValue float64 `json:"value"`
+					}{Days: i + 1, AccValue: a.Data[i-1].AccValue + re.Value[i]})
+				}
+			}
+			kk = append(kk, a)
+		}
+
+		log.Println(kk)
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/prod_mtd.html")).Execute(w, map[string]interface{}{
+			"productiondata": kk,
+		})
+	}
 }
 
 // //////////////////////////////////////////////////////////
@@ -381,7 +467,10 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
-func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pickedChart := r.URL.Query().Get("panelcnccharttype")
 
 	switch pickedChart {
@@ -1944,7 +2033,6 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	json.Unmarshal([]byte(r.FormValue("resultJson")), &result)
 
 	inputDate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
-	strDate := inputDate.Format("2006-01-02")
 
 	updatedPartId := r.FormValue("itempart")
 	incDonePartQty, _ := strconv.Atoi(r.FormValue("partqtyInput"))
@@ -2047,7 +2135,7 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	/////////////////////////////////////////////////
 	if incDoneItemQty > 0 {
 		prodvalRecord := models.ProValRecord{
-			Date:     strDate,
+			Date:     inputDate,
 			Factory:  r.FormValue("factory"),
 			ProdType: r.FormValue("prodtype"),
 			Item:     result.Item.Id,
