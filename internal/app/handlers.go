@@ -252,6 +252,8 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"of": "packchart"}}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$limit", 20}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -268,28 +270,6 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err := cur.All(context.Background(), &packchartData); err != nil {
 		log.Println("failed to decode", err)
 	}
-
-	// pipeline = mongo.Pipeline{
-	// 	{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-	// 	{{"$set", bson.M{"date": "$_id.date", "id": bson.M{"$concat": bson.A{"$_id.factory", "-", "$_id.prodtype"}}}}},
-	// 	{{"$unset", "_id"}},
-	// 	{{"$sort", bson.M{"date": 1}}},
-	// }
-	// cur, err = s.mgdb.Collection("packing").Aggregate(context.Background(), pipeline)
-	// var packingData []struct {
-	// 	Date     string  `bson:"date" json:"date"`
-	// 	Id       string  `bson:"id" json:"id"`
-	// 	Factory  string  `bson:"factory" json:"factory"`
-	// 	Prodtype string  `bson:"prodtype" json:"prodtype"`
-	// 	Value    float64 `bson:"value" json:"value"`
-	// }
-	//dang loi cho nay
-	// if err := cur.All(context.Background(), &packingData); err != nil {
-	// 	log.Println("dashboard: ", err)
-	// }
-	// for _, p := range packingData {
-	// 	log.Println(p)
-	// }
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
@@ -379,7 +359,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			log.Println(err)
 		}
 
-		template.Must(template.ParseFiles("templates/pages/dashboard/productionchart.html")).Execute(w, map[string]interface{}{
+		template.Must(template.ParseFiles("templates/pages/dashboard/prod_value.html")).Execute(w, map[string]interface{}{
 			"productiondata": productiondata,
 		})
 
@@ -401,9 +381,9 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err := cur.All(context.Background(), &resu); err != nil {
 			log.Println(err)
 		}
-		log.Println(resu)
+
 		type PP struct {
-			Month int `json:"month"`
+			Month string `json:"month"`
 			Data  []struct {
 				Days     int     `json:"days"`
 				AccValue float64 `json:"value"`
@@ -413,7 +393,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		var kk []PP
 		for _, re := range resu {
 			var a PP
-			a.Month = re.Month
+			a.Month = time.Month(re.Month).String()
 			for i := 0; i < len(re.Value); i++ {
 				if i == 0 {
 					a.Data = append(a.Data, struct {
@@ -429,8 +409,6 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			}
 			kk = append(kk, a)
 		}
-
-		log.Println(kk)
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/prod_mtd.html")).Execute(w, map[string]interface{}{
 			"productiondata": kk,

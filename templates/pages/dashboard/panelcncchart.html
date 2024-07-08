@@ -69,7 +69,7 @@
                 </label>
                 <div class="col-span-2 w-full">
                   <select @change="popoverOpen=!popoverOpen"
-                    hx-get="/dashboard/panelcnc/getchart" hx-target="#panelchart-container" hx-swap="innerHTML settle:200ms"
+                    hx-get="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelchart-container" hx-swap="innerHTML settle:200ms"
                     name="panelcnccharttype" id="panelcnccharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                     <option value="machinechart">Machine</option>
                     <option value="totalchart">Total</option>
@@ -96,6 +96,15 @@
 
 <script>
   panelcncchart.append(drawPanelcncChart1({{.panelChartData}}))
+
+  const panelcncChart = document.getElementById("panelcnccharttype")
+  const pc_interval = d3.interval(() =>{
+    panelcncChart.selectedIndex = (panelcncChart.selectedIndex + 1) % panelcncChart.length;
+    panelcncChart.dispatchEvent(new Event("input", {bubbles: true}))
+  }, 8000)
+  const pc_clear = () => pc_interval.stop();
+  panelcncChart.addEventListener("change", pc_clear, {once: true});
+  // invalidation.then(() => (pc_clear(), panelcncChart.removeEventListener("change", pc_clear)));
 </script>
 
 
