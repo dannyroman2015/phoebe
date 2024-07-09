@@ -1,8 +1,8 @@
 <div class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <!-- title & control -->
   <div class="flex justify-between">
-    <a href="/lamination/overview" class="mb-1 font-bold hover:underline">
-      Lamination</a>
+    <a href="/sections/reededline/overview" class="mb-1 font-bold hover:underline">
+      Reeded Line</a>
 
     <!-- menu popover -->
     <div x-data="{
@@ -64,19 +64,18 @@
             </div>
             <div class="grid gap-2">
               <div class="grid items-center grid-cols-3 gap-4">
-                  <!-- <label for="productioncharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Chart
-                  </label>
-                  <div class="col-span-2 w-full">
-                      <select @change="popoverOpen=!popoverOpen;"
-                          hx-get="/dashboard/production/getchart" hx-trigger="input, change" hx-target="#productionchart-container" hx-swap="innerHTML settle:200ms"
-                          name="productioncharttype" id="productioncharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                          <option value="value">Value</option>
-                          <option value="mtd">MTD</option>
-                      </select>
-                  </div> -->
-
-                  <!-- <input id="pvcharttype" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
+                <!-- <label for="panelcnccharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Chart
+                </label>
+                <div class="col-span-2 w-full">
+                  <select @change="popoverOpen=!popoverOpen"
+                    hx-get="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelchart-container" hx-swap="innerHTML settle:200ms"
+                    name="panelcnccharttype" id="panelcnccharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                    <option value="machinechart">Machine</option>
+                    <option value="totalchart">Total</option>
+                  </select>
+                </div> -->
+                <!-- <input  id="width" value="100%" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
               </div>
               <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div>
               <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div>
@@ -90,12 +89,20 @@
   </div>
 
   <!-- chart -->
-   <div id="laminationchart-container">
-      <div id="laminationchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+   <div id="reededline-container">
+     <div id="reededlinechart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
    </div>
 </div>
 
-
 <script>
-laminationchart.append(drawLaminationChart({{.laminationChartData}}))
+  reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+
+  /*const panelcncChart = document.getElementById("panelcnccharttype")
+  const pc_interval = d3.interval(() =>{
+    panelcncChart.selectedIndex = (panelcncChart.selectedIndex + 1) % panelcncChart.length;
+    panelcncChart.dispatchEvent(new Event("input", {bubbles: true}))
+  }, 8000)
+  const pc_clear = () => pc_interval.stop();
+  panelcncChart.addEventListener("change", pc_clear, {once: true}); */
+  // invalidation.then(() => (pc_clear(), panelcncChart.removeEventListener("change", pc_clear)));
 </script>

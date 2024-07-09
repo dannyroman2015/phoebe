@@ -125,12 +125,12 @@
 
     productionchart.append(drawProductionChart(newData))
 
-    const prodChart = document.getElementById("productioncharttype")
+    /*const prodChart = document.getElementById("productioncharttype")
     const interval = d3.interval(() => {
       prodChart.selectedIndex = (prodChart.selectedIndex + 1) % prodChart.length;
       prodChart.dispatchEvent(new Event("input", {bubbles: true}))
     }, 8000)
     const clear = () => interval.stop();
-    prodChart.addEventListener("change", clear, {once: true});
+    prodChart.addEventListener("change", clear, {once: true}); */
     // invalidation.then(() => (clear(), prodChart.removeEventListener("change", clear)));
 </script>

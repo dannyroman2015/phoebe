@@ -97,13 +97,13 @@
 <script>
   panelcncchart.append(drawPanelcncChart1({{.panelChartData}}))
 
-  const panelcncChart = document.getElementById("panelcnccharttype")
+  /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{
     panelcncChart.selectedIndex = (panelcncChart.selectedIndex + 1) % panelcncChart.length;
     panelcncChart.dispatchEvent(new Event("input", {bubbles: true}))
   }, 8000)
   const pc_clear = () => pc_interval.stop();
-  panelcncChart.addEventListener("change", pc_clear, {once: true});
+  panelcncChart.addEventListener("change", pc_clear, {once: true}); */
   // invalidation.then(() => (pc_clear(), panelcncChart.removeEventListener("change", pc_clear)));
 </script>
 

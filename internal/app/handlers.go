@@ -221,6 +221,25 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	slices.Reverse(cuttingData)
 
+	// get data for lamination
+	cur, err = s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.prodtype": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var laminationChartData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Qty      float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &laminationChartData); err != nil {
+		log.Println(err)
+	}
+
 	// get data for 6S chart
 	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"datestr": 1}))
 	if err != nil {
@@ -273,17 +292,19 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	template.Must(template.ParseFiles(
 		"templates/pages/dashboard/dashboard.html",
-		"templates/pages/dashboard/packingchart.html",
 		"templates/pages/dashboard/cuttingchart.html",
+		"templates/pages/dashboard/laminationchart.html",
+		"templates/pages/dashboard/packingchart.html",
 		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
-		"cuttingData": cuttingData,
-		"s6areas":     s6areas,
-		"s6dates":     s6dates,
-		"s6data":      s6Data,
-		"packingData": packchartData,
+		"cuttingData":         cuttingData,
+		"laminationChartData": laminationChartData,
+		"s6areas":             s6areas,
+		"s6dates":             s6dates,
+		"s6data":              s6Data,
+		"packingData":         packchartData,
 	})
 }
 
@@ -305,7 +326,7 @@ func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps htt
 	if err != nil {
 		log.Println(err)
 	}
-
+	defer cur.Close(context.Background())
 	type ProdValue struct {
 		Date    string  `json:"date"`
 		Factory string  `json:"factory"`
@@ -345,7 +366,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err != nil {
 			log.Println(err)
 		}
-
+		defer cur.Close(context.Background())
 		type ProdValue struct {
 			Date    string  `json:"date"`
 			Factory string  `json:"factory"`
@@ -373,7 +394,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err != nil {
 			log.Println(err)
 		}
-
+		defer cur.Close(context.Background())
 		var resu []struct {
 			Month int       `bson:"month" json:"month"`
 			Value []float64 `bson:"value" json:"value"`
@@ -416,27 +437,31 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 }
 
-func (s *Server) d_loadlamination(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.prodtype": 1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+// /////////////////////////////////////////////////////////////
+// /dashboard/loadreededline - load reededline area in dashboard
+// /////////////////////////////////////////////////////////////
+func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
-	var laminationChartData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Prodtype string  `bson:"prodtype" json:"prodtype"`
-		Qty      float64 `bson:"qty" json:"qty"`
+	defer cur.Close(context.Background())
+	var reededlinedata []struct {
+		Date string  `bson:"date" json:"date"`
+		Tone string  `bson:"tone" json:"tone"`
+		Qty  float64 `bson:"qty" json:"qty"`
 	}
-	if err := cur.All(context.Background(), &laminationChartData); err != nil {
+	if err := cur.All(context.Background(), &reededlinedata); err != nil {
 		log.Println(err)
 	}
 
-	template.Must(template.ParseFiles("templates/pages/dashboard/lamination.html")).Execute(w, map[string]interface{}{
-		"laminationChartData": laminationChartData,
+	template.Must(template.ParseFiles("templates/pages/dashboard/reededline.html")).Execute(w, map[string]interface{}{
+		"reededlinedata": reededlinedata,
 	})
 }
 
@@ -454,6 +479,7 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	if err != nil {
 		log.Println(err)
 	}
+	defer cur.Close(context.Background())
 	var panelChartData []struct {
 		Date    string  `bson:"date" json:"date"`
 		Machine string  `bson:"machine" json:"machine"`
@@ -487,6 +513,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err != nil {
 			log.Println(err)
 		}
+		defer cur.Close(context.Background())
 		var panelChartData []struct {
 			Date    string  `bson:"date" json:"date"`
 			Machine string  `bson:"machine" json:"machine"`
@@ -512,6 +539,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err != nil {
 			log.Println(err)
 		}
+		defer cur.Close(context.Background())
 		var panelChartData []struct {
 			Date string  `bson:"date" json:"date"`
 			Qty  float64 `bson:"qty" json:"qty"`
