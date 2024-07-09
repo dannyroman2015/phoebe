@@ -5,8 +5,5 @@
 <script>
   console.log({{.packingData}})
   packingchart.append(drawPackingChart({{.packingData}})) 
-  d3.csv("/static/data.csv", d3.autoType).then( data => {
-    console.log(data)
-})
 </script>
 {{end}}

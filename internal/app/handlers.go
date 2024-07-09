@@ -416,6 +416,30 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 }
 
+func (s *Server) d_loadlamination(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.prodtype": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var laminationChartData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Qty      float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &laminationChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/lamination.html")).Execute(w, map[string]interface{}{
+		"laminationChartData": laminationChartData,
+	})
+}
+
 // //////////////////////////////////////////////////////////
 // /dashboard/loadpanelcnc - load panelcnc area in dashboard
 // //////////////////////////////////////////////////////////

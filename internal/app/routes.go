@@ -28,6 +28,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard", s.dashboard)
 	router.GET("/dashboard/loadproduction", s.d_loadproduction)
 	router.GET("/dashboard/production/getchart", s.dpr_getchart)
+	router.GET("/dashboard/loadlamination", s.d_loadlamination)
 	router.GET("/dashboard/loadpanelcnc", s.d_loadpanelcnc)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 

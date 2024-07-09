@@ -1,8 +1,9 @@
 
 const drawPackingChart = (data) => {
+  console.log(data)
   const formatsInfo = [
     {id: "1-brand", label: "1-brand", color: "#E39F94"},
-    {id: "1-rh", label: "1-RH", color: "#ABABAB"},
+    {id: "1-rh", label: "1-rh", color: "#ABABAB"},
     {id: "2-brand", label: "2-brand", color: "blue"},
     {id: "2-rh", label: "2-rh", color: "#2F8999"},
   ];
