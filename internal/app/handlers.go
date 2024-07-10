@@ -495,6 +495,41 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
+// //////////////////////////////////////////////////////////
+// /dashboard/loadveneer - load veneer area in dashboard
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.type"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var veneerChartData []struct {
+		Date string  `bson:"date" json:"date"`
+		Type string  `bson:"type" json:"type"`
+		Qty  float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &veneerChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/veneer.html")).Execute(w, map[string]interface{}{
+		"veneerChartData": veneerChartData,
+	})
+}
+
+func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/assembly.html")).Execute(w, map[string]interface{}{
+		"assemblyChartData": assemblyChartData,
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////

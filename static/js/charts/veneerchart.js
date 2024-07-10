@@ -1,4 +1,4 @@
-const drawReededlineChart = (data) => {
+const drawVeneerChart = (data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -6,9 +6,9 @@ const drawReededlineChart = (data) => {
   const innerHeight = height - margin.top - margin.bottom;
 
   const series = d3.stack()
-    .keys(d3.union(data.map(d => d.tone)))
+    .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
-    (d3.index(data, d => d.date, d => d.tone))
+    (d3.index(data, d => d.date, d => d.type))
 
 
   const x = d3.scaleBand()
@@ -23,7 +23,7 @@ const drawReededlineChart = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["gray", "black", "green"])
+    .range(["red", "blue", "green", "gray"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -76,10 +76,14 @@ const drawReededlineChart = (data) => {
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
-        .attr("dy", "0.35em")
+        .attr("dy", "0.1em")
         .attr("fill", "#75485E")
         .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format("~s")(d[1]-d[0])}
+          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format("~s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format("~s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format("~s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format("~s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format("~s")(d[1]-d[0])} }
         })
 
     innerChart.append("text")

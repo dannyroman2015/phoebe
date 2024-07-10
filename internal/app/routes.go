@@ -30,6 +30,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/production/getchart", s.dpr_getchart)
 	router.GET("/dashboard/loadreededline", s.d_loadreededline)
 	router.GET("/dashboard/loadpanelcnc", s.d_loadpanelcnc)
+	router.GET("/dashboard/loadveneer", s.d_loadveneer)
+	router.GET("/dashboard/loadassembly", s.d_loadassembly)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))

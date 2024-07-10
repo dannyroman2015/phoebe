@@ -7,11 +7,11 @@ const drawLaminationChart = (data) => {
 
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.prodtype)))
-    .value(([, D], key) => D.get(key).qty)
+    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.prodtype))
 
   const x = d3.scaleBand()
-    .domain(d3.groupSort(data, D => d3.sum(D, d => d.qty), d => d.date))
+    .domain(data.map(d => d.date))
     .range([0, innerWidth])
     .padding(0.1);
 
@@ -24,8 +24,6 @@ const drawLaminationChart = (data) => {
     .domain(series.map(d => d.key))
     .range(["red", "blue", "green"])
     .unknown("#ccc");
-  
-  const formatValue = x => x.toLocaleString("en")
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height])
@@ -46,8 +44,6 @@ const drawLaminationChart = (data) => {
       .attr("y", d => y(d[1]))
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
-    .append("title")
-        .text(d => `${d.data[0]} ${d.key}\n${formatValue(d.data[1].get(d.key).qty)}`);
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -87,13 +83,13 @@ const drawLaminationChart = (data) => {
 
     innerChart.append("text")
       .text(serie.key)
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "middle")
-      .attr("x", 0)
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "start")
+      .attr("x", x(serie[0].data[0]) + x.bandwidth()/2 - 30)
       .attr("y", d => y(serie[0]["1"] - (serie[0]["1"] - serie[0]["0"])/2))
       .attr("dy", "0.35em")
       .attr("fill", color(serie.key))
-      .attr("fill-opacity", 0.6)
+      .attr("fill-opacity", 0.9)
   })
 
   svg.append("text")

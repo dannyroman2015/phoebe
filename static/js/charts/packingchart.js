@@ -24,7 +24,7 @@ const drawPackingChart = (data) => {
     .keys(formatsInfo.map(f => f.id));
   
   const annotatedData = stackGenerator(data);
-  console.log(annotatedData)
+ 
   const colorScale = d3.scaleOrdinal()
     .domain(formatsInfo.map(f => f.id))
     .range(formatsInfo.map(f => f.color))
