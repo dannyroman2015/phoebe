@@ -524,11 +524,11 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{})
+	// s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{})
 
-	template.Must(template.ParseFiles("templates/pages/dashboard/assembly.html")).Execute(w, map[string]interface{}{
-		"assemblyChartData": assemblyChartData,
-	})
+	// template.Must(template.ParseFiles("templates/pages/dashboard/assembly.html")).Execute(w, map[string]interface{}{
+	// "assemblyChartData": assemblyChartData,
+	// })
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
