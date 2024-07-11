@@ -32,6 +32,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadpanelcnc", s.d_loadpanelcnc)
 	router.GET("/dashboard/loadveneer", s.d_loadveneer)
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
+	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))
@@ -88,6 +89,24 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	// end Cuttting/////////////////////////////////////////////////////////////
+
+	// Lamination ////////////////////////////////////////////////////////
+	router.GET("/sections/lamination/entry", withAuth(s.sl_entry))
+	router.GET("/sections/lamination/entry/loadform", s.sle_loadform)
+	router.POST("/sections/lamination/entry/sendentry", s.sle_sendentry)
+	// end Lamination/////////////////////////////////////////////////////////////
+
+	// Reededline ////////////////////////////////////////////////////////
+	router.GET("/sections/reededline/entry", withAuth(s.sr_entry))
+	router.GET("/sections/reededline/entry/loadform", s.sre_loadform)
+	router.POST("/sections/reededline/entry/sendentry", s.sre_sendentry)
+	// end Lamination/////////////////////////////////////////////////////////////
+
+	// Panelcnc ////////////////////////////////////////////////////////
+	router.GET("/sections/panelcnc/entry", s.spc_entry)
+	router.GET("/sections/panelcnc/entry/loadform", s.spc_loadform)
+	router.POST("/sections/panelcnc/entry/sendentry", s.spc_sendentry)
+	// end Panelcnc/////////////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////////////////////
 	// packing ////////////////////////////////////////////////////////
