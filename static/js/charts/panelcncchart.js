@@ -19,7 +19,7 @@ const drawPanelcncChart1 = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(machines)
-    .range(d3.schemeDark2)
+    .range(d3.schemePastel1)
     .unknown("#ccc");
 
   const y = d3.scaleLinear()
@@ -49,6 +49,18 @@ const drawPanelcncChart1 = (data) => {
       .attr("width", x.bandwidth())
       .attr("height", d => y(0) - y(d.qty))
       .attr("fill", d => color(d.machine))
+      
+  // const firstdate = data[0].date
+  //     console.log(d3.group(data, d => d.date["0"]))
+  // innerChart.append("g")
+  //   .selectAll()
+  //   .data(d3.group(data, d => d.date[0]))
+  //   .join("text")
+  //     .text(([, d]) => d.machine)
+  //     .attr("x", 20)
+  //     .attr("y", 20)
+  //     .attr("fill", "red")
+
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -59,6 +71,8 @@ const drawPanelcncChart1 = (data) => {
     .attr("transform", `translate(${margin.left}, 0)`)
     .call(d3.axisLeft(y).ticks(null, "s"))
     .call(g => g.selectAll(".domain").remove())
+
+  
 
   return svg.node()
 }

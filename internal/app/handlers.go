@@ -1965,32 +1965,33 @@ func (s *Server) spc_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 // /sections/panelcnc/entry/sendentry - post form of page entry of panelcnc section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// usernameToken, _ := r.Cookie("username")
-	// username := usernameToken.Value
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
 	machine := r.FormValue("machine")
-	start, _ := time.Parse("2006-01-02T03:04", r.FormValue("start"))
-	end, _ := time.Parse("2006-01-02", r.FormValue("end"))
-	// qty, _ := strconv.Atoi(r.FormValue("qty"))
+	start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
+	end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
+	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	operator := r.FormValue("operator")
-	log.Println(r.FormValue("start"), start)
-	if machine == "" || r.FormValue("qty") == "" || operator == "" || start.Sub(end) > 0 {
+	if machine == "" || r.FormValue("qty") == "" || operator == "" || start.Sub(end) >= 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
 		})
 		return
 	}
-	// _, err := s.mgdb.Collection("reededline").InsertOne(context.Background(), bson.M{
-	// 	"date": primitive.NewDateTimeFromTime(start), "tone": prodtype, "qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// 	template.Must(template.ParseFiles("templates/pages/sections/reededline/entry/form.html")).Execute(w, map[string]interface{}{
-	// 		"showErrDialog": true,
-	// 		"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
-	// 	})
-	// 	return
-	// }
+	_, err := s.mgdb.Collection("panelcnc").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
+		"qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+		"machine": machine, "operator": operator,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
