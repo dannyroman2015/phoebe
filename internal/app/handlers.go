@@ -199,27 +199,26 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"type": "report"}}},
-		{{"$group", bson.M{"_id": "$date", "qty_total": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$sort", bson.M{"_id": -1}}},
+		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
 		{{"$limit", 20}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
 	if err != nil {
-		log.Println("failed to access database at GetQtyTotalsByDate: ", err)
+		log.Println(err)
 		return
 	}
 	defer cur.Close(context.Background())
 	var cuttingData []struct {
-		Date string  `bson:"date"`
-		Qty  float64 `bson:"qty_total"`
+		Date string  `bson:"date" json:"date"`
+		Qty  float64 `bson:"qty" json:"qty"`
 	}
 	if err = cur.All(context.Background(), &cuttingData); err != nil {
-		log.Println("failed to decode at GetQtyTotalsByDate: ", err)
+		log.Println(err)
 		return
 	}
-	slices.Reverse(cuttingData)
 
 	// get data for lamination
 	cur, err = s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
@@ -747,6 +746,70 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/wf_detailchart.html")).Execute(w, map[string]interface{}{
 			"woodfinishChartData": woodfinishChartData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/cutting/getchart - change chart of cutting area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.URL.Query().Get("cuttingcharttype")
+
+	switch pickedChart {
+	case "general":
+		pipeline := mongo.Pipeline{
+			{{"$match", bson.M{"type": "report"}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$limit", 20}},
+			{{"$unset", "_id"}},
+		}
+		cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer cur.Close(context.Background())
+		var cuttingData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err = cur.All(context.Background(), &cuttingData); err != nil {
+			log.Println(err)
+			return
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_generalchart.html")).Execute(w, map[string]interface{}{
+			"cuttingData": cuttingData,
+		})
+
+	case "woodtype":
+		pipeline := mongo.Pipeline{
+			{{"$match", bson.M{"type": "report"}}},
+			{{"$group", bson.M{"_id": "$woodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"woodtype": "$_id"}}},
+			{{"$unset", "_id"}},
+		}
+		cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer cur.Close(context.Background())
+		var cuttingData []struct {
+			Woodtype string  `bson:"woodtype" json:"woodtype"`
+			Qty      float64 `bson:"qty" json:"qty"`
+		}
+		if err = cur.All(context.Background(), &cuttingData); err != nil {
+			log.Println(err)
+			return
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_woodtypechart.html")).Execute(w, map[string]interface{}{
+			"cuttingData": cuttingData,
 		})
 	}
 }

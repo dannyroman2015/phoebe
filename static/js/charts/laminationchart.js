@@ -22,7 +22,7 @@ const drawLaminationChart = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["red", "blue", "green"])
+    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -36,7 +36,7 @@ const drawLaminationChart = (data) => {
     .data(series)
     .join("g")
       .attr("fill", d => color(d.key))
-      .attr("fill-opacity", 0.3)
+      .attr("fill-opacity", 1)
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
