@@ -60,7 +60,7 @@ const drawAssemblyChart = (data) => {
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-    .attr("y", d => y(d[1]) - 20)
+    .attr("y", d => y(d[1]) - 15)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .text(d => `Σ ${d3.format("~s")(d[1])}` )

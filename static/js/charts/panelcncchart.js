@@ -1,6 +1,6 @@
 const drawPanelcncChart1 = (data) => {
   const width = 900;
-  const height = 350;
+  const height = 380;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.left;
@@ -49,28 +49,44 @@ const drawPanelcncChart1 = (data) => {
       .attr("width", x.bandwidth())
       .attr("height", d => y(0) - y(d.qty))
       .attr("fill", d => color(d.machine))
-      
-  // const firstdate = data[0].date
-  //     console.log(d3.group(data, d => d.date["0"]))
-  // innerChart.append("g")
-  //   .selectAll()
-  //   .data(d3.group(data, d => d.date[0]))
-  //   .join("text")
-  //     .text(([, d]) => d.machine)
-  //     .attr("x", 20)
-  //     .attr("y", 20)
-  //     .attr("fill", "red")
 
+  innerChart.append("g")
+    .selectAll()
+    .data(d3.group(data, d => d.date))
+    .join("g")
+      .attr("transform", ([date]) => `translate(${fx(date)}, 0)`)
+    .selectAll()
+    .data(([, d]) => d)
+    .join("text")
+      .text(d => d.qty)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", d => x(d.machine) + x.bandwidth()/2)
+      .attr("y", d => y(d.qty) + 8)
+      .attr("fill", "#75485E")
+      .attr("font-size", "12px")
+      
+  innerChart
+    .selectAll()
+    .data(d3.group(data, d => d.date).get(data[0].date))
+    .join("text")
+      .text(d => d.machine)
+      .attr("text-anchor", "start")
+      .attr("x", d => x(d.machine) + x.bandwidth()/2)
+      .attr("y", d => y(d.qty) - 5)
+      .attr("fill", d => color(d.machine))
+      .attr("font-weight", 600)
+      
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(fx).tickSizeOuter(0))
     .call(g => g.selectAll(".domain").remove());
 
-  innerChart.append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(d3.axisLeft(y).ticks(null, "s"))
-    .call(g => g.selectAll(".domain").remove())
+  // innerChart.append("g")
+  //   .attr("transform", `translate(${margin.left}, 0)`)
+  //   .call(d3.axisLeft(y).ticks(null, "s"))
+  //   .call(g => g.selectAll(".domain").remove())
 
   
 

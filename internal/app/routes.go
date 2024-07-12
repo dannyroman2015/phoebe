@@ -34,6 +34,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
+	router.GET("/dashboard/assembly/getchart", s.da_getchart)
+	router.GET("/dashboard/woodfinish/getchart", s.dw_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
@@ -101,6 +103,18 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/reededline/entry/loadform", s.sre_loadform)
 	router.POST("/sections/reededline/entry/sendentry", s.sre_sendentry)
 	// end Lamination/////////////////////////////////////////////////////////////
+
+	// Assembly ////////////////////////////////////////////////////////
+	router.GET("/sections/assembly/entry", s.sa_entry)
+	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
+	router.POST("/sections/assembly/entry/sendentry", s.sae_sendentry)
+	// end Assembly/////////////////////////////////////////////////////////////
+
+	// WoodFinish ////////////////////////////////////////////////////////
+	router.GET("/sections/woodfinish/entry", s.sw_entry)
+	router.GET("/sections/woodfinish/entry/loadform", s.swe_loadform)
+	router.POST("/sections/woodfinish/entry/sendentry", s.swe_sendentry)
+	// end WoodFinish/////////////////////////////////////////////////////////////
 
 	// Panelcnc ////////////////////////////////////////////////////////
 	router.GET("/sections/panelcnc/entry", s.spc_entry)
