@@ -64,7 +64,7 @@ const drawPanelcncChart1 = (data) => {
       .attr("x", d => x(d.machine) + x.bandwidth()/2)
       .attr("y", d => y(d.qty) + 8)
       .attr("fill", "#75485E")
-      .attr("font-size", "12px")
+      .attr("font-size", "14px")
       
   innerChart
     .selectAll()
@@ -81,7 +81,8 @@ const drawPanelcncChart1 = (data) => {
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(fx).tickSizeOuter(0))
-    .call(g => g.selectAll(".domain").remove());
+    .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"));
 
   // innerChart.append("g")
   //   .attr("transform", `translate(${margin.left}, 0)`)
@@ -154,13 +155,14 @@ const drawPanelcncChart2 = (data) => {
     .attr("class", "x-axis")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(xAxis)
-    .call(g => g.selectAll(".domain").remove());
+    .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"));
   
-  innerChart.append("g")
-    .attr("class", "y-axis")
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(d3.axisLeft(y))
-    .call(g => g.selectAll(".domain").remove());
+  // innerChart.append("g")
+  //   .attr("class", "y-axis")
+  //   .attr("transform", `translate(${margin.left}, 0)`)
+  //   .call(d3.axisLeft(y))
+  //   .call(g => g.selectAll(".domain").remove());
 
   return svg.node();
 

@@ -529,8 +529,8 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"itemtype": "whole"}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.factory": 1, "_id.prodtype": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -557,8 +557,8 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"itemtype": "whole"}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.factory": 1, "_id.prodtype": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -672,8 +672,8 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"itemtype": "whole"}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.factory": 1, "_id.prodtype": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 			{{"$unset", "_id"}},
 		})
 		if err != nil {
@@ -728,8 +728,8 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"itemtype": "whole"}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.factory": 1, "_id.prodtype": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 			{{"$unset", "_id"}},
 		})
 		if err != nil {

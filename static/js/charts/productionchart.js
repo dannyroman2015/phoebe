@@ -38,7 +38,7 @@ function bar(svg, down, d, selector) {
       .attr("class", "enter")
       .attr("transform", `translate(0,${margin.top + barStep * barPadding})`)
       .attr("text-anchor", "end")
-      .style("font", "10px sans-serif");
+      .style("font", "12px sans-serif");
 
   const bar = g.selectAll("g")
     .data(d.children)
@@ -50,7 +50,7 @@ function bar(svg, down, d, selector) {
       .attr("x", margin.left - 6)
       .attr("y", barStep * (1 - barPadding) / 2)
       .attr("dy", ".35em")
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .text(d => d.data.name);
 
   bar.append("rect")
@@ -261,7 +261,7 @@ const drawProdMtdChart = (data) => {
 
     innerChart.append("text")
       .text(`${serie.month} - $ ${serie.dat[serie.dat.length-1].value.toLocaleString("en-US")}`)
-      .attr("font-size", "12px")
+      .attr("font-size", "14px")
       .attr("x", x(serie.dat[serie.dat.length-1].days) + 17)
       .attr("y", y(serie.dat[serie.dat.length-1].value) - 13)
       .attr("fill", "#75485E")
@@ -278,13 +278,14 @@ const drawProdMtdChart = (data) => {
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
+    .call(g => g.selectAll("text").attr("font-size", "14px"))
     .call(g => g.append("text")
       .text("days")
       .attr("text-anchor", "start")
       .attr("x", innerWidth - 10)
       .attr("y", 16)
       .attr("fill", "#75485E")
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .attr("font-family", "Roboto, sans-serif"))
 
   innerChart.append("g")
@@ -296,7 +297,7 @@ const drawProdMtdChart = (data) => {
       .attr("x", -30)
       .attr("y", -10)
       .attr("fill", "#75485E")
-      .attr("font-size", "10px")
+      .attr("font-size", "12px")
       .attr("font-weight", 500)
       .attr("font-family", "Roboto, sans-serif"))
 

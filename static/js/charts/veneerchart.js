@@ -23,7 +23,7 @@ const drawVeneerChart = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["red", "blue", "green", "gray"])
+    .range(d3.schemePastel1)
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -37,7 +37,7 @@ const drawVeneerChart = (data) => {
     .data(series)
     .join("g")
       .attr("fill", d => color(d.key))
-      .attr("fill-opacity", 0.3)
+      .attr("fill-opacity", 0.9)
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
@@ -50,25 +50,27 @@ const drawVeneerChart = (data) => {
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
     .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"))
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 12)
+    .attr("font-size", 14)
   .selectAll()
   .data(series[series.length-1])
   .join("text")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-    .attr("y", d => y(d[1]) - 10)
+    .attr("y", d => y(d[1]) - 15)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
+    .attr("font-size", "14px")
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
-        .attr("font-size", 12)
+        .attr("font-size", 14)
       .selectAll()
       .data(serie)
       .join("text")
@@ -78,6 +80,7 @@ const drawVeneerChart = (data) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
         .attr("dy", "0.1em")
         .attr("fill", "#75485E")
+        .attr("font-size", "14px")
         .text(d => {
           if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format("~s")(d[1]-d[0])}` }
           else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format("~s")(d[1]-d[0])}` }
@@ -85,16 +88,6 @@ const drawVeneerChart = (data) => {
           else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format("~s")(d[1]-d[0])}` }
           else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format("~s")(d[1]-d[0])} }
         })
-
-    innerChart.append("text")
-      .text(serie.key)
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "middle")
-      .attr("x", -15)
-      .attr("y", d => y(serie[0]["1"] - (serie[0]["1"] - serie[0]["0"])/2))
-      .attr("dy", "0.35em")
-      .attr("fill", color(serie.key))
-      .attr("fill-opacity", 0.6)
   })
 
   svg.append("text")

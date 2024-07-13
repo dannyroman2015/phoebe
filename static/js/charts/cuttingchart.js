@@ -1,5 +1,4 @@
 const drawCuttingChart = (data) => {
-  console.log(data)
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 30, left: 40};
@@ -30,18 +29,20 @@ const drawCuttingChart = (data) => {
     .append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(bottomAxis)
+      .call(g => g.selectAll(".domain").remove())
+      .call(g => g.selectAll("text").attr("font-size", "12px"))
   
   const leftAxis = d3.axisLeft(yScale)
 
-  innerChart
-    .append("g")
-      .call(leftAxis)
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick line").clone()
-        .attr("x2", width - margin.left - margin.right)
-        .attr("stroke-opacity", 0.15))
-      .call(g => g.selectAll(".tick text")
-        .attr("font-size", "12px"))
+  // innerChart
+  //   .append("g")
+  //     .call(leftAxis)
+  //     .call(g => g.select(".domain").remove())
+  //     .call(g => g.selectAll(".tick line").clone()
+  //       .attr("x2", width - margin.left - margin.right)
+  //       .attr("stroke-opacity", 0.15))
+  //     .call(g => g.selectAll(".tick text")
+  //       .attr("font-size", "12px"))
 
   innerChart
     .selectAll(`rect`)
@@ -55,7 +56,7 @@ const drawCuttingChart = (data) => {
 
   svg.append("g")
       .attr("font-family", "san-serif")
-      .attr("font-size", 16)
+      .attr("font-size", 14)
     .selectAll()
     .data(data)
     .join("text")
@@ -99,18 +100,20 @@ const drawCuttingChart1 = (data) => {
     .append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(bottomAxis)
+      .call(g => g.selectAll(".domain").remove())
+      .call(g => g.selectAll("text").attr("font-size", "12px"))
   
   const leftAxis = d3.axisLeft(yScale)
 
-  innerChart
-    .append("g")
-      .call(leftAxis)
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick line").clone()
-        .attr("x2", width - margin.left - margin.right)
-        .attr("stroke-opacity", 0.15))
-      .call(g => g.selectAll(".tick text")
-        .attr("font-size", "12px"))
+  // innerChart
+  //   .append("g")
+  //     .call(leftAxis)
+  //     .call(g => g.select(".domain").remove())
+  //     .call(g => g.selectAll(".tick line").clone()
+  //       .attr("x2", width - margin.left - margin.right)
+  //       .attr("stroke-opacity", 0.15))
+  //     .call(g => g.selectAll(".tick text")
+  //       .attr("font-size", "12px"))
 
   innerChart
     .selectAll(`rect`)

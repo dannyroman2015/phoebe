@@ -49,6 +49,7 @@ const drawLaminationChart = (data) => {
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
     .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"))
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
@@ -62,6 +63,7 @@ const drawLaminationChart = (data) => {
     .attr("y", d => y(d[1]) - 10)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
+    .attr("font-size", "14px")
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {
@@ -77,19 +79,10 @@ const drawLaminationChart = (data) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
+        .attr("font-size", "14px")
         .text(d => {
           if (d[1] - d[0] != 0) { return d3.format("~s")(d[1]-d[0])}
         })
-
-    innerChart.append("text")
-      .text(serie.key)
-      .attr("text-anchor", "end")
-      .attr("alignment-baseline", "start")
-      .attr("x", x(serie[0].data[0]) + x.bandwidth()/2 - 30)
-      .attr("y", d => y(serie[0]["1"] - (serie[0]["1"] - serie[0]["0"])/2))
-      .attr("dy", "0.35em")
-      .attr("fill", color(serie.key))
-      .attr("fill-opacity", 0.9)
   })
 
   svg.append("text")
@@ -100,7 +93,48 @@ const drawLaminationChart = (data) => {
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", 14)
+      .attr("font-size", "14px")
+
+  const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
+  svg.append("text")
+    .text("RH")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", x(maxOne.data[0]))
+    .attr("y", y(maxOne[1]) - 10)
+    .attr("dy", "0.35em")
+    .attr("fill", color("rh"))
+    .attr("font-size", "14px")
+    .attr("font-weight", 900)
+
+  svg.append("line")
+    .attr("x1", x(maxOne.data[0]))
+    .attr("y1", y(maxOne[1]) + 2)
+    .attr("x2", x(maxOne.data[0]) + x.bandwidth()/2 + 20)
+    .attr("y2", y(maxOne[1] - (maxOne[1] - maxOne[0])/2))
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", 1)
+    .attr("stroke-opacity", 0.5)
+
+  svg.append("text")
+    .text("BRAND")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", x(maxOne.data[0]) + 2*x.bandwidth())
+    .attr("y", y(maxOne[1]))
+    .attr("dy", "0.35em")
+    .attr("fill", color("brand"))
+    .attr("font-size", "14px")
+    .attr("font-weight", 900)
+
+  svg.append("line")
+  .attr("x1", x(maxOne.data[0]) + 2*x.bandwidth())
+  .attr("y1", y(maxOne[1]) + 12)
+  .attr("x2", x(maxOne.data[0]) + x.bandwidth())
+  .attr("y2", y(maxOne[0]/2))
+  .attr("stroke", "#75485E")
+  .attr("stroke-width", 1)
+  .attr("stroke-opacity", 0.5)
 
   return svg.node();
 }
