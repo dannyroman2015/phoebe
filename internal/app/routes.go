@@ -33,10 +33,12 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadveneer", s.d_loadveneer)
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
+	router.GET("/dashboard/loadpack", s.d_loadpack)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.GET("/dashboard/assembly/getchart", s.da_getchart)
 	router.GET("/dashboard/woodfinish/getchart", s.dw_getchart)
 	router.GET("/dashboard/cutting/getchart", s.dc_getchart)
+	router.GET("/dashboard/pack/getchart", s.dp_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
@@ -117,6 +119,12 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/woodfinish/entry/sendentry", s.swe_sendentry)
 	// end WoodFinish/////////////////////////////////////////////////////////////
 
+	// Pack ////////////////////////////////////////////////////////
+	router.GET("/sections/pack/entry", s.spk_entry)
+	router.GET("/sections/pack/entry/loadform", s.spk_loadform)
+	router.POST("/sections/pack/entry/sendentry", s.spk_sendentry)
+	// end Pack/////////////////////////////////////////////////////////////
+
 	// Panelcnc ////////////////////////////////////////////////////////
 	router.GET("/sections/panelcnc/entry", s.spc_entry)
 	router.GET("/sections/panelcnc/entry/loadform", s.spc_loadform)
@@ -139,7 +147,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/packing/sendentry", s.sp_sendentry)
 
 	router.GET("/sections/packing/admin", s.sp_admin)
-	// end packing --------------------------------------------------------
+	// end packing
 
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////

@@ -579,6 +579,34 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadpack - load pack area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"itemtype": "whole"}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packChartData []struct {
+		Date  string  `bson:"date" json:"date"`
+		Type  string  `bson:"type" json:"type"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &packChartData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/dashboard/pack.html")).Execute(w, map[string]interface{}{
+		"packChartData": packChartData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -810,6 +838,62 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_woodtypechart.html")).Execute(w, map[string]interface{}{
 			"cuttingData": cuttingData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/pack/getchart - change chart of pack area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.URL.Query().Get("packcharttype")
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var packChartData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &packChartData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/pack_generalchart.html")).Execute(w, map[string]interface{}{
+			"packChartData": packChartData,
+		})
+
+	case "detail":
+		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"itemtype": "whole"}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var packChartData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &packChartData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/pack_detailchart.html")).Execute(w, map[string]interface{}{
+			"packChartData": packChartData,
 		})
 	}
 }
@@ -2242,6 +2326,66 @@ func (s *Server) swe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/entry - load page entry of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spk_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/pack/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/loadform - load form of page entry of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spk_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/sendentry - post form of page entry of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	itemtype := "whole"
+	if r.FormValue("switch") != "" {
+		itemtype = r.FormValue("switch")
+	}
+	itemcode := r.FormValue("itemcode")
+	part := r.FormValue("part")
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	factory := r.FormValue("factory")
+	prodtype := r.FormValue("prodtype")
+	qty, _ := strconv.Atoi(r.FormValue("qty"))
+	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
+
+	if factory == "" || prodtype == "" || qty == 0 {
+		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("pack").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "itemcode": itemcode, "itemtype": itemtype, "part": part,
+		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/panelcnc/entry - load page entry of panelcnc section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) spc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -2724,6 +2868,16 @@ func (s *Server) sp_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) sp_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/sections/packing/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
+
+// bản tạm cho packing
+func (s *Server) sp_entrytmp(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/packing/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// end bản tạm cho packing
 
 // /////////////////////////////////////////////////////////////////////////////////////////
 // /mo/entry - get entry page of mo

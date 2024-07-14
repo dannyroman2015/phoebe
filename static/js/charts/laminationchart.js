@@ -114,7 +114,7 @@ const drawLaminationChart = (data) => {
     .attr("y2", y(maxOne[1] - (maxOne[1] - maxOne[0])/2))
     .attr("stroke", "#75485E")
     .attr("stroke-width", 1)
-    .attr("stroke-opacity", 0.5)
+    .attr("stroke-opacity", 0.3)
 
   svg.append("text")
     .text("BRAND")
@@ -134,7 +134,7 @@ const drawLaminationChart = (data) => {
   .attr("y2", y(maxOne[0]/2))
   .attr("stroke", "#75485E")
   .attr("stroke-width", 1)
-  .attr("stroke-opacity", 0.5)
+  .attr("stroke-opacity", 0.3)
 
   return svg.node();
 }

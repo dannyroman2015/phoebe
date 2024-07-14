@@ -5,6 +5,11 @@ const drawCuttingChart = (data) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
+  const targets = [
+    {"date": "04 Jul", "target": 28},
+    {"date": "06 Jul", "target": 20},
+  ]
+
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height]);
   
@@ -66,6 +71,38 @@ const drawCuttingChart = (data) => {
       .attr("x", d => margin.left + xScale(d.date) + xScale.bandwidth()/2)
       .attr("y", d => yScale(d.qty) + 15)
       .attr("fill", "black")
+
+  innerChart
+    .selectAll()
+    .data(targets)
+    .join("line")
+      .attr("x1", d => xScale(d.date))
+      .attr("y1", d => yScale(d.target))
+      .attr("x2", d => xScale(d.date) + xScale.bandwidth())
+      .attr("y2", d => yScale(d.target))
+      .attr("stroke", "black")
+      .attr("fill", "none")
+
+      innerChart.append("g")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
+      .attr("text-anchor", "middle")
+    .selectAll()
+    .data(targets)
+    .join("text")
+      .text(d => d.target)
+      .attr("dy", "0.35em")
+      .attr("x", d => xScale(d.date) +xScale.bandwidth()/2)
+      .attr("y", d => yScale(d.target))
+      // .call(text => text.filter((d, i, data) => i === data.length - 1)
+      //   .append("tspan")
+      //     .attr("font-weight", "bold")
+      //     .text(d => `asdf`))
+    .clone(true).lower()
+      .attr("fill", "none")
+      .attr("stroke", "white")
+      .attr("stroke-width", 6);
+
   return svg.node();
 }
 

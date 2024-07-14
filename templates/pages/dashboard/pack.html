@@ -2,11 +2,11 @@
   <!-- title & control -->
   <div class="flex justify-between">
     <a @mouseover="
-          panelcnccharttype.selectedIndex = (panelcnccharttype.selectedIndex + 1) % panelcnccharttype.length;
-          panelcnccharttype.dispatchEvent(new Event('input', {bubble: true}));
-        "
-      href="/sections/panelcnc/overview" class="mb-1 font-bold hover:underline">
-      Panel CNC
+        packcharttype.selectedIndex = (packcharttype.selectedIndex+1) % packcharttype.length;
+        packcharttype.dispatchEvent(new Event('input', {bubble: true}));
+      "
+      href="Javascript:void(0);" class="mb-1 font-bold hover:underline">
+      Pack
     </a>
 
     <!-- menu popover -->
@@ -42,7 +42,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('maxWidth').focus();  }
         });
       "
       class="relative">
@@ -64,20 +64,20 @@
           <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
           <div class="grid gap-4">
             <div class="space-y-2">
-              <h4 class="font-medium leading-none">Title</h4>
-              <p class="text-sm text-muted-foreground">Placeholder for future change.</p>
+              <h4 class="font-medium leading-none">Thông số lọc</h4>
+              <p class="text-sm text-muted-foreground"></p>
             </div>
             <div class="grid gap-2">
               <div class="grid items-center grid-cols-3 gap-4">
-                <label for="panelcnccharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label for="packcharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Chart
                 </label>
                 <div class="col-span-2 w-full">
                   <select @change="popoverOpen=!popoverOpen"
-                    hx-get="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelchart-container" hx-swap="innerHTML settle:200ms"
-                    name="panelcnccharttype" id="panelcnccharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                    <option value="machinechart">Machine</option>
-                    <option value="totalchart">Total</option>
+                    hx-get="/dashboard/pack/getchart" hx-trigger="input, change" hx-target="#pack-container" hx-swap="innerHTML settle:200ms"
+                    name="packcharttype" id="packcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                    <option value="detail">Detail</option>
+                    <option value="general">General</option>
                   </select>
                 </div>
                 <!-- <input  id="width" value="100%" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
@@ -94,13 +94,13 @@
   </div>
 
   <!-- chart -->
-   <div id="panelchart-container">
-     <div id="panelcncchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+   <div id="pack-container">
+    <div id="packchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
    </div>
 </div>
 
 <script>
-  panelcncchart.append(drawPanelcncChart1({{.panelChartData}}))
+  packchart.append(drawPackChart({{.packChartData}}))
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{
@@ -111,5 +111,3 @@
   panelcncChart.addEventListener("change", pc_clear, {once: true}); */
   // invalidation.then(() => (pc_clear(), panelcncChart.removeEventListener("change", pc_clear)));
 </script>
-
-
