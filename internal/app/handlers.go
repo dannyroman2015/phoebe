@@ -616,15 +616,15 @@ func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps h
 	}
 	defer cur.Close(context.Background())
 	var woodrecoveryChartData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Prodtype string  `bson:"prodtype" json:"prodtype"`
-		Rate     float64 `bson:"rate" json:"rate"`
+		Date     time.Time `bson:"date" json:"date"`
+		Prodtype string    `bson:"prodtype" json:"prodtype"`
+		Rate     float64   `bson:"rate" json:"rate"`
 	}
 
 	if err := cur.All(context.Background(), &woodrecoveryChartData); err != nil {
 		log.Println(err)
 	}
-	log.Println(woodrecoveryChartData)
+
 	template.Must(template.ParseFiles("templates/pages/dashboard/woodrecovery.html")).Execute(w, map[string]interface{}{
 		"woodrecoveryChartData": woodrecoveryChartData,
 	})
@@ -2421,6 +2421,56 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 	}
 	template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/entry/woodrecoveryentry - get page entry of wood recovery of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sc_woodrecoveryentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/cutting/entry/woodrecovery.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/entry/woodrecoveryentry - get form
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sce_wr_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wr_form.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/entry/wr_sendentry - post form
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sce_wr_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	rate, _ := strconv.Atoi(r.FormValue("rate"))
+	prodtype := r.FormValue("prodtype")
+	if r.FormValue("prodtype") == "" || r.FormValue("rate") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wr_form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("woodrecovery").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "prodtype": prodtype, "rate": rate, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wr_form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wr_form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
