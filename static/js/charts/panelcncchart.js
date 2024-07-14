@@ -1,6 +1,6 @@
 const drawPanelcncChart1 = (data) => {
   const width = 900;
-  const height = 380;
+  const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.left;
