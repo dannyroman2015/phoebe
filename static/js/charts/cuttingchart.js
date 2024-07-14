@@ -72,16 +72,16 @@ const drawCuttingChart = (data) => {
       .attr("y", d => yScale(d.qty) + 15)
       .attr("fill", "black")
 
-  innerChart
-    .selectAll()
-    .data(targets)
-    .join("line")
-      .attr("x1", d => xScale(d.date))
-      .attr("y1", d => yScale(d.target))
-      .attr("x2", d => xScale(d.date) + xScale.bandwidth())
-      .attr("y2", d => yScale(d.target))
-      .attr("stroke", "black")
-      .attr("fill", "none")
+  // innerChart
+  //   .selectAll()
+  //   .data(targets)
+  //   .join("line")
+  //     .attr("x1", d => xScale(d.date))
+  //     .attr("y1", d => yScale(d.target))
+  //     .attr("x2", d => xScale(d.date) + xScale.bandwidth())
+  //     .attr("y2", d => yScale(d.target))
+  //     .attr("stroke", "black")
+  //     .attr("fill", "none")
 
     // target line
     //   innerChart.append("g")

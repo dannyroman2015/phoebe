@@ -34,6 +34,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
 	router.GET("/dashboard/loadpack", s.d_loadpack)
+	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.GET("/dashboard/assembly/getchart", s.da_getchart)
 	router.GET("/dashboard/woodfinish/getchart", s.dw_getchart)

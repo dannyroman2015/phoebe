@@ -607,6 +607,30 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadwoodrecovery - load woodrecovery area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("woodrecovery").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"date": 1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodrecoveryChartData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Rate     float64 `bson:"rate" json:"rate"`
+	}
+
+	if err := cur.All(context.Background(), &woodrecoveryChartData); err != nil {
+		log.Println(err)
+	}
+	log.Println(woodrecoveryChartData)
+	template.Must(template.ParseFiles("templates/pages/dashboard/woodrecovery.html")).Execute(w, map[string]interface{}{
+		"woodrecoveryChartData": woodrecoveryChartData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

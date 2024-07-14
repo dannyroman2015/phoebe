@@ -17,6 +17,7 @@
   <script src="/static/js/charts/assemblychart.js"></script>
   <script src="/static/js/charts/woodfinishchart.js"></script>
   <script src="/static/js/charts/packchart.js"></script>
+  <script src="/static/js/charts/woodrecoverychart.js"></script>
 
   <title>Dashboard</title>
 </head>
@@ -433,6 +434,10 @@
           </div>
         </div> -->
         <!-- end Packing Chart --> 
+
+        <!-- wood recovery -->
+        <div hx-get="/dashboard/loadwoodrecovery" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end wood recovery -->
 
         <!-- Safety Chart -->
         <div class="col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
