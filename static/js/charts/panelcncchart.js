@@ -89,7 +89,15 @@ const drawPanelcncChart1 = (data) => {
   //   .call(d3.axisLeft(y).ticks(null, "s"))
   //   .call(g => g.selectAll(".domain").remove())
 
-  
+  svg.append("text")
+    .text("(sheet)")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 30)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", 20)
 
   return svg.node()
 }
@@ -158,6 +166,16 @@ const drawPanelcncChart2 = (data) => {
     .call(g => g.selectAll(".domain").remove())
     .call(g => g.selectAll("text").attr("font-size", "12px"));
   
+  svg.append("text")
+    .text("(sheet)")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 30)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", 20)
+    
   // innerChart.append("g")
   //   .attr("class", "y-axis")
   //   .attr("transform", `translate(${margin.left}, 0)`)

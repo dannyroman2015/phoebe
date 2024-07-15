@@ -93,7 +93,7 @@ const drawLaminationChart = (data) => {
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", "14px")
+      .attr("font-size", "20px")
 
   const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
   svg.append("text")
@@ -114,7 +114,6 @@ const drawLaminationChart = (data) => {
     .attr("y2", y(maxOne[1] - (maxOne[1] - maxOne[0])/2))
     .attr("stroke", "#75485E")
     .attr("stroke-width", 1)
-    .attr("stroke-opacity", 0.3)
 
   svg.append("text")
     .text("BRAND")
@@ -134,7 +133,6 @@ const drawLaminationChart = (data) => {
   .attr("y2", y(maxOne[0]/2))
   .attr("stroke", "#75485E")
   .attr("stroke-width", 1)
-  .attr("stroke-opacity", 0.3)
 
   return svg.node();
 }

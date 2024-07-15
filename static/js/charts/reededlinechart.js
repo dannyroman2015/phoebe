@@ -94,7 +94,7 @@ const drawReededlineChart = (data) => {
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", "14px")
+      .attr("font-size", "20px")
 
       const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
       svg.append("text")

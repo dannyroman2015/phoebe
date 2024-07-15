@@ -13,7 +13,7 @@ const drawWoodRecoveryChart = (data) => {
 
   const y = d3.scaleLinear()
       // .domain(d3.extent(data, d => d.rate))
-      .domain([d3.min(data, d => d.rate)-5, 60])
+      .domain([d3.min(data, d => d.rate)-5, 70])
       .range([innerHeight, 0])
       .nice();
 

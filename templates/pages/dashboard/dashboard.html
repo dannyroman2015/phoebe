@@ -8,6 +8,7 @@
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
   <script src="/static/js/htmx.min.js"></script>
   <script src="/static/js/d3.v7.js"></script>
+  <script src="/static/js/plot.js"></script>
 
   <script src="/static/js/charts/legend.js"></script>
   <script src="/static/js/charts/panelcncchart.js"></script>
@@ -18,6 +19,7 @@
   <script src="/static/js/charts/woodfinishchart.js"></script>
   <script src="/static/js/charts/packchart.js"></script>
   <script src="/static/js/charts/woodrecoverychart.js"></script>
+  <script src="/static/js/charts/qualitychart.js"></script>
 
   <title>Dashboard</title>
 </head>
@@ -75,7 +77,7 @@
               popoverPositionCalculate();
             });
             $watch('popoverOpen', function(value){
-              if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+              if(value){ popoverPositionCalculate(); document.getElementById('cuttingcharttype').focus();  }
             });
           "
           class="relative">
@@ -91,7 +93,7 @@
               @click.away="popoverOpen=false;"
               @keydown.escape.window="popoverOpen=false"
               :class="{ 'top-0 mt-12' : popoverPosition == 'bottom', 'bottom-0 mb-1' : popoverPosition == 'top' }"
-              class="absolute w-[300px] max-w-lg -translate-x-full -translate-y-6" x-cloak>
+              class="absolute w-[300px] z-20 max-w-lg -translate-x-full -translate-y-6" x-cloak>
             <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white border rounded-md shadow-sm border-neutral-200/70">
               <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
               <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
@@ -113,16 +115,16 @@
                         <option value="woodtype">WoodType</option>
                       </select>
                     </div>
-                    <!-- <input type="date" id="width" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
                   </div>
 
-                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div>
+                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div> -->
                   <div class="grid items-center grid-cols-3 gap-4">
                     <label for="cuttinglimit" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Limit days
+                      Limit
                     </label>
-                    <input  id="cuttinglimit" name="cuttinglimit" value="20" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
-                  <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div> -->
+                    <input 
+                      id="cuttinglimit" name="cuttinglimit" value="20" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
+                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div> -->
                 
                 </div>
               </div>
@@ -521,6 +523,10 @@
 
         </div>
         <!-- end Safety Chart -->
+
+        <!-- quality -->
+           <div hx-get="/dashboard/loadquality" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end quality -->
 
           <!-- <div class="col-span-full sm:col-span-3 lg:col-span-2 overflow-hidden relative p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
 

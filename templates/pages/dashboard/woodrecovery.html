@@ -67,7 +67,7 @@
                   Chart
                 </label>
                 <div class="col-span-2 w-full">
-                  <select @change="popoverOpen=!popoverOpen"
+                  <select x-data @change="popoverOpen=!popoverOpen"
                     hx-get="/dashboard/woodfinish/getchart" hx-trigger="input, change" hx-target="#woodfinish-container" hx-swap="innerHTML settle:200ms"
                     name="woodfinishcharttype" id="woodfinishcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                     <option value="detail">Detail</option>

@@ -631,6 +631,35 @@ func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps h
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadquality - load quality area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("quality").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "checkedqty": bson.M{"$sum": "$checkedqty"}, "failedqty": bson.M{"$sum": "$failedqty"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
+		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var qualityChartData []struct {
+		Date       string `bson:"date" json:"date"`
+		Section    string `bson:"section" json:"section"`
+		CheckedQty int    `bson:"checkedqty" json:"checkedqty"`
+		FailedQty  int    `bson:"failedqty" json:"failedqty"`
+	}
+	if err := cur.All(context.Background(), &qualityChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/quality.html")).Execute(w, map[string]interface{}{
+		"qualityChartData": qualityChartData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -2970,12 +2999,102 @@ func (s *Server) sp_entrytmp(w http.ResponseWriter, r *http.Request, ps httprout
 
 // end bản tạm cho packing
 
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /quality/entry - copy paste report for quality
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) q_fastentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/quality/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+func (s *Server) q_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, nil)
+}
+
 // /////////////////////////////////////////////////////////////////////////////////////////
 // /mo/entry - get entry page of mo
 // /////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) mo_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 	template.Must(template.ParseFiles("templates/pages/mo/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	lines := strings.Split(strings.Trim(r.FormValue("list"), "\n"), "\n")
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+
+	var jsonStr = `[`
+	for _, line := range lines {
+		raw := strings.Fields(line)
+		section := raw[0]
+		checkedqty := raw[1]
+		failedqty := "0"
+		if len(raw) == 3 {
+			failedqty = raw[2]
+		}
+
+		jsonStr += `{
+			"date":"` + date.Format("2006-01-02") + `", 
+			"section":"` + section + `", 
+			"checkedqty":` + checkedqty + `,
+			"failedqty":` + failedqty + `
+			},`
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	var bdoc []interface{}
+	err := bson.UnmarshalExtJSON([]byte(jsonStr), true, &bdoc)
+	if err != nil {
+		log.Print(err)
+		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Lỗi decode. Vui lòng liên hệ admin.",
+		})
+		return
+	}
+
+	_, err = s.mgdb.Collection("quality").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối database thất bại. Vui lòng liên hệ admin.",
+		})
+		return
+	}
+
+	// usernameToken, _ := r.Cookie("username")
+	// username := usernameToken.Value
+	// machine := r.FormValue("machine")
+	// start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
+	// end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
+	// qty, _ := strconv.Atoi(r.FormValue("qty"))
+	// operator := r.FormValue("operator")
+	// if machine == "" || r.FormValue("qty") == "" || operator == "" || start.Sub(end) >= 0 {
+	// 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
+	// 		"showMissingDialog": true,
+	// 		"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
+	// 	})
+	// 	return
+	// }
+	// _, err := s.mgdb.Collection("panelcnc").InsertOne(context.Background(), bson.M{
+	// 	"date": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
+	// 	"qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+	// 	"machine": machine, "operator": operator,
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
+	// 		"showErrDialog": true,
+	// 		"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+	// 	})
+	// 	return
+	// }
+	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
 }
 
 // /////////////////////////////////////////////////////////////////////////////////////////

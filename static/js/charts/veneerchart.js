@@ -98,7 +98,7 @@ const drawVeneerChart = (data) => {
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", 14)
+      .attr("font-size", 20)
 
   return svg.node();
 }

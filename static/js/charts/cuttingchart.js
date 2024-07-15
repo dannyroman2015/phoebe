@@ -72,6 +72,16 @@ const drawCuttingChart = (data) => {
       .attr("y", d => yScale(d.qty) + 15)
       .attr("fill", "black")
 
+  svg.append("text")
+    .text("(m³)")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 30)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "20px")
+
   // innerChart
   //   .selectAll()
   //   .data(targets)
@@ -175,5 +185,16 @@ const drawCuttingChart1 = (data) => {
       .attr("x", d => margin.left + xScale(d.woodtype) + xScale.bandwidth()/2)
       .attr("y", d => yScale(d.qty) + 15)
       .attr("fill", "black")
+
+  svg.append("text")
+    .text("(m³)")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 30)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "20px")
+    
   return svg.node();
 }
