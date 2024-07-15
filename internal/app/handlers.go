@@ -199,9 +199,10 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"type": "report"}}},
-		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 		{{"$limit", 20}},
 		{{"$unset", "_id"}},
 	}
@@ -213,6 +214,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	defer cur.Close(context.Background())
 	var cuttingData []struct {
 		Date string  `bson:"date" json:"date"`
+		Is25 bool    `bson:"is25" json:"is25"`
 		Qty  float64 `bson:"qty" json:"qty"`
 	}
 	if err = cur.All(context.Background(), &cuttingData); err != nil {
@@ -841,9 +843,10 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 	case "general":
 		pipeline := mongo.Pipeline{
 			{{"$match", bson.M{"type": "report"}}},
-			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
-			{{"$sort", bson.M{"_id": 1}}},
-			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 			{{"$limit", 20}},
 			{{"$unset", "_id"}},
 		}
@@ -855,6 +858,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		defer cur.Close(context.Background())
 		var cuttingData []struct {
 			Date string  `bson:"date" json:"date"`
+			Is25 bool    `bson:"is25" json:"is25"`
 			Qty  float64 `bson:"qty" json:"qty"`
 		}
 		if err = cur.All(context.Background(), &cuttingData); err != nil {
