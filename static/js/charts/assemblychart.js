@@ -53,7 +53,7 @@ const drawAssemblyChart = (data) => {
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", "14px")
+    .attr("font-size", "15px")
   .selectAll()
   .data(series[series.length-1])
   .join("text")
@@ -63,6 +63,7 @@ const drawAssemblyChart = (data) => {
     .attr("y", d => y(d[1]) - 15)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
+    .attr("font-weight", 600)
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {
@@ -195,6 +196,7 @@ const drawAssemblyChart1 = (data) => {
     .attr("y", d => y(d[1]) - 15)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
+    .attr("font-weight", 600)
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {

@@ -313,12 +313,9 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 // /dashboard/loadproduction - load production area in dashboard
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// get data for production value
 	pvPipeline := mongo.Pipeline{
-		{{"$group", bson.M{
-			"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
-			"value": bson.M{"$sum": "$value"},
-		}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.M{"_id.date": -1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": "$_id.factory", "type": "$_id.prodtype", "item": "$_id.item"}}},
 		{{"$unset", "_id"}},
@@ -350,15 +347,15 @@ func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps htt
 // /dashboard/production/getchart - change chart of production area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("productioncharttype")
+	pickedChart := r.FormValue("productioncharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("productionFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("productionToDate"))
 
 	switch pickedChart {
 	case "value":
 		pvPipeline := mongo.Pipeline{
-			{{"$group", bson.M{
-				"_id":   bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"},
-				"value": bson.M{"$sum": "$value"},
-			}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.M{"_id.date": -1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": "$_id.factory", "type": "$_id.prodtype", "item": "$_id.item"}}},
 			{{"$unset", "_id"}},
@@ -386,7 +383,10 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		})
 
 	case "mtd":
+		mtds, _ := strconv.Atoi(r.FormValue("numberOfMTDs"))
+		mtdFromDate := time.Date(time.Now().Year(), time.Now().Month()-time.Month(mtds), 1, 0, 0, 0, 0, time.Now().Location())
 		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(mtdFromDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"$month": "$date"}, "value": bson.M{"$push": "$value"}}}},
 			{{"$set", bson.M{"month": "$_id"}}},
 			{{"$unset", "_id"}},
@@ -531,7 +531,7 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"itemtype": "whole"}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -559,7 +559,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"itemtype": "whole"}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -729,11 +729,14 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 // /dashboard/assembly/getchart - change chart of assembly area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("assemblycharttype")
+	pickedChart := r.FormValue("assemblycharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("assemblyFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("assemblyToDate"))
 
 	switch pickedChart {
 	case "general":
 		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
@@ -757,7 +760,8 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "detail":
 		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"itemtype": "whole"}}},
+			// {{"$match", bson.M{"itemtype": "whole"}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -785,11 +789,14 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 // /dashboard/woodfinish/getchart - change chart of woodfinish area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("woodfinishcharttype")
+	pickedChart := r.FormValue("woodfinishcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("woodfinishFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("woodfinishToDate"))
 
 	switch pickedChart {
 	case "general":
 		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
@@ -813,7 +820,7 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "detail":
 		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"itemtype": "whole"}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
