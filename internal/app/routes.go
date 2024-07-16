@@ -39,7 +39,10 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.GET("/dashboard/assembly/getchart", s.da_getchart)
 	router.GET("/dashboard/woodfinish/getchart", s.dw_getchart)
-	router.GET("/dashboard/cutting/getchart", s.dc_getchart)
+	router.POST("/dashboard/cutting/getchart", s.dc_getchart)
+	router.POST("/dashboard/lamination/getchart", s.dl_getchart)
+	router.POST("/dashboard/reededline/getchart", s.dr_getchart)
+	router.POST("/dashboard/veneer/getchart", s.dv_getchart)
 	router.GET("/dashboard/pack/getchart", s.dp_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))

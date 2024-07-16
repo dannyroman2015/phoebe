@@ -176,6 +176,7 @@ const drawCuttingChart1 = (data) => {
   svg.append("g")
       .attr("font-family", "san-serif")
       .attr("font-size", 16)
+      .attr("font-weight", 600)
     .selectAll()
     .data(data)
     .join("text")
@@ -184,18 +185,13 @@ const drawCuttingChart1 = (data) => {
       .attr("alignment-baseline", "middle")
       .attr("x", d => margin.left + xScale(d.woodtype) + xScale.bandwidth()/2)
       .attr("y", d => yScale(d.qty) + 15)
-      .attr("fill", "black")
+      .attr("fill", "#75485E")
 
   svg.append("text")
     .text("(m³)")
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 30)
-    .attr("y", 5)
-    .attr("dy", "0.35em")
+    .attr("font-size", "16px")
+    .attr("dominant-baseline", "hanging")
     .attr("fill", "#75485E")
-    .attr("font-size", "20px")
-    
   return svg.node();
 }
 
@@ -264,7 +260,8 @@ const drawCuttingChart2 = (data) => {
     .attr("y", d => y(d[1]) - 10)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
-    .attr("font-size", "14px")
+    .attr("font-size", "15px")
+    .attr("font-weight", 600)
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {

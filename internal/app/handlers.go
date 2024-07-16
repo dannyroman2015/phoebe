@@ -198,12 +198,11 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"type": "report"}}},
+		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
-		{{"$limit", 20}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
@@ -224,6 +223,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	// get data for lamination
 	cur, err = s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1, "_id.prodtype": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
@@ -443,6 +443,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 // /////////////////////////////////////////////////////////////
 func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
@@ -501,6 +502,7 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.type"}}},
@@ -837,17 +839,18 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 // /dashboard/cutting/getchart - change chart of cutting area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("cuttingcharttype")
+	pickedChart := r.FormValue("cuttingcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("cuttingFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("cuttingToDate"))
 
 	switch pickedChart {
 	case "general":
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"type": "report"}}},
+			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
-			{{"$limit", 20}},
 			{{"$unset", "_id"}},
 		}
 		cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
@@ -872,7 +875,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "woodtype":
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"type": "report"}}},
+			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": "$woodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.M{"_id": 1}}},
 			{{"$set", bson.M{"woodtype": "$_id"}}},
@@ -895,6 +898,112 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_woodtypechart.html")).Execute(w, map[string]interface{}{
 			"cuttingData": cuttingData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/lamination/getchart - change chart of cutting area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("laminationcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("laminationFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("laminationToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id.date": 1, "_id.prodtype": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var laminationChartData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Prodtype string  `bson:"prodtype" json:"prodtype"`
+			Qty      float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &laminationChartData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/lamination_generalchart.html")).Execute(w, map[string]interface{}{
+			"laminationChartData": laminationChartData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/lamination/getchart - change chart of cutting area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("reededlinecharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("reededlineFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("reededlineToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var reededlinedata []struct {
+			Date string  `bson:"date" json:"date"`
+			Tone string  `bson:"tone" json:"tone"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &reededlinedata); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/reededline_generalchart.html")).Execute(w, map[string]interface{}{
+			"reededlinedata": reededlinedata,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/lamination/getchart - change chart of cutting area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("veneercharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("veneerFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("veneerToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.type"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var veneerChartData []struct {
+			Date string  `bson:"date" json:"date"`
+			Type string  `bson:"type" json:"type"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &veneerChartData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/veneer_generalchart.html")).Execute(w, map[string]interface{}{
+			"veneerChartData": veneerChartData,
 		})
 	}
 }

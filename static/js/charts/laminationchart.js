@@ -64,6 +64,7 @@ const drawLaminationChart = (data) => {
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
+    .attr("font-weight", 600)
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {
@@ -93,7 +94,7 @@ const drawLaminationChart = (data) => {
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", "20px")
+      .attr("font-size", "16px")
 
   const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
   svg.append("text")

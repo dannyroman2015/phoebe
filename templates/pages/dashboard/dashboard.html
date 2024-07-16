@@ -102,31 +102,48 @@
                   <h4 class="font-medium leading-none">Options</h4>
                   <p class="text-sm text-muted-foreground"></p>
                 </div>
-                <div class="grid gap-2">
-                  <div class="grid items-center grid-cols-3 gap-4">
-                    <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="width">
-                      Chart
-                    </label>
-                    <div class="col-span-2 w-full">
-                      <select @change="popoverOpen=!popoverOpen;"
-                        hx-get="/dashboard/cutting/getchart" hx-trigger="input, change" hx-target="#cutting-container" hx-swap="innerHTML settle:200ms"
-                        name="cuttingcharttype" id="cuttingcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                        <option value="general">General</option>
-                        <option value="woodtype">WoodType</option>
-                      </select>
+                <form>
+                  <div class="grid gap-2">
+                    
+                    <div class="grid items-center grid-cols-3 gap-4">
+                      <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="width">
+                        Chart
+                      </label>
+                      <div class="col-span-2 w-full">
+                        <select @change="popoverOpen=!popoverOpen;"
+                          hx-post="/dashboard/cutting/getchart" hx-trigger="input, change" hx-target="#cutting-container" hx-swap="innerHTML settle:200ms"
+                          name="cuttingcharttype" id="cuttingcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                          <option value="general">General</option>
+                          <option value="woodtype">WoodType</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div> -->
-                  <div class="grid items-center grid-cols-3 gap-4">
-                    <label for="cuttinglimit" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Limit
-                    </label>
-                    <input 
-                      id="cuttinglimit" name="cuttinglimit" value="20" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
-                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div> -->
-                
-                </div>
+                    <div class="grid items-center grid-cols-3 gap-4">
+                      <label for="cuttingFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        From Date
+                      </label>
+                      <input hx-post="/dashboard/cutting/getchart" hx-trigger="input, change" hx-target="#cutting-container" hx-swap="innerHTML settle:200ms"
+                        type="date" id="cuttingFromDate" name="cuttingFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    </div>
+
+                    <div class="grid items-center grid-cols-3 gap-4">
+                      <label for="cuttingToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        To Date
+                      </label>
+                      <input hx-post="/dashboard/cutting/getchart" hx-trigger="input, change" hx-target="#cutting-container" hx-swap="innerHTML settle:200ms"
+                        type="date" id="cuttingToDate" name="cuttingToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    </div>
+    
+                    <!-- <div class="grid items-center grid-cols-3 gap-4">
+                      <label for="cuttinglimit" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Limit
+                      </label>
+                      <input id="cuttinglimit" name="cuttinglimit" value="20" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                    </div> -->
+                  
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -186,7 +203,7 @@
                   popoverPositionCalculate();
                 });
                 $watch('popoverOpen', function(value){
-                  if(value){ popoverPositionCalculate(); document.getElementById('maxWidth').focus();  }
+                  if(value){ popoverPositionCalculate(); document.getElementById('laminationcharttype').focus();  }
                 });
               "
               class="relative">
@@ -202,35 +219,51 @@
                   @click.away="popoverOpen=false;"
                   @keydown.escape.window="popoverOpen=false"
                   :class="{ 'top-0 mt-12' : popoverPosition == 'bottom', 'bottom-0 mb-1' : popoverPosition == 'top' }"
-                  class="absolute w-[300px] max-w-lg -translate-x-full -translate-y-6" x-cloak>
+                  class="absolute z-20 w-[300px] max-w-lg -translate-x-full -translate-y-6" x-cloak>
                 <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white border rounded-md shadow-sm border-neutral-200/70">
                   <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
                   <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
                   <div class="grid gap-4">
                     <div class="space-y-2">
-                      <h4 class="font-medium leading-none">Title</h4>
-                      <p class="text-sm text-muted-foreground">Placeholder for future change.</p>
+                      <h4 class="font-medium leading-none">Options</h4>
+                      <p class="text-sm text-muted-foreground"></p>
                     </div>
-                    <div class="grid gap-2">
-                      <div class="grid items-center grid-cols-3 gap-4">
-                          <!-- <label for="productioncharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <form>
+                      <div class="grid gap-2">
+
+                        <div class="grid items-center grid-cols-3 gap-4">
+                          <label for="laminationcharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                               Chart
                           </label>
                           <div class="col-span-2 w-full">
                               <select @change="popoverOpen=!popoverOpen;"
-                                  hx-get="/dashboard/production/getchart" hx-trigger="input, change" hx-target="#productionchart-container" hx-swap="innerHTML settle:200ms"
-                                  name="productioncharttype" id="productioncharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                                  <option value="value">Value</option>
-                                  <option value="mtd">MTD</option>
+                                  hx-get="/dashboard/lamination/getchart" hx-trigger="input, change" hx-target="#lamination-container" hx-swap="innerHTML settle:200ms"
+                                  name="laminationcharttype" id="laminationcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                                  <option value="general">General</option>
                               </select>
-                          </div> -->
-        
-                          <!-- <input id="pvcharttype" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
+                          </div>
+                        </div>
+
+                        <div class="grid items-center grid-cols-3 gap-4">
+                          <label for="laminationFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            From Date
+                          </label>
+                          <input hx-post="/dashboard/lamination/getchart" hx-trigger="input, change" hx-target="#lamination-container" hx-swap="innerHTML settle:200ms"
+                            type="date" id="laminationFromDate" name="laminationFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                        </div>
+    
+                        <div class="grid items-center grid-cols-3 gap-4">
+                          <label for="laminationToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            To Date
+                          </label>
+                          <input hx-post="/dashboard/lamination/getchart" hx-trigger="input, change" hx-target="#lamination-container" hx-swap="innerHTML settle:200ms"
+                            type="date" id="laminationToDate" name="laminationToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                        </div>
+
+                        <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div>
+                        <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div> -->
                       </div>
-                      <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div>
-                      <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div>
-                      <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div>
-                    </div>
+                    </form>
                   </div>
                 </div>
               </div>
@@ -239,7 +272,9 @@
           </div>
         
           <!-- chart -->
-          {{template "lamination" .laminationChartData}}
+           <div id="lamination-container">
+             {{template "lamination" .laminationChartData}}
+           </div>
         </div>
         <!-- end Lamination Chart -->
 
@@ -558,3 +593,9 @@
   }
 </style>
 
+<script>
+  document.getElementById("cuttingToDate").valueAsDate = new Date();
+  document.getElementById("cuttingFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
+  document.getElementById("laminationToDate").valueAsDate = new Date();
+  document.getElementById("laminationFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+</script>
