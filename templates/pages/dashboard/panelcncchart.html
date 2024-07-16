@@ -42,7 +42,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('panelcnccharttype').focus();  }
         });
       "
       class="relative">
@@ -64,28 +64,47 @@
           <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
           <div class="grid gap-4">
             <div class="space-y-2">
-              <h4 class="font-medium leading-none">Title</h4>
-              <p class="text-sm text-muted-foreground">Placeholder for future change.</p>
+              <h4 class="font-medium leading-none">Options</h4>
+              <p class="text-sm text-muted-foreground"></p>
             </div>
-            <div class="grid gap-2">
-              <div class="grid items-center grid-cols-3 gap-4">
-                <label for="panelcnccharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Chart
-                </label>
-                <div class="col-span-2 w-full">
-                  <select @change="popoverOpen=!popoverOpen"
-                    hx-get="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelchart-container" hx-swap="innerHTML settle:200ms"
-                    name="panelcnccharttype" id="panelcnccharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                    <option value="machinechart">Machine</option>
-                    <option value="totalchart">Total</option>
-                  </select>
+
+            <form>
+              <div class="grid gap-2">
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="panelcnccharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Chart
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen"
+                      hx-post="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelcnc-container" hx-swap="innerHTML settle:200ms"
+                      name="panelcnccharttype" id="panelcnccharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="totalchart">Total</option>
+                      <option value="machinechart">Machine</option>
+                    </select>
+                  </div>
                 </div>
-                <!-- <input  id="width" value="100%" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"> -->
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="panelcncFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    From Date
+                  </label>
+                  <input hx-post="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelcnc-container" hx-swap="innerHTML settle:200ms"
+                    type="date" id="panelcncFromDate" name="panelcncFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="panelcncToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    To Date
+                  </label>
+                  <input hx-post="/dashboard/panelcnc/getchart" hx-trigger="input, change" hx-target="#panelcnc-container" hx-swap="innerHTML settle:200ms"
+                    type="date" id="panelcncToDate" name="panelcncToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+
+                <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div> -->
               </div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div>
-            </div>
+            </form>
+
           </div>
         </div>
       </div>
@@ -94,13 +113,15 @@
   </div>
 
   <!-- chart -->
-   <div id="panelchart-container">
+   <div id="panelcnc-container">
      <div id="panelcncchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
    </div>
 </div>
 
 <script>
-  panelcncchart.append(drawPanelcncChart1({{.panelChartData}}))
+  document.getElementById("panelcncToDate").valueAsDate = new Date();
+  document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+  panelcncchart.append(drawPanelcncChart({{.panelChartData}}))
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{

@@ -472,9 +472,10 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pipeline := mongo.Pipeline{
-		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "machine": "$machine"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.machine": 1}}},
-		{{"$set", bson.M{"date": "$_id.date", "machine": "$_id.machine"}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -100))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1}}},
+		{{"$set", bson.M{"date": "$_id.date"}}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
@@ -483,9 +484,8 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var panelChartData []struct {
-		Date    string  `bson:"date" json:"date"`
-		Machine string  `bson:"machine" json:"machine"`
-		Qty     float64 `bson:"qty" json:"qty"`
+		Date string  `bson:"date" json:"date"`
+		Qty  float64 `bson:"qty" json:"qty"`
 	}
 
 	if err := cur.All(context.Background(), &panelChartData); err != nil {
@@ -667,11 +667,14 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("panelcnccharttype")
+	pickedChart := r.FormValue("panelcnccharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("panelcncFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("panelcncToDate"))
 
 	switch pickedChart {
 	case "machinechart":
 		pipeline := mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "machine": "$machine"}, "qty": bson.M{"$sum": "$qty"}}}},
 			{{"$sort", bson.M{"_id.date": 1, "_id.machine": 1}}},
 			{{"$set", bson.M{"date": "$_id.date", "machine": "$_id.machine"}}},
@@ -687,17 +690,16 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			Machine string  `bson:"machine" json:"machine"`
 			Qty     float64 `bson:"qty" json:"qty"`
 		}
-
 		if err := cur.All(context.Background(), &panelChartData); err != nil {
 			log.Println(err)
 		}
-
 		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_machinechart.html")).Execute(w, map[string]interface{}{
 			"panelChartData": panelChartData,
 		})
 
 	case "totalchart":
 		pipeline := mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
 			{{"$sort", bson.M{"_id.date": 1}}},
 			{{"$set", bson.M{"date": "$_id.date"}}},

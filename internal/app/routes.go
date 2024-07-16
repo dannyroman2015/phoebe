@@ -36,7 +36,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadpack", s.d_loadpack)
 	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/loadquality", s.d_loadquality)
-	router.GET("/dashboard/panelcnc/getchart", s.dpc_getchart)
+	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.GET("/dashboard/assembly/getchart", s.da_getchart)
 	router.GET("/dashboard/woodfinish/getchart", s.dw_getchart)
 	router.POST("/dashboard/cutting/getchart", s.dc_getchart)
@@ -116,25 +116,25 @@ func (s *Server) routes() http.Handler {
 	// end Lamination/////////////////////////////////////////////////////////////
 
 	// Assembly ////////////////////////////////////////////////////////
-	router.GET("/sections/assembly/entry", s.sa_entry)
+	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
 	router.POST("/sections/assembly/entry/sendentry", s.sae_sendentry)
 	// end Assembly/////////////////////////////////////////////////////////////
 
 	// WoodFinish ////////////////////////////////////////////////////////
-	router.GET("/sections/woodfinish/entry", s.sw_entry)
+	router.GET("/sections/woodfinish/entry", withAuth(s.sw_entry))
 	router.GET("/sections/woodfinish/entry/loadform", s.swe_loadform)
 	router.POST("/sections/woodfinish/entry/sendentry", s.swe_sendentry)
 	// end WoodFinish/////////////////////////////////////////////////////////////
 
 	// Pack ////////////////////////////////////////////////////////
-	router.GET("/sections/pack/entry", s.spk_entry)
+	router.GET("/sections/pack/entry", withAuth(s.spk_entry))
 	router.GET("/sections/pack/entry/loadform", s.spk_loadform)
 	router.POST("/sections/pack/entry/sendentry", s.spk_sendentry)
 	// end Pack/////////////////////////////////////////////////////////////
 
 	// Panelcnc ////////////////////////////////////////////////////////
-	router.GET("/sections/panelcnc/entry", s.spc_entry)
+	router.GET("/sections/panelcnc/entry", withAuth(s.spc_entry))
 	router.GET("/sections/panelcnc/entry/loadform", s.spc_loadform)
 	router.POST("/sections/panelcnc/entry/sendentry", s.spc_sendentry)
 	// end Panelcnc/////////////////////////////////////////////////////////////

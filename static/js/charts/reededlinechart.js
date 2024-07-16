@@ -65,6 +65,7 @@ const drawReededlineChart = (data) => {
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
+    .attr("font-weight", 600)
     .text(d => `Σ ${d3.format("~s")(d[1])}` )
 
   series.forEach(serie => {

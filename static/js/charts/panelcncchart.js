@@ -31,10 +31,12 @@ const drawPanelcncChart1 = (data) => {
     .attr("width", width)
     .attr("height", height)
     .attr("viewBox", [0, 0, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+    .attr("style", "max-width: 100%; height: auto;")
+    // .call(zoom); //nguyên cứu sau
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    
 
   innerChart.append("g")
     .selectAll()
@@ -99,10 +101,34 @@ const drawPanelcncChart1 = (data) => {
     .attr("fill", "#75485E")
     .attr("font-size", 20)
 
-  return svg.node()
+  return svg.node();
+
+  function zoom(svg) {
+    const extent = [[0, 0], [innerWidth, innerHeight]];
+
+    svg.call(d3.zoom()
+      .scaleExtent([1, 8])
+      .translateExtent(extent)
+      .extent(extent)
+      .on("zoom", zoomed));
+
+    function zoomed(event) {
+      x.range([0, innerWidth].map(d => event.transform.applyX(d)));
+      svg.selectAll(".bars rect").attr("x", d => x(d.date)).attr("width", x.bandwidth());
+      svg.selectAll(".x-axis").call(xAxis).call(g => g.selectAll(".domain").remove());
+      svg.selectAll(".label text").attr("x", d => x(d.date) + x.bandwidth()/2).call(t => {
+        if (x.bandwidth() < 50) {
+          t.attr("hidden", true)
+        }
+        else {
+          t.attr("hidden", null)
+        }
+      })
+    }
+  }
 }
 
-const drawPanelcncChart2 = (data) => {
+const drawPanelcncChart = (data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -130,7 +156,7 @@ const drawPanelcncChart2 = (data) => {
 
   const innerChart = svg.append("g")
     .attr("class", "bars")
-    .attr("fill", "steelblue")
+    .attr("fill", "#DFC6A2")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
   
   innerChart.append("g")
@@ -156,7 +182,8 @@ const drawPanelcncChart2 = (data) => {
       .attr("x", d => x(d.date) + x.bandwidth()/2)
       .attr("y", d => y(d.qty) - 12)
       .attr("dy", "0.35em")
-      .attr("fill", "black")
+      .attr("fill", "#75485E")
+      .attr("font-weight", 600)
       .attr("hidden", x.bandwidth() < 50 ? true : null)
 
   innerChart.append("g")
