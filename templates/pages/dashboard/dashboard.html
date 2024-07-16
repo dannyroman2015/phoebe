@@ -93,7 +93,7 @@
               @click.away="popoverOpen=false;"
               @keydown.escape.window="popoverOpen=false"
               :class="{ 'top-0 mt-12' : popoverPosition == 'bottom', 'bottom-0 mb-1' : popoverPosition == 'top' }"
-              class="absolute w-[300px] z-20 max-w-lg -translate-x-full -translate-y-6" x-cloak>
+              class="absolute w-[300px] z-40 max-w-lg -translate-x-full -translate-y-6" x-cloak>
             <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white border rounded-md shadow-sm border-neutral-200/70">
               <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
               <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
