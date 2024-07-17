@@ -241,34 +241,6 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		log.Println(err)
 	}
 
-	// get data for 6S chart
-	cur, err = s.mgdb.Collection("sixs").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"datestr": 1}))
-	if err != nil {
-		log.Println("dashboard: ", err)
-	}
-
-	type ScoreReport struct {
-		Area  string `bson:"area"`
-		Date  string `bson:"datestr"`
-		Score int    `bson:"score"`
-	}
-	var s6Data []ScoreReport
-	var s6areas []string
-	var s6dates []string
-	for cur.Next(context.Background()) {
-		var a ScoreReport
-		cur.Decode(&a)
-		t, _ := time.Parse("2006-01-02", a.Date)
-		a.Date = t.Format("2 Jan")
-		if !slices.Contains(s6areas, a.Area) {
-			s6areas = append(s6areas, a.Area)
-		}
-		if !slices.Contains(s6dates, a.Date) {
-			s6dates = append(s6dates, a.Date)
-		}
-		s6Data = append(s6Data, a)
-	}
-
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"of": "packchart"}}},
@@ -296,15 +268,11 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/pages/dashboard/cuttingchart.html",
 		"templates/pages/dashboard/laminationchart.html",
 		"templates/pages/dashboard/packingchart.html",
-		"templates/pages/dashboard/6schart.html",
 		"templates/pages/dashboard/provalcht.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
 		"cuttingData":         cuttingData,
 		"laminationChartData": laminationChartData,
-		"s6areas":             s6areas,
-		"s6dates":             s6dates,
-		"s6data":              s6Data,
 		"packingData":         packchartData,
 	})
 }
@@ -587,7 +555,7 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"itemtype": "whole"}}},
+		{{"$match", bson.M{"itemtype": "whole", "$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -660,6 +628,48 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/quality.html")).Execute(w, map[string]interface{}{
 		"qualityChartData": qualityChartData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadsixs - load 6S area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
+	todate := time.Now().Format("2006-01-02")
+	cur, err := s.mgdb.Collection("sixs").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"datestr": bson.M{"$gte": fromdate}}, bson.M{"datestr": bson.M{"$lte": todate}}}}}},
+		{{"$sort", bson.M{"datestr": 1}}},
+	})
+	if err != nil {
+		log.Println("dashboard: ", err)
+	}
+
+	type ScoreReport struct {
+		Area  string `bson:"area"`
+		Date  string `bson:"datestr"`
+		Score int    `bson:"score"`
+	}
+	var s6Data []ScoreReport
+	var s6areas []string
+	var s6dates []string
+	for cur.Next(context.Background()) {
+		var a ScoreReport
+		cur.Decode(&a)
+		t, _ := time.Parse("2006-01-02", a.Date)
+		a.Date = t.Format("2 Jan")
+		if !slices.Contains(s6areas, a.Area) {
+			s6areas = append(s6areas, a.Area)
+		}
+		if !slices.Contains(s6dates, a.Date) {
+			s6dates = append(s6dates, a.Date)
+		}
+		s6Data = append(s6Data, a)
+	}
+	template.Must(template.ParseFiles("templates/pages/dashboard/sixs.html")).Execute(w, map[string]interface{}{
+		"s6areas": s6areas,
+		"s6dates": s6dates,
+		"s6data":  s6Data,
 	})
 }
 
@@ -1021,11 +1031,14 @@ func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 // /dashboard/pack/getchart - change chart of pack area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	pickedChart := r.URL.Query().Get("packcharttype")
+	pickedChart := r.FormValue("packcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("packFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("packToDate"))
 
 	switch pickedChart {
 	case "general":
 		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
@@ -1049,7 +1062,7 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "detail":
 		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"itemtype": "whole"}}},
+			{{"$match", bson.M{"itemtype": "whole", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -1069,6 +1082,91 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/pack_detailchart.html")).Execute(w, map[string]interface{}{
 			"packChartData": packChartData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/pack/getchart - change chart of pack area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ds_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("sixscharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("sixsFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("sixsToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("sixs").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"datestr": bson.M{"$gte": fromdate.Format("2006-01-02")}}, bson.M{"datestr": bson.M{"$lte": todate.Format("2006-01-02")}}}}}},
+			{{"$sort", bson.M{"datestr": 1}}},
+		})
+		if err != nil {
+			log.Println("dashboard: ", err)
+		}
+
+		type ScoreReport struct {
+			Area  string `bson:"area"`
+			Date  string `bson:"datestr"`
+			Score int    `bson:"score"`
+		}
+		var s6Data []ScoreReport
+		var s6areas []string
+		var s6dates []string
+		for cur.Next(context.Background()) {
+			var a ScoreReport
+			cur.Decode(&a)
+			t, _ := time.Parse("2006-01-02", a.Date)
+			a.Date = t.Format("2 Jan")
+			if !slices.Contains(s6areas, a.Area) {
+				s6areas = append(s6areas, a.Area)
+			}
+			if !slices.Contains(s6dates, a.Date) {
+				s6dates = append(s6dates, a.Date)
+			}
+			s6Data = append(s6Data, a)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/sixs_generalchart.html")).Execute(w, map[string]interface{}{
+			"s6areas": s6areas,
+			"s6dates": s6dates,
+			"s6data":  s6Data,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/quality/getchart - change chart of quality area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dq_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("qualitycharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("qualityFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("qualityToDate"))
+
+	switch pickedChart {
+	case "general":
+		log.Println("sdf")
+		cur, err := s.mgdb.Collection("quality").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": fromdate.Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": todate.Format("2006-01-02")}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "checkedqty": bson.M{"$sum": "$checkedqty"}, "failedqty": bson.M{"$sum": "$failedqty"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
+			{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var qualityChartData []struct {
+			Date       string `bson:"date" json:"date"`
+			Section    string `bson:"section" json:"section"`
+			CheckedQty int    `bson:"checkedqty" json:"checkedqty"`
+			FailedQty  int    `bson:"failedqty" json:"failedqty"`
+		}
+		if err := cur.All(context.Background(), &qualityChartData); err != nil {
+			log.Println(err)
+		}
+		log.Println(qualityChartData)
+		template.Must(template.ParseFiles("templates/pages/dashboard/quality_generalchart.html")).Execute(w, map[string]interface{}{
+			"qualityChartData": qualityChartData,
 		})
 	}
 }
@@ -3131,17 +3229,16 @@ func (s *Server) q_fastentry(w http.ResponseWriter, r *http.Request, ps httprout
 	)).Execute(w, nil)
 }
 
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /quality/loadform - load form of report for quality
+// ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) q_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, nil)
 }
 
-// /////////////////////////////////////////////////////////////////////////////////////////
-// /mo/entry - get entry page of mo
-// /////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) mo_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/mo/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
-}
-
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /quality/sendentry - post report for quality
+// ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	lines := strings.Split(strings.Trim(r.FormValue("list"), "\n"), "\n")
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
@@ -3175,7 +3272,6 @@ func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 		})
 		return
 	}
-
 	_, err = s.mgdb.Collection("quality").InsertMany(context.Background(), bdoc)
 	if err != nil {
 		log.Println(err)
@@ -3185,38 +3281,17 @@ func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 		})
 		return
 	}
-
-	// usernameToken, _ := r.Cookie("username")
-	// username := usernameToken.Value
-	// machine := r.FormValue("machine")
-	// start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
-	// end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
-	// qty, _ := strconv.Atoi(r.FormValue("qty"))
-	// operator := r.FormValue("operator")
-	// if machine == "" || r.FormValue("qty") == "" || operator == "" || start.Sub(end) >= 0 {
-	// 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
-	// 		"showMissingDialog": true,
-	// 		"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
-	// 	})
-	// 	return
-	// }
-	// _, err := s.mgdb.Collection("panelcnc").InsertOne(context.Background(), bson.M{
-	// 	"date": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
-	// 	"qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
-	// 	"machine": machine, "operator": operator,
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
-	// 		"showErrDialog": true,
-	// 		"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
-	// 	})
-	// 	return
-	// }
 	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// /////////////////////////////////////////////////////////////////////////////////////////
+// /mo/entry - get entry page of mo
+// /////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mo_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/mo/entry/entry.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 
 // /////////////////////////////////////////////////////////////////////////////////////////

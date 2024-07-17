@@ -36,6 +36,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadpack", s.d_loadpack)
 	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/loadquality", s.d_loadquality)
+	router.GET("/dashboard/loadsixs", s.d_loadsixs)
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.POST("/dashboard/assembly/getchart", s.da_getchart)
 	router.POST("/dashboard/woodfinish/getchart", s.dw_getchart)
@@ -43,7 +44,9 @@ func (s *Server) routes() http.Handler {
 	router.POST("/dashboard/lamination/getchart", s.dl_getchart)
 	router.POST("/dashboard/reededline/getchart", s.dr_getchart)
 	router.POST("/dashboard/veneer/getchart", s.dv_getchart)
-	router.GET("/dashboard/pack/getchart", s.dp_getchart)
+	router.POST("/dashboard/pack/getchart", s.dp_getchart)
+	router.POST("/dashboard/sixs/getchart", s.ds_getchart)
+	router.POST("/dashboard/quality/getchart", s.dq_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)

@@ -1,7 +1,7 @@
 const drawQualityChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 20, right: 20, bottom: 20, left: 60};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -56,94 +56,30 @@ const drawQualityChart = (data) => {
     .call(g => g.selectAll(".domain").remove())
     .call(g => g.selectAll("text").attr("font-size", "12px"))
 
-  // innerChart.append("g")
-  //   .attr("font-family", "sans-serif")
-  //   .attr("font-size", 14)
-  // .selectAll()
-  // .data(series[series.length-1])
-  // .join("text")
-  //   .attr("text-anchor", "middle")
-  //   .attr("alignment-baseline", "middle")
-  //   .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-  //   .attr("y", d => y(d[1]) - 10)
-  //   .attr("dy", "0.35em")
-  //   .attr("fill", "#75485E")
-  //   .attr("font-size", "14px")
-  //   .text(d => `Σ ${d3.format("~s")(d[1])}` )
-
   series.forEach(serie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
-        .attr("font-size", 12)
+        .attr("font-size", 10)
       .selectAll()
       .data(serie)
       .join("text")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 3)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 8)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
-        .attr("font-size", "14px")
-        .text(d => {
-          if (d.data[0] == data[0].date) {
-            if (d[1]-d[0] < 10) {return ""}; 
-            return d.key
-          }
-          else {
-            const failedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).failedqty
-            const checkedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).checkedqty
-            return d[1] - d[0] >= 5 ? `${d[1]-d[0]}% ${failedqty}/${checkedqty}` : ""
-          }
-        })
+        .attr("font-size", "10px")
+        .text(d =>  d[1] - d[0] >= 10 ? d.key : "")
+          .append("tspan")
+            .text(d => {
+              const failedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).failedqty
+              const checkedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).checkedqty
+              return  d[1] - d[0] >= 10 ? `${failedqty}/${checkedqty}(${d[1]-d[0]}%)` : ""
+            })
+            .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+            .attr("dy", "1.5em")
   })
-
-  // svg.append("text")
-  //     .text("(m²)")
-  //     .attr("text-anchor", "middle")
-  //     .attr("alignment-baseline", "middle")
-  //     .attr("x", 30)
-  //     .attr("y", 5)
-  //     .attr("dy", "0.35em")
-  //     .attr("fill", "#75485E")
-  //     .attr("font-size", "20px")
-
-  //     const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
-  //     svg.append("text")
-  //       .text("Dark")
-  //       .attr("text-anchor", "middle")
-  //       .attr("alignment-baseline", "middle")
-  //       .attr("x", x(maxOne.data[0]))
-  //       .attr("y", y(maxOne[1]) - 10)
-  //       .attr("dy", "0.35em")
-  //       .attr("fill", "#75485E")
-  //       .attr("font-size", "14px")
-    
-  //     svg.append("line")
-  //       .attr("x1", x(maxOne.data[0]))
-  //       .attr("y1", y(maxOne[1]) + 2)
-  //       .attr("x2", x(maxOne.data[0]) + x.bandwidth()/2 + 20)
-  //       .attr("y2", y(maxOne[1] - (maxOne[1] - maxOne[0])/2))
-  //       .attr("stroke", "#75485E")
-  //       .attr("stroke-width", 1);
-    
-  //     svg.append("text")
-  //       .text("Bright")
-  //       .attr("text-anchor", "middle")
-  //       .attr("alignment-baseline", "middle")
-  //       .attr("x", x(maxOne.data[0]) + 2*x.bandwidth())
-  //       .attr("y", y(maxOne[1]))
-  //       .attr("dy", "0.35em")
-  //       .attr("fill", "#75485E")
-  //       .attr("font-size", "14px")
-
-  //     svg.append("line")
-  //       .attr("x1", x(maxOne.data[0]) + 2*x.bandwidth())
-  //       .attr("y1", y(maxOne[1]) + 12)
-  //       .attr("x2", x(maxOne.data[0]) + x.bandwidth() + 20)
-  //       .attr("y2", y(maxOne[0]/2))
-  //       .attr("stroke", "#75485E")
-  //       .attr("stroke-width", 1);
 
   return svg.node();
 }
