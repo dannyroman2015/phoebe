@@ -1231,6 +1231,29 @@ func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "wrnote"}}},
+		{{"$sort", bson.M{"wrnotecode": 1}}},
+		{{"$limit", 5}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var wrnotes []struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WoodType   string  `bson:"woodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+		WrRemain   float64 `bson:"wrremain"`
+	}
+	// var wrnotes []interface{}
+	if err := cur.All(context.Background(), &wrnotes); err != nil {
+		log.Println(err)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote.html")).Execute(w, map[string]interface{}{})
 }
 
@@ -2254,22 +2277,12 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	report := models.CuttingReport{
-		Date:             occurdate,
-		WoodType:         woodtype,
-		Qtycbm:           qty,
-		Thickness:        thickness,
-		WoodRecievedNote: wrnote,
-		Reporter:         usernameToken.Value,
-		CreatedDate:      time.Now(),
-		LastModified:     time.Now(),
-	}
-
-	if err := models.NewCuttingModel(s.mgdb).InsertOne(report); err != nil {
-		log.Println("sc_sendentry: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to create new report"))
-		return
+	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
+		"type": "report", "wrnote": wrnote, "woodtype": woodtype, "qtycbm": qty, "thickness": thickness, "reporter": usernameToken.Value,
+		"date": primitive.NewDateTimeFromTime(occurdate), "createddate": primitive.NewDateTimeFromTime(time.Now()), "lastmodified": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
 	}
 
 	// update remain qty of wrnote
