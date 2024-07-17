@@ -1234,7 +1234,6 @@ func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpr
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "wrnote"}}},
 		{{"$sort", bson.M{"wrnotecode": 1}}},
-		{{"$limit", 5}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
@@ -1249,12 +1248,15 @@ func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpr
 		WrnoteQty  float64 `bson:"wrnoteqty"`
 		WrRemain   float64 `bson:"wrremain"`
 	}
-	// var wrnotes []interface{}
 	if err := cur.All(context.Background(), &wrnotes); err != nil {
 		log.Println(err)
 	}
+	numberOfWrnotes := len(wrnotes)
 
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote.html")).Execute(w, map[string]interface{}{})
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote.html")).Execute(w, map[string]interface{}{
+		"wrnotes":         wrnotes,
+		"numberOfWrnotes": numberOfWrnotes,
+	})
 }
 
 // //////////////////////////////////////////////////////////

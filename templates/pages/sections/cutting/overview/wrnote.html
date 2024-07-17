@@ -1,13 +1,9 @@
-<div x-data="{
-    openAddForm: false,
-    critid:'', critapplyon: '', critdescription: '', critkind: '', critpoint: '',
-  }"
-  class=" fade-in col-span-full lg:col-span-3 relative px-4 py-4 overflow-auto rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class=" fade-in col-span-full lg:col-span-3 relative px-4 py-4 overflow-auto rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
         <h2 class="text-lg font-medium text-gray-800 dark:text-white">Phiếu nhập gỗ</h2>
-        <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">4 phiếu</span>
+        <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">{{.numberOfWrnotes}} phiếu</span>
       </div>
         <p class="mt-1 text-sm text-blue-600 dark:text-gray-300"></p>
     </div>
@@ -83,19 +79,49 @@
                       Số khối
                     </th>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      Còn lại
+                    </th>
+                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                       Ngày cấp
                     </th>
                   </tr>
                 </thead>
 
                 <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                  {{range .wrnotes}}
+                  <tr>  
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">Kind</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteCode}}</p>
                       </div>
                     </td>
-
-                  </tr> 
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.WoodType}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Thickness}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteQty}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.WrRemain}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Date}}</p>
+                      </div>
+                    </td>
+                  </tr>
+                  {{end}}
                 </tbody>
               </table>              
             </div>
