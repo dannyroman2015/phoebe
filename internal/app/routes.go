@@ -89,6 +89,7 @@ func (s *Server) routes() http.Handler {
 
 	// Cuttting ////////////////////////////////////////////////////////
 	router.GET("/sections/cutting/overview", s.sc_overview)
+	router.GET("/sections/cutting/overview/loadwrnote", s.sco_loadwrnote)
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
 	router.POST("/sections/cutting/entry/wrnoteinfo", s.sc_wrnoteinfo)
@@ -163,7 +164,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// Quality ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/quality/fastentry", s.q_fastentry)
+	router.GET("/quality/fastentry", withAuth(s.q_fastentry))
 	router.GET("/quality/entry/loadform", s.q_loadform)
 	router.POST("/quality/entry/sendentry", s.q_sendentry)
 	// end packing

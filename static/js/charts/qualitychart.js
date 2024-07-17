@@ -1,7 +1,7 @@
 const drawQualityChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 60};
+  const margin = {top: 20, right: 20, bottom: 20, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -48,7 +48,11 @@ const drawQualityChart = (data) => {
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .append("title")
-        .text(d => d.key)
+        .text(d => {
+          const failedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).failedqty
+          const checkedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).checkedqty
+          return  d[1] - d[0] < 15 ? `${d.key} - ${failedqty}/${checkedqty} (${d[1]-d[0]}%)` : ""
+        })
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -66,16 +70,16 @@ const drawQualityChart = (data) => {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 8)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 9)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "10px")
-        .text(d =>  d[1] - d[0] >= 10 ? d.key : "")
+        .text(d =>  d[1] - d[0] >= 15 ? d.key : "")
           .append("tspan")
             .text(d => {
               const failedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).failedqty
               const checkedqty = d.data[1].get(d.key) == undefined ? "" : d.data[1].get(d.key).checkedqty
-              return  d[1] - d[0] >= 10 ? `${failedqty}/${checkedqty}(${d[1]-d[0]}%)` : ""
+              return  d[1] - d[0] >= 15 ? `${failedqty}/${checkedqty}(${d[1]-d[0]}%)` : ""
             })
             .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
             .attr("dy", "1.5em")

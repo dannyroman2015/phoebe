@@ -555,7 +555,7 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"itemtype": "whole", "$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -607,6 +607,7 @@ func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps h
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("quality").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -10).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "checkedqty": bson.M{"$sum": "$checkedqty"}, "failedqty": bson.M{"$sum": "$failedqty"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
 		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
@@ -1143,7 +1144,6 @@ func (s *Server) dq_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	switch pickedChart {
 	case "general":
-		log.Println("sdf")
 		cur, err := s.mgdb.Collection("quality").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": fromdate.Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": todate.Format("2006-01-02")}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "checkedqty": bson.M{"$sum": "$checkedqty"}, "failedqty": bson.M{"$sum": "$failedqty"}}}},
@@ -1164,7 +1164,7 @@ func (s *Server) dq_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &qualityChartData); err != nil {
 			log.Println(err)
 		}
-		log.Println(qualityChartData)
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/quality_generalchart.html")).Execute(w, map[string]interface{}{
 			"qualityChartData": qualityChartData,
 		})
@@ -1199,30 +1199,39 @@ func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/cutting/overview - get page overview of Cutting
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{})
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer cur.Close(context.Background())
-
-	var records []CuttingRecord
-
-	if err := cur.All(context.Background(), &records); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var data = map[string]interface{}{
-		"records": records,
-	}
-
 	template.Must(template.ParseFiles(
 		"templates/pages/sections/cutting/overview/overview.html",
-		"templates/pages/sections/cutting/overview/reptbl.html",
 		"templates/shared/navbar.html",
-	)).Execute(w, data)
+	)).Execute(w, nil)
+
+	// cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{})
+	// if err != nil {
+	// 	log.Println(err)
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer cur.Close(context.Background())
+
+	// var records []CuttingRecord
+
+	// if err := cur.All(context.Background(), &records); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// var data = map[string]interface{}{
+	// 	"records": records,
+	// }
+
+	// template.Must(template.ParseFiles(
+	// 	"templates/pages/sections/cutting/overview/overview.html",
+	// 	"templates/pages/sections/cutting/overview/reptbl.html",
+	// 	"templates/shared/navbar.html",
+	// )).Execute(w, data)
+}
+
+func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote.html")).Execute(w, map[string]interface{}{})
 }
 
 // //////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-<div class="fade-in col-span-full lg:col-span-6 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="flex justify-between">
     <a href="Javascript:void(0)" class="mb-1 font-bold hover:underline">
       Quality</a>
@@ -111,7 +111,7 @@
 
 <script>
   document.getElementById("qualityToDate").valueAsDate = new Date();
-  document.getElementById("qualityFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
+  document.getElementById("qualityFromDate").valueAsDate = new Date(Date.now() - 10*86400000);
   qualityChart.append(drawQualityChart({{.qualityChartData}}))
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{
