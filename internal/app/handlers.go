@@ -2136,7 +2136,7 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/entry - get entry page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createat": -1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}, options.Find().SetSort(bson.M{"createat": -1}))
 	if err != nil {
 		log.Println(err)
 	}
@@ -2170,36 +2170,15 @@ func (s *Server) sc_wrnoteinfo(w http.ResponseWriter, r *http.Request, ps httpro
 		WoodType   string  `bson:"woodtype"`
 		WrnoteQty  float64 `bson:"wrnoteqty"`
 		Thickness  float64 `bson:"thickness"`
+		WrRemain   float64 `bson:"wrremain"`
 	}
 
 	if err := sresult.Decode(&wrnoteinfo); err != nil {
 		log.Println(err)
 	}
 
-	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "wrnote": r.FormValue("wrnote")}}},
-		{{"$group", bson.M{"_id": "$wrnote", "total": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$set", bson.M{"wrnote": "$_id"}}},
-		{{"$unset", "_id"}},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-	defer cur.Close(context.Background())
-	var result []struct {
-		DoneQty float64 `bson:"total"`
-	}
-	cur.All(context.Background(), &result)
-	var remain float64
-	if len(result) == 0 {
-		remain = wrnoteinfo.WrnoteQty
-	} else {
-		remain = wrnoteinfo.WrnoteQty - result[0].DoneQty
-	}
-
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinfo.html")).Execute(w, map[string]interface{}{
 		"wrnoteinfo": wrnoteinfo,
-		"remain":     remain,
 	})
 }
 
@@ -2208,21 +2187,20 @@ func (s *Server) sc_newwrnote(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	wrnotedate := r.FormValue("occurdate")
+	wrnotedate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 	code := r.FormValue("wrnotecode")
 	woodtype := r.FormValue("woodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnoteqty, _ := strconv.ParseFloat(r.FormValue("wrnoteqty"), 64)
-	if wrnotedate == "" || code == "" || woodtype == "" || thickness == 0 || wrnoteqty == 0 {
+	if code == "" || woodtype == "" || thickness == 0 || wrnoteqty == 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, map[string]interface{}{
 			"showSuccessDialog": false,
 			"showMissingDialog": true,
 		})
 		return
 	}
-
 	_, err := s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type": "wrnote", "wrnotecode": code, "wrnoteqty": wrnoteqty, "woodtype": woodtype, "thickness": thickness, "date": wrnotedate, "createat": primitive.NewDateTimeFromTime(time.Now()),
+		"type": "wrnote", "wrnotecode": code, "wrnoteqty": wrnoteqty, "wrremain": wrnoteqty, "woodtype": woodtype, "thickness": thickness, "date": primitive.NewDateTimeFromTime(wrnotedate), "createat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		log.Println(err)
@@ -2233,7 +2211,7 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
 	if err != nil {
 		log.Println(err)
 	}
@@ -2242,7 +2220,9 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 	var wrnotes []struct {
 		WrnoteCode string  `bson:"wrnotecode"`
 		WrnoteQty  float64 `bson:"wrnoteqty"`
+		WrRemain   float64 `bson:"wrremain"`
 	}
+
 	if err = cur.All(context.Background(), &wrnotes); err != nil {
 		log.Println(err)
 	}
@@ -2258,8 +2238,7 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	remain, _ := strconv.ParseFloat(strings.Split(r.FormValue("wrnoteqty"), "/")[0], 64)
 	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
-	stroccurdate := r.FormValue("occurdate")
-	occurdate, _ := time.Parse("2006-01-02", stroccurdate)
+	occurdate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 	woodtype := r.FormValue("woodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnote := r.FormValue("wrnote")
@@ -2291,6 +2270,12 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed to create new report"))
 		return
+	}
+
+	// update remain qty of wrnote
+	_, err = s.mgdb.Collection("cutting").UpdateOne(context.Background(), bson.M{"type": "wrnote", "wrnotecode": wrnote}, bson.M{"$inc": bson.M{"wrremain": -qty}})
+	if err != nil {
+		log.Println(err)
 	}
 
 	http.Redirect(w, r, "/sections/cutting/entry", http.StatusSeeOther)

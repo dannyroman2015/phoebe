@@ -1,16 +1,15 @@
 <div x-data="{
-  openAddForm: false,
-  message: 'Giao tiếp, hướng dẫn xuất hiện ở đây.',
-  critid:'', critapplyon: '', critdescription: '', critkind: '', critpoint: '',
-}"
-    class=" fade-in col-span-full lg:col-span-3 relative px-4 py-4 overflow-auto rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+    openAddForm: false,
+    critid:'', critapplyon: '', critdescription: '', critkind: '', critpoint: '',
+  }"
+  class=" fade-in col-span-full lg:col-span-3 relative px-4 py-4 overflow-auto rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
         <h2 class="text-lg font-medium text-gray-800 dark:text-white">Phiếu nhập gỗ</h2>
         <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">4 phiếu</span>
       </div>
-        <p x-text="message" id="message" class="mt-1 text-sm text-blue-600 dark:text-gray-300"></p>
+        <p class="mt-1 text-sm text-blue-600 dark:text-gray-300"></p>
     </div>
 
     <div class="flex items-center mt-4 gap-x-3">
@@ -68,9 +67,39 @@
     <div class="mx-4 my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div id="table-container" class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-              <div hx-get="/incentive/admin/loadcrittable" hx-target="this" hx-swap="outHTML" hx-trigger="load">
                 
-              </div>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        Mã kiện
+                      </th>
+                      <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        Loại Gỗ
+                      </th>
+                      <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        Độ dày
+                      </th>
+                      <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        Số khối
+                      </th>
+                      <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        Ngày cấp
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                      <td class="px-4 py-1 text-sm whitespace-nowrap">
+                        <div>
+                          <p class="text-gray-500 dark:text-gray-400">Kind</p>
+                        </div>
+                      </td>
+
+                    </tr> 
+                  </tbody>
+                </table>
+
             </div>
         </div>
     </div>
