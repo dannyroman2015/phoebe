@@ -1,10 +1,10 @@
 <section id="entry-container" class="fade-in">
   <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
-      <form class="space-y-4" hx-post="/sections/reededline/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
+      <form class="space-y-4" hx-post="/sections/veneer/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
         <div class="mt-4 text-center">
           <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
-            Gửi</button>
+            Veneer</button>
         </div>
 
         <div class="mt-4 text-center">
@@ -165,8 +165,8 @@
         <div class="grid grid-cols-2 gap-4 text-center">
           <div>
             <label for="straight" tabindex="0"
-              class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-zinc-100 has-[:checked]:text-black">
-              <input class="sr-only" value="straight" id="straight" type="radio" tabindex="-1" name="type" />
+                  class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+              <input class="sr-only" value="straight" id="straight" type="radio" tabindex="-1" name="type"/>
               <span class="text-sm">Thẳng</span>
             </label>
           </div>
@@ -195,15 +195,19 @@
             </label>
           </div>
         </div>
-        <!-- <div class="container flex justify-center px-4 mx-auto">
-          <div class="w-64"> -->
-        <div class="w-64 mt-4 flex justify-center px-4 mx-auto">
+
+        <div class="w-1/2 mt-4 text-center justify-center mx-auto">
           <label for="qty" class="relative block rounded-md border">
-            <input type="number" id="qty" name="qty" placeholder="Số lượng" min="0" step="1"
+            <input type="number" id="qty" name="qty" placeholder="" min="0" step="0.01"
               class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
             <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-              Số lượng (tấm)</span>
+              Số lượng (m<sup>2</sup>)</span>
           </label>
+        </div>
+
+        <div class="mt-4 text-center">
+          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+            Gửi</button>
         </div>
       </form>
     </div>

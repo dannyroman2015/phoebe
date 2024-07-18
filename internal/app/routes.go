@@ -125,6 +125,7 @@ func (s *Server) routes() http.Handler {
 	// Veneer ////////////////////////////////////////////////////////
 	router.GET("/sections/veneer/entry", withAuth(s.sv_entry))
 	router.GET("/sections/veneer/entry/loadform", s.sve_loadform)
+	router.POST("/sections/veneer/entry/sendentry", s.sve_sendentry)
 	// end Veneer/////////////////////////////////////////////////////////////
 
 	// Assembly ////////////////////////////////////////////////////////

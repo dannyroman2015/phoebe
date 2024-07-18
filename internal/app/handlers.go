@@ -2588,6 +2588,39 @@ func (s *Server) sve_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/entry/sendentry - load form of page entry of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sve_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	qty, _ := strconv.Atoi(r.FormValue("qty"))
+	veneertype := r.FormValue("type")
+	if r.FormValue("type") == "" || r.FormValue("qty") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/veneer/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("veneer").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "type": veneertype, "qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/veneer/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/assembly/entry - load page entry of assembly section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sa_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
