@@ -1,0 +1,69 @@
+<div id="reporttable-container" class="flex flex-col">
+  <div class="mx-4 my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">           
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Ngày cắt
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Sản lượng
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Mã kiện
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Loại Gỗ
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Độ dày
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Người báo cáo
+                  </th>       
+                </tr>
+              </thead>
+
+              <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                {{range .reports}}
+                <tr>  
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Date}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Qtycbm}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Wrnote}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Woodtype}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Thickness}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Reporter}}</p>
+                    </div>
+                  </td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>              
+          </div>
+      </div>     
+  </div>
+</div>

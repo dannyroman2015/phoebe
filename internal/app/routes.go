@@ -90,6 +90,9 @@ func (s *Server) routes() http.Handler {
 	// Cuttting ////////////////////////////////////////////////////////
 	router.GET("/sections/cutting/overview", s.sc_overview)
 	router.GET("/sections/cutting/overview/loadwrnote", s.sco_loadwrnote)
+	router.GET("/sections/cutting/overview/loadreport", s.sco_loadreport)
+	router.POST("/sections/cutting/overview/wrnotesearch", s.sco_wrnotesearch)
+	router.POST("/sections/cutting/overview/reportsearch", s.sco_reportsearch)
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
 	router.POST("/sections/cutting/entry/wrnoteinfo", s.sc_wrnoteinfo)

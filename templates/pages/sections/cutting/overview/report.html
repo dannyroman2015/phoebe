@@ -2,8 +2,8 @@
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Phiếu nhập gỗ</h2>
-        <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">{{.numberOfWrnotes}} phiếu</span>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Báo cáo cắt gỗ</h2>
+        <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">{{.numberOfReports}} báo cáo</span>
       </div>
     </div>
 
@@ -115,8 +115,8 @@
   </div>
 
   <div x-data="{
-    showWrnoteDropdown:false,
-    filter:'wrnotecode',
+    showReportDropdown:false,
+    filter:'wrnote',
     filterLabel: 'Mã kiện',
     }"
     class="mt-3 md:flex space-x-2 md:items-center md:justify-between">
@@ -125,7 +125,7 @@
         <div class="relative w-full flex items-center mt-4 md:mt-0">
             <input type="text" :value="filter" name="searchFilter" hidden>
             <label for="search-dropdown" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">filter</label>
-            <button x-text="filterLabel" @click="showWrnoteDropdown=!showWrnoteDropdown" id="wrnotedropdown-button" 
+            <button x-text="filterLabel" @click="showReportDropdown=!showReportDropdown" id="reportdropdown-button" 
                 class="flex-shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-900 bg-gray-100 border border-gray-300 rounded-s-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700 dark:text-white dark:border-gray-600" type="button">
                 
                 <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
@@ -133,22 +133,22 @@
                 </svg>
             </button>
 
-            <div x-show="showWrnoteDropdown" 
-                id="wrnotedropdown" class="absolute top-0 mt-12 z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
-                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="wrnotedropdown-button">
+            <div x-show="showReportDropdown" 
+                id="reportdropdown" class="absolute top-0 mt-12 z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="reportdropdown-button">
                 <li>
-                  <button @click="showWrnoteDropdown=!showWrnoteDropdown; filter='wrnotecode'; filterLabel='Mã kiện'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                  <button @click="showReportDropdown=!showReportDropdown; filter='wrnote'; filterLabel='Mã kiện'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                     Mã kiện</button>
                 </li>
                 <li>
-                    <button @click="showWrnoteDropdown=!showWrnoteDropdown; filter='woodtype'; filterLabel='Loại gỗ'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                      Loại gỗ</button>
-                </li>
+                  <button @click="showReportDropdown=!showReportDropdown; filter='woodtype'; filterLabel='Loại gỗ'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Loại gỗ</button>
+                </li>             
             </div>
 
             <div class="relative w-full">
-                <input hx-post="/sections/cutting/overview/wrnotesearch" hx-target="#table-container" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML settel:200ms"
-                    type="search" name="wrnotesearch" id="wrnotesearch" class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-white rounded-e-lg border-s-gray-50 border-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" 
+                <input hx-post="/sections/cutting/overview/reportsearch" hx-target="#reporttable-container" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML settel:200ms"
+                    type="search" name="reportsearch" id="reportsearch" class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-white rounded-e-lg border-s-gray-50 border-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" 
                         placeholder="Search" required />
  
             </div>
@@ -157,13 +157,19 @@
           
   </div>
   
-  <div id="table-container" class="flex flex-col">
+  <div id="reporttable-container" class="flex flex-col">
     <div class="mx-4 my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">           
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-800">
                   <tr>
+                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      Ngày cắt
+                    </th>
+                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      Sản lượng
+                    </th>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                       Mã kiện
                     </th>
@@ -174,28 +180,32 @@
                       Độ dày
                     </th>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      Số khối
-                    </th>
-                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      Còn lại
-                    </th>
-                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      Ngày cấp
-                    </th>
+                      Người báo cáo
+                    </th>       
                   </tr>
                 </thead>
  
                 <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  {{range .wrnotes}}
+                  {{range .reports}}
                   <tr>  
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteCode}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Date}}</p>
                       </div>
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.WoodType}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Qtycbm}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Wrnote}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Woodtype}}</p>
                       </div>
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
@@ -205,17 +215,7 @@
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteQty}}</p>
-                      </div>
-                    </td>
-                    <td class="px-4 py-1 text-sm whitespace-nowrap">
-                      <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.WrRemain}}</p>
-                      </div>
-                    </td>
-                    <td class="px-4 py-1 text-sm whitespace-nowrap">
-                      <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.Date}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Reporter}}</p>
                       </div>
                     </td>
                   </tr>

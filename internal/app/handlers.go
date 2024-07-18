@@ -1203,33 +1203,11 @@ func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprout
 		"templates/pages/sections/cutting/overview/overview.html",
 		"templates/shared/navbar.html",
 	)).Execute(w, nil)
-
-	// cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{})
-	// if err != nil {
-	// 	log.Println(err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	// defer cur.Close(context.Background())
-
-	// var records []CuttingRecord
-
-	// if err := cur.All(context.Background(), &records); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// var data = map[string]interface{}{
-	// 	"records": records,
-	// }
-
-	// template.Must(template.ParseFiles(
-	// 	"templates/pages/sections/cutting/overview/overview.html",
-	// 	"templates/pages/sections/cutting/overview/reptbl.html",
-	// 	"templates/shared/navbar.html",
-	// )).Execute(w, data)
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/loadwrnote - load wrnote section of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "wrnote"}}},
@@ -1256,6 +1234,111 @@ func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpr
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote.html")).Execute(w, map[string]interface{}{
 		"wrnotes":         wrnotes,
 		"numberOfWrnotes": numberOfWrnotes,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/loadreport - load report section of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "report"}}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var reports []struct {
+		Wrnote    string  `bson:"wrnote"`
+		Woodtype  string  `bson:"woodtype"`
+		Thickness float64 `bson:"thickness"`
+		Date      string  `bson:"date"`
+		Qtycbm    float64 `bson:"qtycbm"`
+		Reporter  string  `bson:"reporter"`
+	}
+	if err := cur.All(context.Background(), &reports); err != nil {
+		log.Println(err)
+	}
+	numberOfReports := len(reports)
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report.html")).Execute(w, map[string]interface{}{
+		"reports":         reports,
+		"numberOfReports": numberOfReports,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/wrnotesearch - search wrnote of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_wrnotesearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnoteseach := r.FormValue("wrnotesearch")
+	regexWord := ".*" + wrnoteseach + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "wrnote", searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var wrnotes []struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WoodType   string  `bson:"woodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+		WrRemain   float64 `bson:"wrremain"`
+	}
+	if err = cur.All(context.Background(), &wrnotes); err != nil {
+		log.Println(err)
+	}
+
+	numberOfWrnotes := len(wrnotes)
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote_tbl.html")).Execute(w, map[string]interface{}{
+		"wrnotes":         wrnotes,
+		"numberOfWrnotes": numberOfWrnotes,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/reportsearch - search report of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "report", searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var reports []struct {
+		Wrnote    string  `bson:"wrnote"`
+		Woodtype  string  `bson:"woodtype"`
+		Thickness float64 `bson:"thickness"`
+		Date      string  `bson:"date"`
+		Qtycbm    float64 `bson:"qtycbm"`
+		Reporter  string  `bson:"reporter"`
+	}
+	if err := cur.All(context.Background(), &reports); err != nil {
+		log.Println(err)
+	}
+	numberOfReports := len(reports)
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
+		"reports":         reports,
+		"numberOfReports": numberOfReports,
 	})
 }
 
