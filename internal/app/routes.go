@@ -122,6 +122,11 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/reededline/entry/sendentry", s.sre_sendentry)
 	// end Lamination/////////////////////////////////////////////////////////////
 
+	// Veneer ////////////////////////////////////////////////////////
+	router.GET("/sections/veneer/entry", withAuth(s.sv_entry))
+	router.GET("/sections/veneer/entry/loadform", s.sve_loadform)
+	// end Veneer/////////////////////////////////////////////////////////////
+
 	// Assembly ////////////////////////////////////////////////////////
 	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
