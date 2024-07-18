@@ -8,7 +8,7 @@ const drawPanelcncChart1 = (data) => {
   const fx = d3.scaleBand()
     .domain(new Set(data.map(d => d.date)))
     .rangeRound([margin.left, innerWidth])
-    .paddingInner(0.3);
+    .paddingInner(0.15);
 
   const machines = new Set(data.map(d => d.machine))
 
@@ -36,7 +36,6 @@ const drawPanelcncChart1 = (data) => {
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
-    
 
   innerChart.append("g")
     .selectAll()
@@ -68,16 +67,17 @@ const drawPanelcncChart1 = (data) => {
       .attr("fill", "#75485E")
       .attr("font-size", "14px")
       
-  innerChart
-    .selectAll()
-    .data(d3.group(data, d => d.date).get(data[0].date))
-    .join("text")
-      .text(d => d.machine)
-      .attr("text-anchor", "start")
-      .attr("x", d => x(d.machine) + x.bandwidth()/2)
-      .attr("y", d => y(d.qty) - 5)
-      .attr("fill", d => color(d.machine))
-      .attr("font-weight", 600)
+  // innerChart
+  //   .selectAll()
+  //   .data(d3.group(data, d => d.date).get(data[0].date))
+  //   .join("text")
+  //     .text(d => d.machine)
+  //     .attr("text-anchor", "start")
+  //     .attr("x", d => x(d.machine) + x.bandwidth()/2)
+  //     .attr("y", d => y(d.qty) - 5)
+  //     .attr("fill", d => color(d.machine))
+  //     .attr("font-weight", 600)
+  //     .attr("transform", d => `rotate(-90, ${x(d.machine) + x.bandwidth()}, ${y(d.qty) - 20})`)
       
 
   innerChart.append("g")
@@ -99,7 +99,67 @@ const drawPanelcncChart1 = (data) => {
     .attr("y", 5)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
-    .attr("font-size", 20)
+    .attr("font-size", 12)
+
+  svg.append("text")
+    .text("rover c")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 890)
+    .attr("y", 90)
+    .attr("dy", "0.35em")
+    .attr("fill", color("rover c"))
+    .attr("font-size", 16)
+    .attr("font-weight", 600)
+    .attr("transform", d => `rotate(-90, 890, 90)`)
+
+  svg.append("text")
+    .text("rover b")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 880)
+    .attr("y", 90)
+    .attr("dy", "0.35em")
+    .attr("fill", color("rover b"))
+    .attr("font-size", 16)
+    .attr("font-weight", 600)
+    .attr("transform", d => `rotate(-90, 880, 90)`)
+
+  svg.append("text")
+    .text("panel saw new")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 870)
+    .attr("y", 90)
+    .attr("dy", "0.35em")
+    .attr("fill", color("panel saw new"))
+    .attr("font-size", 14)
+    .attr("font-weight", 600)
+    .attr("transform", d => `rotate(-90, 870, 90)`)
+
+  svg.append("text")
+    .text("panel saw")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 860)
+    .attr("y", 90)
+    .attr("dy", "0.35em")
+    .attr("fill", color("panel saw"))
+    .attr("font-size", 14)
+    .attr("font-weight", 600)
+    .attr("transform", d => `rotate(-90, 860, 90)`)
+
+  svg.append("text")
+    .text("nesting new")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 850)
+    .attr("y", 90)
+    .attr("dy", "0.35em")
+    .attr("fill", color("nesting new"))
+    .attr("font-size", 14)
+    .attr("font-weight", 600)
+    .attr("transform", d => `rotate(-90, 850, 90)`)
 
   return svg.node();
 
@@ -201,7 +261,7 @@ const drawPanelcncChart = (data) => {
     .attr("y", 5)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
-    .attr("font-size", 20)
+    .attr("font-size", 16)
     
   // innerChart.append("g")
   //   .attr("class", "y-axis")

@@ -2896,7 +2896,8 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	operator := r.FormValue("operator")
-	if machine == "" || r.FormValue("qty") == "" || operator == "" || start.Sub(end) >= 0 {
+
+	if machine == "" || r.FormValue("qty") == "" || start.Sub(end) >= 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
