@@ -2545,7 +2545,7 @@ func (s *Server) sre_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
-	qty, _ := strconv.Atoi(r.FormValue("qty"))
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
 	prodtype := r.FormValue("tone")
 	if r.FormValue("tone") == "" || r.FormValue("qty") == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/reededline/entry/form.html")).Execute(w, map[string]interface{}{
