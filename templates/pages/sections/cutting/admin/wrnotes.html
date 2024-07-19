@@ -1,11 +1,13 @@
-<section
+<section x-data="{
+  numberOfWrnotes: {{.numberOfWrnotes}},
+}"
   class="fade-in px-4 py-4 mx-auto">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
         <h2 class="text-lg font-medium text-gray-800 dark:text-white">Phiếu Nhập Gỗ</h2>
         <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">
-        <strong>{{.numberOfWrnotes}}</strong> phiếu</span>
+        <strong x-text="numberOfWrnotes"></strong> phiếu</span>
       </div>
     </div>
   
@@ -44,7 +46,8 @@
         </svg>
       </span>
       <!-- Search employee -->
-      <input name="reportSearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
+      <input hx-post="/sections/cutting/admin/searchwrnote" hx-trigger="input changed delay:500ms, search" hx-target="#wrnote_tbody" hx-swap="outerHTML settle:200ms"
+        name="wrnoteSearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
   </div>
   
@@ -78,6 +81,15 @@
                     <span>Quantity</span>                              
                   </button>
                 </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Remain</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Wrnote ID</th>
           
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   Recieving Date</th>
@@ -92,14 +104,14 @@
             </thead>
             
             <tbody hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML swap:1s" 
-                id="report_tbody" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                id="wrnote_tbody" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
               {{range .cuttingWrnotes}}
               <tr>
                 <td class="px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                   <div class="inline-flex items-center gap-x-3">            
                     <div class="flex items-center gap-x-2">
                       <div>
-                        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
+                        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.WrnoteCode}}</p>
                       </div>
                     </div>
                   </div>
@@ -107,7 +119,7 @@
   
                 <td class="px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                   <div class="inline-flex items-center px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">          
-                    <h2 class="text-sm font-normal text-emerald-500">{{.WoodType}}</h2>
+                    <h2 class="text-sm font-normal text-emerald-500">{{.Woodtype}}</h2>
                   </div>
                 </td>
   
@@ -126,7 +138,23 @@
                     </div>
                   </div>
                 </td>
+
+                <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div class="inline-flex items-center gap-x-3">            
+                    <div class="flex items-center gap-x-2">
+                      <div>
+                        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Remain}}</p>
+                      </div>
+                    </div>
+                  </div>
+                </td>
                   
+                <td class="px-4 py-4 text-sm whitespace-nowrap">
+                  <div class="flex items-center gap-x-2">
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.WrnoteId}}</p>
+                  </div>
+                </td>
+
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-2">
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Date}}</p>
@@ -135,15 +163,14 @@
 
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-2">
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.CreatedAt}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.CreatedDate}}</p>
                   </div>
                 </td>
   
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-6">
-                    <!-- delete report -->
-                    <button
-                      hx-delete=""
+                    <button @click="numberOfWrnotes--"
+                      hx-delete="/sections/cutting/admin/deletewrnote/{{.WrnoteId}}"
                       class="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -159,39 +186,6 @@
       </div>
     </div>
   
-    <!-- <div class="mt-6 sm:flex sm:items-center sm:justify-between ">
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        Page 
-        <span id="curpage" class="font-medium text-gray-700 dark:text-gray-100">currentPage</span>
-        of 
-        <span id="maxpage" class="font-medium text-gray-700 dark:text-gray-100">numberOfPages</span>
-      </div>
-  
-      <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-          <a
-              class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"           
-          >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
-              </svg>
-  
-              <span>
-                  previous
-              </span>
-          </a>
-  
-          <button         
-          id="nextbtn"  class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
-              <span>
-                  Next
-              </span>
-  
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-              </svg>
-          </button>
-      </div>
-    </div> -->
   </div>  
 </section>
 

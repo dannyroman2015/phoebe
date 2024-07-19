@@ -2421,25 +2421,27 @@ func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httpr
 // /sections/cutting/admin/loadwrnote - load wrnote area on cutting admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	model := models.NewCuttingModel(s.mgdb)
-	cuttingWrnote, err := model.FindAllWrnotes()
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createat": -1}))
 	if err != nil {
-		log.Println("sc_admin: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to access cutting database"))
+		log.Println(err)
 		return
 	}
-
-	// chỗ này sao này làm next prev sửa lại sau
-	var n int
-	if len(cuttingWrnote) > 20 {
-		n = 20
-	} else {
-		n = len(cuttingWrnote)
+	defer cur.Close(context.Background())
+	var cuttingWrnote []struct {
+		WrnoteId    string    `bson:"_id"`
+		WrnoteCode  string    `bson:"wrnotecode"`
+		Woodtype    string    `bson:"woodtype"`
+		Thickness   float64   `bson:"thickness"`
+		Qty         float64   `bson:"wrnoteqty"`
+		Remain      float64   `bson:"wrremain"`
+		Date        time.Time `bson:"date"`
+		CreatedDate time.Time `bson:"createat"`
 	}
-
+	if err := cur.All(context.Background(), &cuttingWrnote); err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnotes.html")).Execute(w, map[string]interface{}{
-		"cuttingWrnotes":  cuttingWrnote[:n],
+		"cuttingWrnotes":  cuttingWrnote,
 		"numberOfWrnotes": len(cuttingWrnote),
 	})
 }
@@ -2450,7 +2452,43 @@ func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpro
 func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
 
-	_, err := s.mgdb.Collection("cutting").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	deletedReport := s.mgdb.Collection("cutting").FindOneAndDelete(context.Background(), bson.M{"_id": reportid})
+	if deletedReport.Err() != nil {
+		log.Println(deletedReport.Err())
+		return
+	}
+	var report struct {
+		ReportId     string    `bson:"_id"`
+		Date         time.Time `bson:"date"`
+		Wrnote       string    `bson:"wrnote"`
+		Woodtype     string    `bson:"woodtype"`
+		Thickness    float64   `bson:"thickness"`
+		Qty          float64   `bson:"qtycbm"`
+		Type         string    `bson:"type"`
+		Reporter     string    `bson:"reporter"`
+		CreatedDate  time.Time `bson:"createddate"`
+		LastModified time.Time `bson:"lastmodified"`
+	}
+	if err := deletedReport.Decode(&report); err != nil {
+		log.Println(err)
+		return
+	}
+	// return quantity for wrnote
+	wrnote := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"type": "wrnote", "wrnotecode": report.Wrnote},
+		bson.M{"$inc": bson.M{"wrremain": report.Qty}})
+	if wrnote.Err() != nil {
+		log.Println(wrnote.Err())
+		return
+	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/deletereport/:reportid - delete a report on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_deletewrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
+
+	_, err := s.mgdb.Collection("cutting").DeleteOne(context.Background(), bson.M{"_id": wrnoteid})
 	if err != nil {
 		log.Println(err)
 		return
@@ -2464,6 +2502,16 @@ func (s *Server) sca_searchreport(w http.ResponseWriter, r *http.Request, ps htt
 	cuttingReports := models.NewCuttingModel(s.mgdb).Search(r.FormValue("reportSearch"))
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, map[string]interface{}{
 		"cuttingReports": cuttingReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/earchwrnote - search wrnote on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_searchwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cuttingWrnotes := models.NewCuttingModel(s.mgdb).WrnoteSearch(r.FormValue("wrnoteSearch"))
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnote_tbody.html")).Execute(w, map[string]interface{}{
+		"cuttingWrnotes": cuttingWrnotes,
 	})
 }
 

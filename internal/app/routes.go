@@ -107,7 +107,9 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/cutting/admin/loadreports", s.sc_loadreports)
 	router.GET("/sections/cutting/admin/loadwrnote", s.sc_loadwrnote)
 	router.POST("/sections/cutting/admin/searchreport", s.sca_searchreport)
+	router.POST("/sections/cutting/admin/searchwrnote", s.sca_searchwrnote)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
+	router.DELETE("/sections/cutting/admin/deletewrnote/:wrnoteid", s.sca_deletewrnote)
 	// end Cuttting/////////////////////////////////////////////////////////////
 
 	// Lamination ////////////////////////////////////////////////////////

@@ -46,7 +46,7 @@
 
   <div x-show="activeAccordion==id" x-collapse x-cloak>
       <div class="p-5 pt-0">
-        khu vực bản cho phiếu nhập gỗ
+        <div hx-get="/sections/cutting/admin/loadwrnote" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
       </div>
   </div>
 </div>
@@ -66,11 +66,6 @@
   </div>
 </div> -->
 </div>
-
-
-
-
-<!-- <div hx-get="/sections/cutting/admin/loadwrnote" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div> -->
 
 </body>
 </html>
