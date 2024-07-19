@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -16,15 +15,16 @@ import (
 // CuttingModel for collection "cutting"
 // /////////////////////////////////////////////////////
 type CuttingReport struct {
-	ReportId         string    `bson:"_id"`
-	Date             time.Time `bson:"date"`
-	WoodType         string    `bson:"woodtype"`
-	Qtycbm           float64   `bson:"qtycbm"`
-	Thickness        float64   `bson:"thickness"`
-	WoodRecievedNote string    `bson:"wrnote"`
-	Reporter         string    `bson:"reporter"`
-	CreatedDate      time.Time `bson:"createddate"`
-	LastModified     time.Time `bson:"lastmodified"`
+	ReportId     string    `bson:"_id"`
+	Date         time.Time `bson:"date"`
+	Wrnote       string    `bson:"wrnote"`
+	Woodtype     string    `bson:"woodtype"`
+	Thickness    float64   `bson:"thickness"`
+	Qty          float64   `bson:"qtycbm"`
+	Type         string    `bson:"type"`
+	Reporter     string    `bson:"reporter"`
+	CreatedDate  time.Time `bson:"createddate"`
+	LastModified time.Time `bson:"lastmodified"`
 }
 
 type CuttingWrnote struct {
@@ -58,17 +58,19 @@ func (m *CuttingModel) Search(searchWord string) []CuttingReport {
 	var filter bson.M
 
 	if err != nil {
-		filter = bson.M{"$or": bson.A{
+		filter = bson.M{"type": "report", "$or": bson.A{
 			bson.M{"woodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"wrnote": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"thickness": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"qtycbm": bson.M{"$regex": regexWord, "$options": "i"}},
 		},
 		}
 	} else {
-		s := primitive.NewDateTimeFromTime(dateSearch)
-		filter = bson.M{"date": s}
+		filter = bson.M{"type": "report", "date": primitive.NewDateTimeFromTime(dateSearch)}
 	}
 
-	cur, err := m.mgdb.Collection("cutting").Find(context.Background(), filter, options.Find().SetSort(bson.M{"occurdate": -1}))
+	cur, err := m.mgdb.Collection("cutting").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
 	if err != nil {
 		log.Println("failed to access databa cutting at search of model cutting", err)
 		return nil
@@ -116,23 +118,4 @@ func (m *CuttingModel) FindAllReportsSortDateDesc() ([]CuttingReport, error) {
 	}
 
 	return results, nil
-}
-
-func (m *CuttingModel) InsertOne(entry CuttingReport) error {
-	_, err := m.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type":         "report",
-		"date":         entry.Date,
-		"woodtype":     entry.WoodType,
-		"qtycbm":       entry.Qtycbm,
-		"thickness":    entry.Thickness,
-		"wrnote":       entry.WoodRecievedNote,
-		"reporter":     entry.Reporter,
-		"createddate":  entry.CreatedDate,
-		"lastmodified": entry.LastModified,
-	})
-	if err != nil {
-		log.Println(err)
-		return errors.New("failed to insert one to cutting collection")
-	}
-	return nil
 }

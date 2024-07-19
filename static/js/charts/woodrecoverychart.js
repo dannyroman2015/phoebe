@@ -31,10 +31,11 @@ const drawWoodRecoveryChart = (data) => {
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).ticks(innerWidth / 80).tickSizeOuter(0));
 
+  const groupedData = d3.group(data, d => d.prodtype)
   // Add a container for each series.
   const serie = innerChart.append("g")
     .selectAll()
-    .data(d3.group(data, d => d.prodtype))
+    .data(groupedData)
     .join("g");
 
   // Draw the lines.
@@ -87,6 +88,48 @@ const drawWoodRecoveryChart = (data) => {
     .attr("dy", "0.35em")
     .attr("fill", "#06D001")
     .attr("font-size", "12px")
+
+  const lastBrand = groupedData.get("brand")[groupedData.get("brand").length-2]
+  const lastrh = groupedData.get("rh")[groupedData.get("rh").length-2]
+  innerChart.append("text")
+    .text("Brand")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 60 : x(lastBrand.date) + 60)
+    .attr("y", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 40 : y(lastBrand.rate) + 40)
+    .attr("dy", "0.35em")
+    .attr("fill", color("brand"))
+    .attr("font-size", "16px") 
+    .attr("font-weight", 600)
+    
+  innerChart.append("line")
+    .attr("x1", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 40 : x(lastBrand.date) + 40)
+    .attr("y1", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 25 : y(lastBrand.rate) + 25)
+    .attr("x2", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 15 : x(lastBrand.date) + 15)
+    .attr("y2", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 5 : y(lastBrand.rate) + 5)
+    .attr("fill", "none")
+    .attr("stroke", color("brand"))
+    .attr("stroke-width", "2px")
+
+  innerChart.append("text")
+    .text("RH")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 60 : x(lastrh.date) + 60)
+    .attr("y", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 30 : y(lastrh.rate) + 30)
+    .attr("dy", "0.35em")
+    .attr("fill", color("rh"))
+    .attr("font-size", "16px")
+    .attr("font-weight", 600)
+    
+  innerChart.append("line")
+    .attr("x1", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 45 : x(lastrh.date) + 45)
+    .attr("y1", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 25 : y(lastrh.rate) + 25)
+    .attr("x2", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 15 : x(lastrh.date) + 15)
+    .attr("y2", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 5 : y(lastrh.rate) + 5)
+    .attr("fill", "none")
+    .attr("stroke", color("rh"))
+    .attr("stroke-width", "2px")
 
   return svg.node();
 }

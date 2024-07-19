@@ -7,18 +7,16 @@
   wrnote: '',
   reportid: '',
   numberOfReports: {{.numberOfReports}},
-  message: 'Giao tiếp, hướng dẫn xuất hiện ở đây.',
 }"
   class="fade-in px-4 py-4 mx-auto">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <!-- title & message -->
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Cutting Section</h2>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Báo cáo sản lượng Cutting</h2>
         <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">
         <strong x-text="numberOfReports"></strong> reports</span>
       </div>
-      <p x-text="message" id="empmsg" class="mt-1 text-sm text-blue-600 dark:text-gray-300"></p>
     </div>
   
     <div class="flex items-center mt-4 gap-x-3">
@@ -56,7 +54,7 @@
         </svg>
       </span>
       <!-- Search employee -->
-      <input hx-post="/sections/cutting/admin/searchreport" hx-trigger="input changed delay:500ms, search" hx-target="#report_tbody" hx-swap="outerHTML swap:1s"
+      <input hx-post="/sections/cutting/admin/searchreport" hx-trigger="input changed delay:500ms, search" hx-target="#report_tbody" hx-swap="outerHTML settle:200ms"
             id="reportSearch" name="reportSearch" type="text" value="" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
   </div>
@@ -65,7 +63,7 @@
     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
         <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-          <!-- table -->
+
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
@@ -94,13 +92,19 @@
                 </th>
           
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  Note Code</th>
+                  Wrnote</th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   Reporter</th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   Report ID</th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Created Date</th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Last Modified</th>
 
                 <th scope="col" class="relative py-3.5 px-4">
                   <span class="sr-only">Edit</span>
@@ -124,7 +128,7 @@
   
                 <td class="px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                   <div class="inline-flex items-center px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">          
-                    <h2 class="text-sm font-normal text-emerald-500">{{.WoodType}}</h2>
+                    <h2 class="text-sm font-normal text-emerald-500">{{.Woodtype}}</h2>
                   </div>
                 </td>
   
@@ -138,7 +142,7 @@
                   <div class="inline-flex items-center gap-x-3">            
                     <div class="flex items-center gap-x-2">
                       <div>
-                        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Qtycbm}}</p>
+                        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Qty}}</p>
                       </div>
                     </div>
                   </div>
@@ -146,7 +150,7 @@
                   
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-2">
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.WoodRecievedNote}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Wrnote}}</p>
                   </div>
                 </td>
 
@@ -159,6 +163,18 @@
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-2">
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.ReportId}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-4 text-sm whitespace-nowrap">
+                  <div class="flex items-center gap-x-2">
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.CreatedDate}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-4 text-sm whitespace-nowrap">
+                  <div class="flex items-center gap-x-2">
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.LastModified}}</p>
                   </div>
                 </td>
   
@@ -182,39 +198,6 @@
       </div>
     </div>
   
-    <!-- <div class="mt-6 sm:flex sm:items-center sm:justify-between ">
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        Page 
-        <span id="curpage" class="font-medium text-gray-700 dark:text-gray-100">currentPage</span>
-        of 
-        <span id="maxpage" class="font-medium text-gray-700 dark:text-gray-100">numberOfPages</span>
-      </div>
-  
-      <div class="flex items-center mt-4 gap-x-4 sm:mt-0">
-          <a
-              class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"           
-          >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
-              </svg>
-  
-              <span>
-                  previous
-              </span>
-          </a>
-  
-          <button         
-          id="nextbtn"  class="flex items-center justify-center w-1/2 px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md sm:w-auto gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
-              <span>
-                  Next
-              </span>
-  
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-              </svg>
-          </button>
-      </div>
-    </div> -->
   </div>  
 </section>
 

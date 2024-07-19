@@ -2390,25 +2390,29 @@ func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/cutting/admin/loadreports - load report area on cutting admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	model := models.NewCuttingModel(s.mgdb)
-	cuttingReports, err := model.FindAllReportsSortDateDesc()
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "report"}, options.Find().SetSort(bson.M{"createddate": -1}))
 	if err != nil {
-		log.Println("sc_admin: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed to access cutting database"))
-		return
+		log.Println(err)
 	}
-
-	// chỗ này sao này làm next prev sửa lại sau
-	var n int
-	if len(cuttingReports) > 20 {
-		n = 20
-	} else {
-		n = len(cuttingReports)
+	defer cur.Close(context.Background())
+	var cuttingReports []struct {
+		ReportId     string    `bson:"_id"`
+		Date         time.Time `bson:"date"`
+		Wrnote       string    `bson:"wrnote"`
+		Woodtype     string    `bson:"woodtype"`
+		Thickness    float64   `bson:"thickness"`
+		Qty          float64   `bson:"qtycbm"`
+		Type         string    `bson:"type"`
+		Reporter     string    `bson:"reporter"`
+		CreatedDate  time.Time `bson:"createddate"`
+		LastModified time.Time `bson:"lastmodified"`
+	}
+	if err := cur.All(context.Background(), &cuttingReports); err != nil {
+		log.Println(err)
 	}
 
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/reports.html")).Execute(w, map[string]interface{}{
-		"cuttingReports":  cuttingReports[:n],
+		"cuttingReports":  cuttingReports,
 		"numberOfReports": len(cuttingReports),
 	})
 }
@@ -2444,13 +2448,11 @@ func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpro
 // /sections/cutting/admin/deletereport/:reportid - delete a report on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rawreportid := ps.ByName("reportid")
-	reportid, _ := primitive.ObjectIDFromHex(rawreportid)
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
 
 	_, err := s.mgdb.Collection("cutting").DeleteOne(context.Background(), bson.M{"_id": reportid})
 	if err != nil {
-		log.Println("sca_deletereport: ", err)
-		w.Write([]byte("Failed to access database"))
+		log.Println(err)
 		return
 	}
 }
@@ -2459,15 +2461,10 @@ func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/admin/searchreport - search reports on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sca_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	results := models.NewCuttingModel(s.mgdb).Search(r.FormValue("reportSearch"))
-	// chỗ này sao này làm next prev sửa lại sau
-	var n int
-	if len(results) > 20 {
-		n = 20
-	} else {
-		n = len(results)
-	}
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, results[:n])
+	cuttingReports := models.NewCuttingModel(s.mgdb).Search(r.FormValue("reportSearch"))
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"cuttingReports": cuttingReports,
+	})
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
