@@ -2515,6 +2515,81 @@ func (s *Server) sca_searchwrnote(w http.ResponseWriter, r *http.Request, ps htt
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/overview - get page overview of Lamination
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sl_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/lamination/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/overview/loadreport - load report table of page overview of Lamination
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) slo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var laminationReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        string    `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		ProdType    string    `bson:"prodtype"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/overview/report.html")).Execute(w, map[string]interface{}{
+		"laminationReports": laminationReports,
+		"numberOfReports":   len(laminationReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/searchreport - search reports on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var laminationReports []interface{}
+	if err = cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println("faild to decode", err)
+
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"laminationReports": laminationReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/lamination/entry/entry - load page entry of lamination section
 // //////////////////////////////////////////////////////////////////////////////////////////////////

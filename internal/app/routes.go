@@ -113,9 +113,14 @@ func (s *Server) routes() http.Handler {
 	// end Cuttting/////////////////////////////////////////////////////////////
 
 	// Lamination ////////////////////////////////////////////////////////
+	router.GET("/sections/lamination/overview", s.sl_overview)
+	router.GET("/sections/lamination/overview/loadreport", s.slo_loadreport)
+	router.POST("/sections/lamination/overview/reportsearch", s.slo_reportsearch)
+
 	router.GET("/sections/lamination/entry", withAuth(s.sl_entry))
 	router.GET("/sections/lamination/entry/loadform", s.sle_loadform)
 	router.POST("/sections/lamination/entry/sendentry", s.sle_sendentry)
+
 	// end Lamination/////////////////////////////////////////////////////////////
 
 	// Reededline ////////////////////////////////////////////////////////

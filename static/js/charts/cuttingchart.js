@@ -180,7 +180,7 @@ const drawCuttingChart1 = (data) => {
     .selectAll()
     .data(data)
     .join("text")
-      .text(d => d.qty)
+      .text(d => d3.format("~s")(d.qty))
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => margin.left + xScale(d.woodtype) + xScale.bandwidth()/2)
@@ -192,6 +192,7 @@ const drawCuttingChart1 = (data) => {
     .attr("font-size", "16px")
     .attr("dominant-baseline", "hanging")
     .attr("fill", "#75485E")
+
   return svg.node();
 }
 
