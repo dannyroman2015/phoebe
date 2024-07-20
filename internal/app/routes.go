@@ -130,16 +130,30 @@ func (s *Server) routes() http.Handler {
 	// Reededline ////////////////////////////////////////////////////////
 	router.GET("/sections/reededline/overview", s.sr_overview)
 	router.GET("/sections/reededline/overview/loadreport", s.sro_loadreport)
+	router.POST("/sections/reededline/overview/reportsearch", s.sro_reportsearch)
 
 	router.GET("/sections/reededline/entry", withAuth(s.sr_entry))
 	router.GET("/sections/reededline/entry/loadform", s.sre_loadform)
 	router.POST("/sections/reededline/entry/sendentry", s.sre_sendentry)
+
+	router.GET("/sections/reededline/admin", withAuth(s.sr_admin))
+	router.GET("/sections/reededline/admin/loadreport", s.sra_loadreport)
+	router.POST("/sections/reededline/admin/searchreport", s.sra_searchreport)
+	router.DELETE("/sections/reededline/admin/deletereport/:reportid", s.sra_deletereport)
 	// end Reededline/////////////////////////////////////////////////////////////
 
 	// Veneer ////////////////////////////////////////////////////////
+	router.GET("/sections/veneer/overview", s.sv_overview)
+	router.GET("/sections/veneer/overview/loadreport", s.svo_loadreport)
+	router.POST("/sections/veneer/overview/reportsearch", s.svo_reportsearch)
+
 	router.GET("/sections/veneer/entry", withAuth(s.sv_entry))
 	router.GET("/sections/veneer/entry/loadform", s.sve_loadform)
 	router.POST("/sections/veneer/entry/sendentry", s.sve_sendentry)
+
+	router.GET("/sections/veneer/admin", withAuth(s.sv_admin))
+	router.GET("/sections/veneer/admin/loadreport", s.sva_loadreport)
+	router.DELETE("/sections/veneer/admin/deletereport/:reportid", s.sva_deletereport)
 	// end Veneer/////////////////////////////////////////////////////////////
 
 	// Assembly ////////////////////////////////////////////////////////

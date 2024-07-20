@@ -2531,19 +2531,19 @@ func (s *Server) sl_overview(w http.ResponseWriter, r *http.Request, ps httprout
 func (s *Server) slo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
 	var laminationReports []struct {
-		ReportId    string    `bson:"_id"`
-		Date        string    `bson:"date"`
-		Qty         float64   `bson:"qty"`
-		ProdType    string    `bson:"prodtype"`
-		Reporter    string    `bson:"reporter"`
-		CreatedDate time.Time `bson:"createdat"`
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		ProdType    string  `bson:"prodtype"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"at"`
 	}
 	if err := cur.All(context.Background(), &laminationReports); err != nil {
 		log.Println(err)
@@ -2556,7 +2556,7 @@ func (s *Server) slo_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-// /sections/cutting/admin/searchreport - search reports on page admin of cutting section
+// /sections/lamination/admin/searchreport - search reports on page admin of lamination section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	reportsearch := r.FormValue("reportsearch")
@@ -2736,12 +2736,12 @@ func (s *Server) sr_overview(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ///////////////////////////////////////////////////////////////////////////////
-// /sections/lamination/overview/loadreport - load report table of page overview of Lamination
+// /sections/reededline/overview/loadreport - load report table of page overview of reededline
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sro_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "At": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -2762,6 +2762,39 @@ func (s *Server) sro_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 	template.Must(template.ParseFiles("templates/pages/sections/reededline/overview/report.html")).Execute(w, map[string]interface{}{
 		"reededlineReports": reededlineReports,
 		"numberOfReports":   len(reededlineReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/reededline/admin/searchreport - search reports on page admin of reededline section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sro_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var reededlineReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Tone        string  `bson:"tone"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"at"`
+	}
+	if err = cur.All(context.Background(), &reededlineReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"reededlineReports": reededlineReports,
 	})
 }
 
@@ -2815,6 +2848,166 @@ func (s *Server) sre_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/reededline/admin - get page admin of reededline section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sr_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/reededline/admin/loadreport - load report area on reededline admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sra_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("reededline").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var reededlineReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Tone        string    `bson:"tone"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &reededlineReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/admin/report.html")).Execute(w, map[string]interface{}{
+		"reededlineReports": reededlineReports,
+		"numberOfReports":   len(reededlineReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/reededline/admin/searchreport - search reports on page admin of reededline section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sra_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"tone": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("reededline").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var reededlineReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Tone        string    `bson:"tone"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &reededlineReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"reededlineReports": reededlineReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/reededline/admin/deletereport/:reportid - delete a report on page admin of reededline section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sra_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("reededline").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/overview - get page overview of veneer
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sv_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/veneer/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/overview/loadreport - load report table of page overview of veneer
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) svo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var veneerReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &veneerReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/overview/report.html")).Execute(w, map[string]interface{}{
+		"veneerReports":   veneerReports,
+		"numberOfReports": len(veneerReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/searchreport - search reports on page admin of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) svo_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var veneerReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &veneerReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"veneerReports": veneerReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/veneer/entry - load page entry of veneer section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2863,6 +3056,53 @@ func (s *Server) sve_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin - get page admin of veneer section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sv_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/loadreport - load report area on veneer admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sva_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("veneer").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var veneerReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &veneerReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/admin/report.html")).Execute(w, map[string]interface{}{
+		"veneerReports":   veneerReports,
+		"numberOfReports": len(veneerReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/deletereport/:reportid - delete a report on page admin of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sva_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("veneer").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

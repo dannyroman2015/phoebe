@@ -10,7 +10,7 @@
   
   <script src="/static/js/htmx.min.js"></script>
 
-  <title>Reededline Overview</title>
+  <title>Veneer Overview</title>
 </head>
 <body class="bg-gray-100">
   {{template "navbar"}}
@@ -42,12 +42,12 @@
           <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
           <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
         </div>  
-        <span>Bảng báo cáo sản lượng của Reededline</span>
+        <span>Bảng báo cáo sản lượng của Veneer</span>
           
       </button>
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
-          <div hx-get="/sections/reededline/overview/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>         
+          <div hx-get="/sections/veneer/overview/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>         
       </div>
     </div>
 

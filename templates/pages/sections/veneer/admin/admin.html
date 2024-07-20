@@ -4,31 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/static/css/style.css">
-  <script defer src="/static/js/alpinejs_focus.min.js"></script>
   <script defer src="/static/js/alpinejs.collapse.min.js"></script>
   <script defer src="/static/js/alpine.3.13.10.min.js"></script>
-  
   <script src="/static/js/htmx.min.js"></script>
 
-  <title>Reededline Overview</title>
+  <title>Veneer Admin</title>
 </head>
 <body class="bg-gray-100">
   {{template "navbar"}}
-  <!-- section of charts -->
-  <section>
-    <div class="py-4">
-      <div class="mx-2 max-w-full text-gray-500">
-        <div class="relative">
-          <div class="relative grid gap-3 grid-cols-6">
-            <!-- khu vuc cho bieu do -->
 
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- section of table -->
   <div x-data="{ 
     activeAccordion: '', 
     setActiveAccordion(id) { 
@@ -42,12 +26,14 @@
           <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
           <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
         </div>  
-        <span>Bảng báo cáo sản lượng của Reededline</span>
+        <span>Quản lý báo cáo sản lượng của Veneer</span>
           
       </button>
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
-          <div hx-get="/sections/reededline/overview/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>         
+          <div class="p-5 pt-0">
+            <div hx-get="/sections/veneer/admin/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+          </div>
       </div>
     </div>
 
@@ -83,7 +69,6 @@
     </div> -->
   </div>
 
-  
 </body>
 </html>
 
