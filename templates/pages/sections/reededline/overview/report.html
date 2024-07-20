@@ -2,7 +2,7 @@
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Báo cáo Lamination</h2>
+        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Báo cáo Reededline</h2>
         <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">{{.numberOfReports}} báo cáo</span>
       </div>
     </div>
@@ -176,11 +176,14 @@
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                       Người báo cáo
                     </th>
+                    <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                      Báo cáo lúc
+                    </th>
                   </tr>
                 </thead>
  
                 <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                  {{range .laminationReports}}
+                  {{range .reededlineReports}}
                   <tr>  
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
@@ -189,7 +192,7 @@
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.ProdType}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.Tone}}</p>
                       </div>
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
@@ -200,6 +203,11 @@
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
                         <p class="text-gray-500 dark:text-gray-400">{{.Reporter}}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-1 text-sm whitespace-nowrap">
+                      <div>
+                        <p class="text-gray-500 dark:text-gray-400">{{.CreatedDate}}</p>
                       </div>
                     </td>
                   </tr>

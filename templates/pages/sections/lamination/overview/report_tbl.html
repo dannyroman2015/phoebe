@@ -1,0 +1,53 @@
+<div id="reporttable-container" class="flex flex-col">
+  <div class="mx-4 my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">           
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Ngày
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Loại hàng
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Sản lượng
+                  </th>
+                  <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    Người báo cáo
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                {{range .laminationReports}}
+                <tr>  
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Date}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.ProdType}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Qty}}</p>
+                    </div>
+                  </td>
+                  <td class="px-4 py-1 text-sm whitespace-nowrap">
+                    <div>
+                      <p class="text-gray-500 dark:text-gray-400">{{.Reporter}}</p>
+                    </div>
+                  </td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>              
+          </div>
+      </div>     
+  </div>
+</div>

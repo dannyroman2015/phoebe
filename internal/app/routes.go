@@ -121,13 +121,20 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/lamination/entry/loadform", s.sle_loadform)
 	router.POST("/sections/lamination/entry/sendentry", s.sle_sendentry)
 
+	router.GET("/sections/lamination/admin", withAuth(s.sl_admin))
+	router.GET("/sections/lamination/admin/loadreport", s.sla_loadreport)
+	router.POST("/sections/lamination/admin/searchreport", s.sla_searchreport)
+	router.DELETE("/sections/lamination/admin/deletereport/:reportid", s.sla_deletereport)
 	// end Lamination/////////////////////////////////////////////////////////////
 
 	// Reededline ////////////////////////////////////////////////////////
+	router.GET("/sections/reededline/overview", s.sr_overview)
+	router.GET("/sections/reededline/overview/loadreport", s.sro_loadreport)
+
 	router.GET("/sections/reededline/entry", withAuth(s.sr_entry))
 	router.GET("/sections/reededline/entry/loadform", s.sre_loadform)
 	router.POST("/sections/reededline/entry/sendentry", s.sre_sendentry)
-	// end Lamination/////////////////////////////////////////////////////////////
+	// end Reededline/////////////////////////////////////////////////////////////
 
 	// Veneer ////////////////////////////////////////////////////////
 	router.GET("/sections/veneer/entry", withAuth(s.sv_entry))

@@ -2559,33 +2559,29 @@ func (s *Server) slo_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 // /sections/cutting/admin/searchreport - search reports on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	searchWord := r.FormValue("reportSearch")
-	regexWord := ".*" + searchWord + ".*"
-	dateSearch, err := time.Parse("2006-01-02", searchWord)
-	var filter bson.M
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
 
-	if err != nil {
-		filter = bson.M{"$or": bson.A{
-			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
-			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
-		},
-		}
-	} else {
-		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
-	}
-	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
 
-	var laminationReports []interface{}
-	if err = cur.All(context.Background(), &laminationReports); err != nil {
-		log.Println("faild to decode", err)
-
+	var laminationReports []struct {
+		Date     string  `bson:"date"`
+		ProdType string  `bson:"prodtype"`
+		Qty      float64 `bson:"qty"`
+		Reporter string  `bson:"reporter"`
 	}
-
-	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+	if err = cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/overview/report_tbl.html")).Execute(w, map[string]interface{}{
 		"laminationReports": laminationReports,
 	})
 }
@@ -2638,6 +2634,134 @@ func (s *Server) sle_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/sections/lamination/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/lamination/admin - get page admin of lamination section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sl_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/lamination/admin/loadreport - load report area on lamination admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sla_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var laminationReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		ProdType    string    `bson:"prodtype"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/admin/report.html")).Execute(w, map[string]interface{}{
+		"laminationReports": laminationReports,
+		"numberOfReports":   len(laminationReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/admin/searchreport - search reports on page admin of lamination section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sla_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"qty": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var laminationReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		ProdType    string    `bson:"prodtype"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"laminationReports": laminationReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/admin/deletereport/:reportid - delete a report on page admin of lamination section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sla_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("lamination").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/reededline/overview - get page overview of reededline
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sr_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/reededline/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/overview/loadreport - load report table of page overview of Lamination
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sro_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "At": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var reededlineReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Tone        string  `bson:"tone"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"at"`
+	}
+	if err := cur.All(context.Background(), &reededlineReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/overview/report.html")).Execute(w, map[string]interface{}{
+		"reededlineReports": reededlineReports,
+		"numberOfReports":   len(reededlineReports),
 	})
 }
 

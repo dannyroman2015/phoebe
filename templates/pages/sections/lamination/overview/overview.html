@@ -10,7 +10,7 @@
 
   <title>Lamination Overview</title>
 </head>
-<body>
+<body class="bg-gray-100">
   {{template "navbar"}}
   
   <section>
@@ -20,7 +20,7 @@
           <div class="relative grid gap-3 grid-cols-6">
 
             <!-- report -->
-            <div hx-get="/sections/lamination/overview/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>         
+            <div hx-get="/sections/lamination/overview/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>         
             <!-- end report -->
 
           </div>

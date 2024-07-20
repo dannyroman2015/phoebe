@@ -1,4 +1,4 @@
-<div class=" fade-in col-span-full lg:col-span-3 relative px-4 pt-2 overflow-auto rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class=" fade-in col-span-full lg:col-span-3 relative px-4 pt-2 overflow-hidden rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
       <div class="flex items-center gap-x-3">
@@ -147,7 +147,7 @@
             </div>
 
             <div class="relative w-full">
-                <input hx-post="/sections/cutting/overview/reportsearch" hx-target="#reporttable-container" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML settel:200ms"
+                <input hx-post="/sections/cutting/overview/reportsearch" hx-target="#reporttable-container" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML"
                     type="search" name="reportsearch" id="reportsearch" class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-white rounded-e-lg border-s-gray-50 border-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" 
                         placeholder="Search" required />
  
