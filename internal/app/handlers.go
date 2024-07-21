@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"slices"
 	"strconv"
@@ -440,7 +441,7 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -100))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -100))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1}}},
 		{{"$set", bson.M{"date": "$_id.date"}}},
@@ -685,7 +686,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 	switch pickedChart {
 	case "machinechart":
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}, "machine": "$machine"}, "qty": bson.M{"$sum": "$qty"}}}},
 			{{"$sort", bson.M{"_id.date": 1, "_id.machine": 1}}},
 			{{"$set", bson.M{"date": "$_id.date", "machine": "$_id.machine"}}},
@@ -710,7 +711,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 
 	case "totalchart":
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
 			{{"$sort", bson.M{"_id.date": 1}}},
 			{{"$set", bson.M{"date": "$_id.date"}}},
@@ -3026,6 +3027,46 @@ func (s *Server) sve_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/searchreport - search reports on page admin of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sva_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"type": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("veneer").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var veneerReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &veneerReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"veneerReports": veneerReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/veneer/entry/sendentry - load form of page entry of veneer section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sve_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -3105,6 +3146,88 @@ func (s *Server) sva_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/assembly/overview - get page overview of assembly
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sa_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/assembly/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/assembly/overview/loadreport - load report table of page overview of assembly
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sao_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &assemblyReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/overview/report.html")).Execute(w, map[string]interface{}{
+		"assemblyReports": assemblyReports,
+		"numberOfReports": len(assemblyReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/assembly/admin/searchreport - search reports on page admin of assembly section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sao_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &assemblyReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"assemblyReports": assemblyReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/assembly/entry - load page entry of assembly section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3162,6 +3285,189 @@ func (s *Server) sae_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/assembly/admin - get page admin of assembly section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sa_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/assembly/admin/loadreport - load report area on assembly admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) saa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("assembly").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Component   string    `bson:"component"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &assemblyReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/admin/report.html")).Execute(w, map[string]interface{}{
+		"assemblyReports": assemblyReports,
+		"numberOfReports": len(assemblyReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/assembly/admin/searchreport - search reports on page admin of assembly section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) saa_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"itemcode": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"component": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"itemtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"factory": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("assembly").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var assemblyReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Component   string    `bson:"component"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &assemblyReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"assemblyReports": assemblyReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/deletereport/:reportid - delete a report on page admin of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) saa_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("assembly").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/overview - get page overview of assembly
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sw_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/woodfinish/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/overview/loadreport - load report table of page overview of woodfinish
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) swo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &woodfinishReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/overview/report.html")).Execute(w, map[string]interface{}{
+		"woodfinishReports": woodfinishReports,
+		"numberOfReports":   len(woodfinishReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/admin/searchreport - search reports on page admin of woodfinish section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) swo_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &woodfinishReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"woodfinishReports": woodfinishReports,
 	})
 }
 
@@ -3225,6 +3531,189 @@ func (s *Server) swe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/admin - get page admin of woodfinish section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sw_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/admin/loadreport - load report area on woodfinish admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) swa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("woodfinish").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Component   string    `bson:"component"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &woodfinishReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/admin/report.html")).Execute(w, map[string]interface{}{
+		"woodfinishReports": woodfinishReports,
+		"numberOfReports":   len(woodfinishReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/admin/searchreport - search reports on page admin of woodfinish section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) swa_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"itemcode": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"component": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"itemtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"factory": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("woodfinish").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var woodfinishReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Component   string    `bson:"component"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &woodfinishReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"woodfinishReports": woodfinishReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/admin/deletereport/:reportid - delete a report on page admin of woodfinish section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) swa_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("woodfinish").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/pack/overview - get page overview of assembly
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) spk_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/pack/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/pack/overview/loadreport - load report table of page overview of pack
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) pko_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Part        string  `bson:"part"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/pack/overview/report.html")).Execute(w, map[string]interface{}{
+		"packReports":     packReports,
+		"numberOfReports": len(packReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/searchreport - search reports on page admin of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) pko_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Part        string  `bson:"part"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/pack/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/pack/entry - load page entry of pack section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3285,7 +3774,7 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
 			"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
 			"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
-			"from": "pack", "refId": insertedResult.InsertedID,
+			"from": "pack", "refid": insertedResult.InsertedID,
 		})
 		if err != nil {
 			log.Println(err)
@@ -3300,6 +3789,119 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/pack/admin - get page admin of pack section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) spk_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/loadreport - load report area on pack admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) spka_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("pack").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Part        string    `bson:"part"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/report.html")).Execute(w, map[string]interface{}{
+		"packReports":     packReports,
+		"numberOfReports": len(packReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/searchreport - search reports on page admin of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spka_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"itemcode": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"part": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"itemtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"factory": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("pack").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var packReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Part        string    `bson:"part"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/deletereport/:reportid - delete a report on page admin of pack section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spka_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	deletedPackReport := s.mgdb.Collection("pack").FindOneAndDelete(context.Background(), bson.M{"_id": reportid})
+	if deletedPackReport.Err() != nil {
+		log.Println(deletedPackReport.Err())
+		return
+	}
+	var packReport struct {
+		ReportID string `bson:"_id"`
+	}
+	if err := deletedPackReport.Decode(&packReport); err != nil {
+		log.Println(err)
+	}
+	refidObject, _ := primitive.ObjectIDFromHex(packReport.ReportID)
+	// update production value
+	result := s.mgdb.Collection("prodvalue").FindOneAndDelete(context.Background(), bson.M{"refid": refidObject})
+	if result.Err() != nil {
+		log.Println(result.Err())
+	}
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3352,6 +3954,93 @@ func (s *Server) sce_wr_sendentry(w http.ResponseWriter, r *http.Request, ps htt
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/overview - get page overview of panelcnc
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) spc_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/panelcnc/overview/overview.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/overview/loadreport - load report table of page overview of panelcnc
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) spco_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
+			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$date", "timezone": "Asia/Bangkok"}},
+			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var panelcncReports []struct {
+		ReportId    string  `bson:"_id"`
+		Machine     string  `bson:"machine"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		StartAt     string  `bson:"startat"`
+		EndAt       string  `bson:"endat"`
+		Hours       float64 `bson:"hours"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &panelcncReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/overview/report.html")).Execute(w, map[string]interface{}{
+		"panelcncReports": panelcncReports,
+		"numberOfReports": len(panelcncReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/admin/searchreport - search reports on page admin of panelcnc section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spco_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportsearch := r.FormValue("reportsearch")
+	regexWord := ".*" + reportsearch + ".*"
+	searchFilter := r.FormValue("searchFilter")
+
+	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
+			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$date", "timezone": "Asia/Bangkok"}},
+			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var panelcncReports []struct {
+		ReportId    string  `bson:"_id"`
+		Machine     string  `bson:"machine"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		StartAt     string  `bson:"startat"`
+		EndAt       string  `bson:"endat"`
+		Hours       float64 `bson:"hours"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &panelcncReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"panelcncReports": panelcncReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/panelcnc/entry - load page entry of panelcnc section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3378,10 +4067,12 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	machine := r.FormValue("machine")
 	start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
 	end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
+	hours := math.Round(end.Sub(start).Hours()*10) / 10
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	operator := r.FormValue("operator")
+	paneltype := r.FormValue("type")
 
-	if machine == "" || r.FormValue("qty") == "" || start.Sub(end) >= 0 {
+	if paneltype == "" || machine == "" || r.FormValue("qty") == "" || hours <= 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
@@ -3391,7 +4082,7 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	_, err := s.mgdb.Collection("panelcnc").InsertOne(context.Background(), bson.M{
 		"date": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
 		"qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
-		"machine": machine, "operator": operator,
+		"machine": machine, "operator": operator, "type": paneltype, "hours": hours,
 	})
 	if err != nil {
 		log.Println(err)
@@ -3405,6 +4096,103 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/admin - get page admin of panelcnc section
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) spc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/veneer/admin/loadreport - load report area on veneer admin page
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) spca_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("panelcnc").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var panelcncReports []struct {
+		ReportId    string    `bson:"_id"`
+		Machine     string    `bson:"machine"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		StartAt     time.Time `bson:"startat"`
+		EndAt       time.Time `bson:"endat"`
+		Hours       float64   `bson:"hours"`
+		Type        string    `bson:"type"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &panelcncReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/admin/report.html")).Execute(w, map[string]interface{}{
+		"panelcncReports": panelcncReports,
+		"numberOfReports": len(panelcncReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/admin/searchreport - search reports on page admin of panelcnc section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spca_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchWord := r.FormValue("reportSearch")
+	regexWord := ".*" + searchWord + ".*"
+	dateSearch, err := time.Parse("2006-01-02", searchWord)
+
+	var filter bson.M
+	if err != nil {
+		filter = bson.M{"$or": bson.A{
+			bson.M{"machine": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"type": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
+		},
+		}
+	} else {
+		filter = bson.M{"date": primitive.NewDateTimeFromTime(dateSearch)}
+	}
+	cur, err := s.mgdb.Collection("panelcnc").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var panelcncReports []struct {
+		ReportId    string    `bson:"_id"`
+		Machine     string    `bson:"machine"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		StartAt     time.Time `bson:"startat"`
+		EndAt       time.Time `bson:"endat"`
+		Hours       float64   `bson:"hours"`
+		Type        string    `bson:"type"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &panelcncReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"panelcncReports": panelcncReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/admin/deletereport/:reportid - delete a report on page admin of panelcnc section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spca_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("panelcnc").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -3486,7 +4274,6 @@ func (s *Server) s6_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/packing/overview - get overview page of packing
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sp_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 	template.Must(template.ParseFiles("templates/pages/sections/packing/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
 }
 

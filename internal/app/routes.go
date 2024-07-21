@@ -153,31 +153,68 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/sections/veneer/admin", withAuth(s.sv_admin))
 	router.GET("/sections/veneer/admin/loadreport", s.sva_loadreport)
+	router.POST("/sections/veneer/admin/searchreport", s.sva_searchreport)
 	router.DELETE("/sections/veneer/admin/deletereport/:reportid", s.sva_deletereport)
 	// end Veneer/////////////////////////////////////////////////////////////
 
 	// Assembly ////////////////////////////////////////////////////////
+	router.GET("/sections/assembly/overview", s.sa_overview)
+	router.GET("/sections/assembly/overview/loadreport", s.sao_loadreport)
+	router.POST("/sections/assembly/overview/reportsearch", s.sao_reportsearch)
+
 	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
 	router.POST("/sections/assembly/entry/sendentry", s.sae_sendentry)
+
+	router.GET("/sections/assembly/admin", withAuth(s.sa_admin))
+	router.GET("/sections/assembly/admin/loadreport", s.saa_loadreport)
+	router.POST("/sections/assembly/admin/searchreport", s.saa_searchreport)
+	router.DELETE("/sections/assembly/admin/deletereport/:reportid", s.saa_deletereport)
 	// end Assembly/////////////////////////////////////////////////////////////
 
 	// WoodFinish ////////////////////////////////////////////////////////
+	router.GET("/sections/woodfinish/overview", s.sw_overview)
+	router.GET("/sections/woodfinish/overview/loadreport", s.swo_loadreport)
+	router.POST("/sections/woodfinish/overview/reportsearch", s.swo_reportsearch)
+
 	router.GET("/sections/woodfinish/entry", withAuth(s.sw_entry))
 	router.GET("/sections/woodfinish/entry/loadform", s.swe_loadform)
 	router.POST("/sections/woodfinish/entry/sendentry", s.swe_sendentry)
+
+	router.GET("/sections/woodfinish/admin", withAuth(s.sw_admin))
+	router.GET("/sections/woodfinish/admin/loadreport", s.swa_loadreport)
+	router.POST("/sections/woodfinish/admin/searchreport", s.swa_searchreport)
+	router.DELETE("/sections/woodfinish/admin/deletereport/:reportid", s.swa_deletereport)
 	// end WoodFinish/////////////////////////////////////////////////////////////
 
 	// Pack ////////////////////////////////////////////////////////
+	router.GET("/sections/pack/overview", s.spk_overview)
+	router.GET("/sections/pack/overview/loadreport", s.pko_loadreport)
+	router.POST("/sections/pack/overview/reportsearch", s.pko_reportsearch)
+
 	router.GET("/sections/pack/entry", withAuth(s.spk_entry))
 	router.GET("/sections/pack/entry/loadform", s.spk_loadform)
 	router.POST("/sections/pack/entry/sendentry", s.spk_sendentry)
+
+	router.GET("/sections/pack/admin", withAuth(s.spk_admin))
+	router.GET("/sections/pack/admin/loadreport", s.spka_loadreport)
+	router.POST("/sections/pack/admin/searchreport", s.spka_searchreport)
+	router.DELETE("/sections/pack/admin/deletereport/:reportid", s.spka_deletereport)
 	// end Pack/////////////////////////////////////////////////////////////
 
 	// Panelcnc ////////////////////////////////////////////////////////
+	router.GET("/sections/panelcnc/overview", s.spc_overview)
+	router.GET("/sections/panelcnc/overview/loadreport", s.spco_loadreport)
+	router.POST("/sections/panelcnc/overview/reportsearch", s.spco_reportsearch)
+
 	router.GET("/sections/panelcnc/entry", withAuth(s.spc_entry))
 	router.GET("/sections/panelcnc/entry/loadform", s.spc_loadform)
 	router.POST("/sections/panelcnc/entry/sendentry", s.spc_sendentry)
+
+	router.GET("/sections/panelcnc/admin", withAuth(s.spc_admin))
+	router.GET("/sections/panelcnc/admin/loadreport", s.spca_loadreport)
+	router.POST("/sections/panelcnc/admin/searchreport", s.spca_searchreport)
+	router.DELETE("/sections/panelcnc/admin/deletereport/:reportid", s.spca_deletereport)
 	// end Panelcnc/////////////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////////////////////

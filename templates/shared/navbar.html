@@ -92,10 +92,10 @@
                                                     <span class="block mb-1 font-medium text-black">Tra cứu</span>
                                                     <span class="block leading-5 opacity-50">Trang tra cứu điểm công nhân viên.</span>
                                                 </a>
-                                                <a href="/sections/cutting/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                <!-- <a href="/sections/cutting/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Tổng quan Cutting</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang thông tin bộ phận Cutting.</span>
-                                                </a>
+                                                </a> -->
                                                 <a href="/sections/cutting/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Cutting</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Cutting.</span>
@@ -104,37 +104,21 @@
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Wood Recovery</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu Wood Recovery của bộ phận Cutting.</span>
                                                 </a>
-                                                <a href="/sections/lamination/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Tổng quan Lamination</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang tổng quan của bộ phận Lamination.</span>
-                                                </a>
                                                 <a href="/sections/lamination/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Lamination</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Lamination.</span>
                                                 </a>
-                                                <a href="/sections/lamination/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Quản lý Lamination</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý của bộ phận Lamination.</span>
-                                                </a>
                                                 <a href="/sections/reededline/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Reededline</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Reededline.</span>
-                                                </a>
-                                                <a href="/sections/reededline/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Quản lý Reededline</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Reededline.</span>
                                                 </a>
                                                 <a href="/sections/panelcnc/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Panel CNC</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Panel CNC.</span>
                                                 </a>
                                                 <a href="/sections/veneer/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Nhập liệu Veneer Lamination</span>
+                                                    <span class="block mb-1 font-medium text-black">Nhập liệu Veneer</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Veneer Lamination.</span>
-                                                </a>
-                                                <a href="/sections/veneer/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Quản lý Veneer</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Veneer Lamination.</span>
                                                 </a>
                                                 <a href="/sections/assembly/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Assembly</span>
@@ -142,20 +126,59 @@
                                                 </a>
                                                 <a href="/sections/woodfinish/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Wood Finish</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Assembly.</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Wood Finish.</span>
+                                                </a>
+                                                <a href="/sections/pack/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Nhập liệu Packing</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Packing.</span>
                                                 </a>
                                                 <a href="/quality/fastentry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Quality</span>
                                                     <span class="block font-light leading-5 opacity-50">Copy Paste dữ liệu quality.</span>
                                                 </a>
+                                                
+                                                <!-- <a href="/sections/lamination/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Tổng quan Lamination</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang tổng quan của bộ phận Lamination.</span>
+                                                </a> -->
+                                                <a href="/sections/cutting/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Cutting</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý của bộ phận Cutting.</span>
+                                                </a>
+                                                <a href="/sections/lamination/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Lamination</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý của bộ phận Lamination.</span>
+                                                </a>           
+                                                <a href="/sections/reededline/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Reededline</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Reededline.</span>
+                                                </a>                                           
+                                                <a href="/sections/panelcnc/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Panel CNC</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Panel CNC.</span>
+                                                </a>                                        
+                                                <a href="/sections/veneer/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Veneer</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Veneer Lamination.</span>
+                                                </a>                                    
+                                                <a href="/sections/assembly/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Assembly</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Assembly.</span>
+                                                </a>                                              
+                                                <a href="/sections/woodfinish/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Finish</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Wood Finish.</span>
+                                                </a>
+                                                <a href="/sections/pack/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                    <span class="block mb-1 font-medium text-black">Quản lý Packing</span>
+                                                    <span class="block font-light leading-5 opacity-50">Trang quản lý báo cáo của bộ phận Packing.</span>
+                                                </a>
                                                 <!-- <a href="/sections/packing/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Packing</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Packing.</span>
                                                 </a> -->
-                                                <a href="/sections/pack/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                                                    <span class="block mb-1 font-medium text-black">Nhập liệu Pack</span>
-                                                    <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo nhập liệu của bộ phận Packing.</span>
-                                                </a>
+                                                
+                                                
                                                 <!-- <a href="/mo/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu Mo</span>
                                                     <span class="block leading-5 opacity-50">Trang nhập liệu cho Mo.</span>
@@ -164,10 +187,10 @@
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu 6S</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang gửi báo cáo chấm điểm 6S.</span>
                                                 </a> -->
-                                                <a href="/hr/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                                                <!-- <a href="/hr/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Nhập liệu HR</span>
                                                     <span class="block font-light leading-5 opacity-50">Trang nhập liệu nhân sự.</span>
-                                                </a>
+                                                </a> -->
                                                 <a href="/login" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                                                     <span class="block mb-1 font-medium text-black">Đăng nhập</span>
                                                     <span class="block leading-5 opacity-50"></span>
@@ -197,13 +220,13 @@
                     href="/home">Home</a></li> -->
                 <li><a class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none bg-background hover:bg-neutral-100 group w-max" 
                     href="/dashboard">Dashboard</a></li>
-                <li>
+                <!-- <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='MO', 'hover:bg-neutral-100' : navigationMenu!='MO' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='MO'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
                         <span>MO</span> 
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'MO' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                </li>
+                </li> -->
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='Item', 'hover:bg-neutral-100' : navigationMenu!='Item' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Item'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
@@ -232,13 +255,13 @@
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Incentive' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li>
-                <li>
+                <!-- <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='HR', 'hover:bg-neutral-100' : navigationMenu!='HR' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='HR'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
                         <span>HR</span> 
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'HR' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                </li>
+                </li> -->
 
                 <li>
                     <button
@@ -270,7 +293,7 @@
         <div class="flex justify-center w-auto h-auto overflow-auto bg-white border rounded-md shadow-sm border-neutral-200/70">
 
             <!-- Item -->
-            <div x-show="navigationMenu == 'Item'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
+            <!-- <div x-show="navigationMenu == 'Item'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
                 <div class="w-72">
                     <a href="/item/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Tổng Quan</span>
@@ -285,11 +308,11 @@
                         <span class="block leading-5 opacity-50">Trang quản lý chỉnh sửa Item.</span>
                     </a>
                 </div>
-            </div>
+            </div> -->
             <!-- end Item -->
             
             <!-- Mo -->
-            <div x-show="navigationMenu == 'MO'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
+            <!-- <div x-show="navigationMenu == 'MO'" class="flex items-stretch justify-center w-full max-w-2xl p-6 gap-x-3">
                 <div class="w-72">
                     <a href="/mo/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Tổng Quan</span>
@@ -304,7 +327,7 @@
                         <span class="block leading-5 opacity-50">Trang quản lý chỉnh sửa MO.</span>
                     </a>
                 </div>
-            </div>
+            </div> -->
             <!-- end MO -->
 
             <!-- Sections -->
@@ -368,45 +391,45 @@
                     </div>
                     <div class="w-44">
                         <h1>Panel CNC</h1>
-                        <!-- <a href="/sections/panelcnc/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                        <a href="/sections/panelcnc/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Tổng Quan</span>
-                        </a> -->
+                        </a>
                         <a href="/sections/panelcnc/entry" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
                         </a>
-                        <!-- <a href="/sections/panelcnc/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                        <a href="/sections/panelcnc/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Quản Lý</span>
-                        </a> -->
+                        </a>
                     </div>
 
                     <div class="w-44">
                         <h1>Assembly</h1>
-                        <!-- <a href="/sections/panelcnc/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
-                            <span class="block mb-1 font-medium text-black">Tổng Quan</span>
-                        </a> -->
+                        <a href="/sections/assembly/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                            <span class="block mb-1 font-medium text-black">Tổng quan</span>
+                        </a>
                         <a href="/sections/assembly/entry" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
                         </a>
-                        <!-- <a href="/sections/panelcnc/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
-                            <span class="block mb-1 font-medium text-black">Quản Lý</span>
-                        </a> -->
-                    </div>
-
-                    <div class="w-44">
-                        <h1>Wood Finishing</h1>
-                        <!-- <a href="/sections/woodfinish/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
-                            <span class="block mb-1 font-medium text-black">Tổng Quan</span>
-                        </a> -->
-                        <a href="/sections/woodfinish/entry" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
-                            <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
+                        <a href="/sections/assembly/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                            <span class="block mb-1 font-medium text-black">Quản lý</span>
                         </a>
-                        <!-- <a href="/sections/woodfinish/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
-                            <span class="block mb-1 font-medium text-black">Quản Lý</span>
-                        </a> -->
-                    </div>
+                    </div>            
                 </div>
 
                 <div>
+                    <div class="w-44">
+                        <h1>Wood Finishing</h1>
+                        <a href="/sections/woodfinish/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                            <span class="block mb-1 font-medium text-black">Tổng Quan</span>
+                        </a>
+                        <a href="/sections/woodfinish/entry" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                            <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
+                        </a>
+                        <a href="/sections/woodfinish/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                            <span class="block mb-1 font-medium text-black">Quản Lý</span>
+                        </a>
+                    </div>
+
                     <!-- <div class="w-44">
                         <h1>Packing</h1>
                         <a href="/sections/packing/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
@@ -421,15 +444,15 @@
                     </div> -->
                     <div class="w-44">
                         <h1>Pack</h1>
-                        <!-- <a href="/sections/pack/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                        <a href="/sections/pack/overview" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Tổng Quan</span>
-                        </a> -->
+                        </a>
                         <a href="/sections/pack/entry" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Nhập Liệu</span>
                         </a>
-                        <!-- <a href="/sections/pack/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
+                        <a href="/sections/pack/admin" @click="navigationMenuClose()" class="block px-3.5 py-1 text-sm rounded hover:bg-neutral-100">
                             <span class="block mb-1 font-medium text-black">Quản Lý</span>
-                        </a> -->
+                        </a>
                     </div>
                 </div>
                 
@@ -475,7 +498,7 @@
             <!-- End Incentive -->
 
             <!-- HR -->
-            <div x-show="navigationMenu == 'HR'" class="flex items-stretch justify-center w-full p-6">
+            <!-- <div x-show="navigationMenu == 'HR'" class="flex items-stretch justify-center w-full p-6">
                 <div class="w-72">
                     <a href="/hr/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Entry</span>
@@ -486,24 +509,24 @@
                         <span class="block font-light leading-5 opacity-50">Trang quản lý nhân sự.</span>
                     </a>        
                 </div>
-            </div>
+            </div> -->
             <!-- End HR -->
 
             <!-- 6S -->
             <div x-show="navigationMenu == '6S'" class="flex items-stretch justify-center w-full p-6">
                 <div class="w-72">
-                    <a href="/6s/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                    <!-- <a href="/6s/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Overview</span>
                         <span class="block font-light leading-5 opacity-50">Trang tổng quan về 6S.</span>
-                    </a>
+                    </a> -->
                     <a href="/6s/entry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Evaluate</span>
                         <span class="block font-light leading-5 opacity-50">Trang chấm điểm 6S.</span>
                     </a>
-                    <a href="/6s/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                    <!-- <a href="/6s/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Manament</span>
                         <span class="block font-light leading-5 opacity-50">Trang quản lý 6S.</span>
-                    </a>        
+                    </a>         -->
                 </div>
             </div>
             <!-- End 6S -->
