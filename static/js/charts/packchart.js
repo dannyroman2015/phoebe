@@ -1,7 +1,7 @@
 const drawPackChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 50};
+  const margin = {top: 20, right: 20, bottom: 20, left: 30};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   
@@ -86,45 +86,67 @@ const drawPackChart = (data) => {
 
   svg.append("text")
       .text("($)")
-      .attr("text-anchor", "middle")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", 30)
-      .attr("y", 5)
+      .attr("x", 0)
+      .attr("y", 55)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", 20)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Brand")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 30)
+      .attr("dy", "0.35em")
+      .attr("fill", "#DFC6A2")
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("RH")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 5)
+      .attr("dy", "0.35em")
+      .attr("fill", "#A5A0DE")
+      .attr("font-weight", 600)
+      .attr("font-size", 16)    
 
     lastX1 = series.filter(d => d.key.startsWith("X1"))[1][0]
     const factoryLabel = svg.append("text")
-      .attr("text-anchor", "middle")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", margin.left - 20)
+      .attr("x", 0)
       .attr("y", y(lastX1[1]) + 13)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", "20px")
 
     factoryLabel.append("tspan")
-      .text("F2")
-      .attr("x", margin.left - 20)
+      .text("X2")
+      .attr("x", 0)
       .attr("dy", -5)
       .attr("font-size", "20px")
 
     factoryLabel.append("tspan")
       .text("⬀")
-      .attr("x", margin.left)
+      .attr("x", 20)
       .attr("dy", -20)
       .attr("font-size", "40px")
 
     factoryLabel.append("tspan")
-      .text("F1")
-      .attr("x", margin.left - 20)
+      .text("X1")
+      .attr("x", 0)
       .attr("dy", 50)
       .attr("font-size", "20px")
 
     factoryLabel.append("tspan")
       .text("⬂")
-      .attr("x", margin.left)
+      .attr("x", 20)
       .attr("dy", 30)
       .attr("font-size", "40px")
 
@@ -219,13 +241,35 @@ const drawPackChart1 = (data) => {
 
   svg.append("text")
       .text("($)")
-      .attr("text-anchor", "middle")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", 30)
-      .attr("y", 5)
+      .attr("x", 0)
+      .attr("y", 55)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", 20)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Đồng bộ")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 30)
+      .attr("dy", "0.35em")
+      .attr("fill", "#89CFF3")
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Trên truyền")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 5)
+      .attr("dy", "0.35em")
+      .attr("fill", "#CDF5FD")
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
 
   return svg.node();
 }

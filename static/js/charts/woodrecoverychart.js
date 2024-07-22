@@ -1,7 +1,7 @@
 const drawWoodRecoveryChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 30, bottom: 20, left: 40};
+  const margin = {top: 20, right: 30, bottom: 20, left: 30};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -13,7 +13,7 @@ const drawWoodRecoveryChart = (data) => {
 
   const y = d3.scaleLinear()
       // .domain(d3.extent(data, d => d.rate))
-      .domain([d3.min(data, d => d.rate)-5, 70])
+      .domain([d3.min(data, d => d.rate)-5, 75])
       .range([innerHeight, 0])
       .nice();
 
@@ -60,12 +60,12 @@ const drawWoodRecoveryChart = (data) => {
       .attr("dy", "0.35em")
       .attr("x", d => x(d.date))
       .attr("y", d => y(d.rate))
-      .call(text => text.filter((d, i, data) => i === 0)
-        .append("tspan")
-          .attr("font-size", "14px")
-          .attr("fill", d => color(d.prodtype))
-          .attr("dy", -10 )
-          .text(d => ` ${d.prodtype}`))
+      // .call(text => text.filter((d, i, data) => i === 0)
+      //   .append("tspan")
+      //     .attr("font-size", "14px")
+      //     .attr("fill", d => color(d.prodtype))
+      //     .attr("dy", -10 )
+      //     .text(d => ` ${d.prodtype}`))
     .clone(true).lower()
       .attr("fill", "none")
       .attr("stroke", "white")
@@ -108,8 +108,8 @@ const drawWoodRecoveryChart = (data) => {
     .attr("x2", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 15 : x(lastBrand.date) + 15)
     .attr("y2", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 5 : y(lastBrand.rate) + 5)
     .attr("fill", "none")
-    .attr("stroke", color("brand"))
-    .attr("stroke-width", "2px")
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", "1px")
 
   innerChart.append("text")
     .text("RH")
@@ -128,8 +128,8 @@ const drawWoodRecoveryChart = (data) => {
     .attr("x2", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 15 : x(lastrh.date) + 15)
     .attr("y2", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 5 : y(lastrh.rate) + 5)
     .attr("fill", "none")
-    .attr("stroke", color("rh"))
-    .attr("stroke-width", "2px")
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", "1px")
 
   return svg.node();
 }
