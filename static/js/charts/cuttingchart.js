@@ -65,7 +65,7 @@ const drawCuttingChart = (data) => {
     .selectAll()
     .data(data)
     .join("text")
-      .text(d => d.qty)
+      .text(d => d3.format(".2")(d.qty))
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => margin.left + xScale(d.date) + xScale.bandwidth()/2)
@@ -149,7 +149,7 @@ const drawCuttingChart1 = (data) => {
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(bottomAxis)
       .call(g => g.selectAll(".domain").remove())
-      .call(g => g.selectAll("text").attr("font-size", "12px"))
+      .call(g => g.selectAll("text").attr("font-size", "14px").attr("font-weight", 600).style("text-transform", "capitalize"))
   
   const leftAxis = d3.axisLeft(yScale)
 
@@ -180,7 +180,7 @@ const drawCuttingChart1 = (data) => {
     .selectAll()
     .data(data)
     .join("text")
-      .text(d => d3.format("~s")(d.qty))
+      .text(d => d3.format(".3s")(d.qty))
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => margin.left + xScale(d.woodtype) + xScale.bandwidth()/2)
@@ -263,7 +263,7 @@ const drawCuttingChart2 = (data) => {
     .attr("fill", "#75485E")
     .attr("font-size", "15px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format("~s")(d[1])}` )
+    .text(d => `Σ ${d3.format(".3s")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -280,7 +280,7 @@ const drawCuttingChart2 = (data) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format("~s")(d[1]-d[0])}
+          if (d[1] - d[0] != 0) { return d3.format(".2s")(d[1]-d[0])}
         })
   })
 
@@ -303,7 +303,5 @@ const drawCuttingChart2 = (data) => {
     .attr("fill", "#DFC6A2")
     .attr("font-weight", 600)
  
-
-
   return svg.node();
 }

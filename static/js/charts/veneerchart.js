@@ -61,12 +61,12 @@ const drawVeneerChart = (data) => {
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-    .attr("y", d => y(d[1]) - 15)
+    .attr("y", d => y(d[1]) - 12)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format("~s")(d[1])}` )
+    .text(d => `Σ ${d3.format(".2s")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -83,23 +83,67 @@ const drawVeneerChart = (data) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format("~s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format("~s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format("~s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format("~s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format("~s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format(".2s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format(".2s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format(".2s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format(".2s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format(".2s")(d[1]-d[0])} }
         })
   })
 
   svg.append("text")
       .text("(m²)")
-      .attr("text-anchor", "middle")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", 30)
+      .attr("x", 0)
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-size", 20)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Rework")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 30)
+      .attr("dy", "0.35em")
+      .attr("fill", color("rework"))
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Reeded")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 50)
+      .attr("dy", "0.35em")
+      .attr("fill", color("reeded"))
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Thẳng")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 70)
+      .attr("dy", "0.35em")
+      .attr("fill", color("straight"))
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
+
+  svg.append("text")
+      .text("Cong")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 90)
+      .attr("dy", "0.35em")
+      .attr("fill", color("curve"))
+      .attr("font-weight", 600)
+      .attr("font-size", 16)
 
   return svg.node();
 }
