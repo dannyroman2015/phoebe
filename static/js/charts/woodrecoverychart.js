@@ -30,6 +30,7 @@ const drawWoodRecoveryChart = (data) => {
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).ticks(innerWidth / 80).tickSizeOuter(0));
+    
 
   const groupedData = d3.group(data, d => d.prodtype)
   // Add a container for each series.

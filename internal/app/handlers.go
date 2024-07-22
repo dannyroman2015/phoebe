@@ -3928,7 +3928,7 @@ func (s *Server) sce_wr_sendentry(w http.ResponseWriter, r *http.Request, ps htt
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
-	rate, _ := strconv.Atoi(r.FormValue("rate"))
+	rate, _ := strconv.ParseFloat(r.FormValue("rate"), 64)
 	prodtype := r.FormValue("prodtype")
 	if r.FormValue("prodtype") == "" || r.FormValue("rate") == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wr_form.html")).Execute(w, map[string]interface{}{
