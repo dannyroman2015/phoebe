@@ -2276,6 +2276,7 @@ func (s *Server) sc_wrnoteinfo(w http.ResponseWriter, r *http.Request, ps httpro
 
 	var wrnoteinfo struct {
 		WrnoteCode string  `bson:"wrnotecode"`
+		ProdType   string  `bson:"prodtype"`
 		WoodType   string  `bson:"woodtype"`
 		WrnoteQty  float64 `bson:"wrnoteqty"`
 		Thickness  float64 `bson:"thickness"`
@@ -2297,11 +2298,12 @@ func (s *Server) sc_newwrnote(w http.ResponseWriter, r *http.Request, ps httprou
 
 func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	wrnotedate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+	prodtype := r.FormValue("prodtype")
 	code := r.FormValue("wrnotecode")
 	woodtype := r.FormValue("woodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnoteqty, _ := strconv.ParseFloat(r.FormValue("wrnoteqty"), 64)
-	if code == "" || woodtype == "" || thickness == 0 || wrnoteqty == 0 {
+	if code == "" || woodtype == "" || prodtype == "" || thickness == 0 || wrnoteqty == 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinput.html")).Execute(w, map[string]interface{}{
 			"showSuccessDialog": false,
 			"showMissingDialog": true,
@@ -2309,7 +2311,7 @@ func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	_, err := s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type": "wrnote", "wrnotecode": code, "wrnoteqty": wrnoteqty, "wrremain": wrnoteqty, "woodtype": woodtype, "thickness": thickness, "date": primitive.NewDateTimeFromTime(wrnotedate), "createat": primitive.NewDateTimeFromTime(time.Now()),
+		"type": "wrnote", "wrnotecode": code, "prodtype": prodtype, "wrnoteqty": wrnoteqty, "wrremain": wrnoteqty, "woodtype": woodtype, "thickness": thickness, "date": primitive.NewDateTimeFromTime(wrnotedate), "createat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		log.Println(err)
