@@ -4689,6 +4689,56 @@ func (s *Server) tge_loadsectionentry(w http.ResponseWriter, r *http.Request, ps
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/settarget - post settarget in page target entry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	targetname := r.FormValue("targetname")
+	targetstart, _ := time.Parse("2006-01-02", r.FormValue("targetstart"))
+	targetend, _ := time.Parse("2006-01-02", r.FormValue("targetend"))
+	weekdays := strings.Fields(r.FormValue("weekdays"))
+	target, _ := strconv.Atoi(r.FormValue("target"))
+
+	if targetname == "" || r.FormValue("target") == "" || r.FormValue("weekdays") == "" {
+		template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin, vui lòng nhập lại.",
+		})
+		return
+	}
+
+	var intWeekDays []int
+	for _, d := range weekdays {
+		t, _ := strconv.Atoi(d)
+		intWeekDays = append(intWeekDays, t)
+	}
+
+	var bdoc []interface{}
+	for tmpdate := targetstart; tmpdate.Sub(targetend) <= 0; tmpdate = tmpdate.AddDate(0, 0, 1) {
+		if slices.Contains(intWeekDays, int(tmpdate.Weekday())) {
+			b := bson.M{
+				"name": targetname, "date": primitive.NewDateTimeFromTime(tmpdate), "value": target,
+			}
+			bdoc = append(bdoc, b)
+		}
+	}
+
+	_, err := s.mgdb.Collection("target").InsertMany(context.Background(), bdoc, options.InsertMany())
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Cập nhật thất bại, vui lòng nhập lại.",
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Đã đặt target thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /quality/entry - copy paste report for quality
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) q_fastentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

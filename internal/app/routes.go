@@ -240,6 +240,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	router.GET("/target/entry", s.tg_entry)
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
+	router.POST("/target/entry/settarget", s.tge_settarget)
 	// end Target
 
 	////////////////////////////////////////////////////////////////////

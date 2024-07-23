@@ -197,7 +197,9 @@ const drawCuttingChart1 = (data) => {
 }
 
 const drawCuttingChart2 = (data, target) => {
-
+  if (target == undefined) {
+    target = [{"date": "", "value": 0}]
+  }
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};
