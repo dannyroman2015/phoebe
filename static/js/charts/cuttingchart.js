@@ -196,10 +196,11 @@ const drawCuttingChart1 = (data) => {
   return svg.node();
 }
 
-const drawCuttingChart2 = (data) => {
+const drawCuttingChart2 = (data, target) => {
+
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 20};
+  const margin = {top: 20, right: 20, bottom: 20, left: 40};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -214,7 +215,7 @@ const drawCuttingChart2 = (data) => {
     .padding(0.1);
 
   const y = d3.scaleLinear()
-    .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
+    .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
     .rangeRound([innerHeight, 0])
     .nice()
 
@@ -263,7 +264,7 @@ const drawCuttingChart2 = (data) => {
     .attr("fill", "#75485E")
     .attr("font-size", "15px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".3s")(d[1])}` )
+    .text(d => `Σ ${d3.format(".3s")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -284,24 +285,85 @@ const drawCuttingChart2 = (data) => {
         })
   })
 
-  const title = svg.append("text")
-      .text("(m³): ")
-      .attr("dominant-baseline", "hanging")
-      .attr("fill", "#75485E")
-      .attr("font-size", "16px")
+ //draw target lines
+ innerChart
+ .selectAll()
+ .data(target)
+ .join("line")
+   .attr("x1", d => x(d.date))
+   .attr("y1", d => y(d.value))
+   .attr("x2", d => x(d.date) + x.bandwidth())
+   .attr("y2", d => y(d.value))
+   .attr("stroke", "#FA7070")
+   .attr("fill", "none")
+   .attr("stroke-opacity", 0.5)
 
-  title.append("tspan")
+innerChart.append("g")
+   .attr("stroke-linecap", "round")
+   .attr("stroke-linejoin", "round")
+   .attr("text-anchor", "middle")
+ .selectAll()
+ .data(target)
+ .join("text")
+   .text((d,i) => {
+      if (i == target.length-1) return d.value;
+      else {
+        if (d.value != target[i+1].value) return d.value;
+      }
+    })
+   .attr("font-size", "14px")
+   .attr("dy", "0.35em")
+   .attr("x", d => x(d.date) + x.bandwidth()/2)
+   .attr("y", d => y(d.value))
+   .attr("stroke", "#75485E")
+   .attr("font-weight", 300)
+   .clone(true).lower()
+   .attr("fill", "none")
+   .attr("stroke", "white")
+   .attr("stroke-width", 6)
+
+svg.append("text")
     .text("Gỗ 25")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
     .attr("fill", "#A5A0DE")
     .attr("font-weight", 600)
+    .attr("font-size", 16)
 
-  title.append("tspan")
-    .text(" & ")
-
-  title.append("tspan")
+svg.append("text")
     .text("Còn lại")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 30)
+    .attr("dy", "0.35em")
     .attr("fill", "#DFC6A2")
     .attr("font-weight", 600)
+    .attr("font-size", 16)
+
+svg.append("text")
+    .text("Target")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 55)
+    .attr("dy", "0.35em")
+    .attr("fill", "#FA7070")
+    .attr("font-weight", 600)
+    .attr("font-size", 16)
+
+svg.append("text")
+    .text("(m³)")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 80)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", 16)
  
   return svg.node();
 }

@@ -201,12 +201,12 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 		{{"$unset", "_id"}},
 	}
-	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline, options.Aggregate())
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline)
 	if err != nil {
 		log.Println(err)
 		return
@@ -220,6 +220,22 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err = cur.All(context.Background(), &cuttingData); err != nil {
 		log.Println(err)
 		return
+	}
+	//get target data of cutting
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var cuttingTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &cuttingTarget); err != nil {
+		log.Println(err)
 	}
 
 	// get data for lamination
@@ -273,6 +289,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
 		"cuttingData":         cuttingData,
+		"cuttingTarget":       cuttingTarget,
 		"laminationChartData": laminationChartData,
 		"packingData":         packchartData,
 	})
@@ -890,8 +907,25 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			return
 		}
 
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var cuttingTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &cuttingTarget); err != nil {
+			log.Println(err)
+		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_generalchart.html")).Execute(w, map[string]interface{}{
-			"cuttingData": cuttingData,
+			"cuttingData":   cuttingData,
+			"cuttingTarget": cuttingTarget,
 		})
 
 	case "woodtype":
@@ -2299,6 +2333,7 @@ func (s *Server) sc_newwrnote(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) sc_createwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	wrnotedate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 	prodtype := r.FormValue("prodtype")
+
 	code := r.FormValue("wrnotecode")
 	woodtype := r.FormValue("woodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
@@ -4635,6 +4670,23 @@ func (s *Server) sp_entrytmp(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // end bản tạm cho packing
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry - get page target entry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tg_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/target/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry - get page target entry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_loadsectionentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, nil)
+}
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /quality/entry - copy paste report for quality
