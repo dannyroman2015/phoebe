@@ -52,9 +52,9 @@ const drawWoodRemainChart = (data) => {
         .attr("y", "0.8em")
         .attr("fill-opacity", 0.8)
         .attr("fill", "#f6fafc")
-        .text(d => d.data.value))
+        .text(d => d3.format(".3f")(d.data.value)))
 
-  const remainTotal = data.reduce((total, d) => total + d.value, 0)
+  const remainTotal = d3.format(".5s")(data.reduce((total, d) => total + d.value, 0))
 
   svg.append("text")
       .attr("text-anchor", "middle")
