@@ -118,7 +118,11 @@
 <script>
   document.getElementById("veneerToDate").valueAsDate = new Date();
   document.getElementById("veneerFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
-  venerrchart.append(drawVeneerChart({{.veneerChartData}}))
+  if ({{.veneerTarget}} == undefined) {
+    venerrchart.append(drawVeneerChart({{.veneerChartData}}))
+  } else {
+    venerrchart.append(drawVeneerChart1({{.veneerChartData}}, {{.veneerTarget}}))
+  }
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{

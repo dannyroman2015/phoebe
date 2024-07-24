@@ -310,7 +310,7 @@ innerChart.append("g")
    .text((d,i) => {
       if (i == target.length-1) return d.value;
       else {
-        if (d.value != target[i+1].value) return d.value;
+        if (d.value != target[i+1].value && Math.abs(data.filter(t => t.date == d.date).reduce((total, n) => total + n.qty, 0) - d.value) > 2) return d.value;
       }
     })
    .attr("font-size", "14px")

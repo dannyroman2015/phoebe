@@ -121,7 +121,12 @@
 <script>
   document.getElementById("panelcncToDate").valueAsDate = new Date();
   document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
-  panelcncchart.append(drawPanelcncChart({{.panelChartData}}))
+
+  if ({{.panelcncTarget}} == undefined) {
+    panelcncchart.append(drawPanelcncChart({{.panelChartData}}))
+  } else {
+    panelcncchart.append(drawPanelcncChart2({{.panelChartData}}, {{.panelcncTarget}}))
+  }
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{

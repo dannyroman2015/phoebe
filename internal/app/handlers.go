@@ -270,6 +270,9 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		Date  string  `bson:"date" json:"date"`
 		Value float64 `bson:"value" json:"value"`
 	}
+	if err = cur.All(context.Background(), &laminationTarget); err != nil {
+		log.Println(err)
+	}
 
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
@@ -462,8 +465,26 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 
+	// get target of reededline
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "reededline total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var reededlineTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &reededlineTarget); err != nil {
+		log.Println(err)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/dashboard/reededline.html")).Execute(w, map[string]interface{}{
-		"reededlinedata": reededlinedata,
+		"reededlinedata":   reededlinedata,
+		"reededlineTarget": reededlineTarget,
 	})
 }
 
@@ -491,9 +512,26 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	if err := cur.All(context.Background(), &panelChartData); err != nil {
 		log.Println(err)
 	}
+	// get target of panelcnc
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "panelcnc total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var panelcncTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &panelcncTarget); err != nil {
+		log.Println(err)
+	}
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/panelcncchart.html")).Execute(w, map[string]interface{}{
 		"panelChartData": panelChartData,
+		"panelcncTarget": panelcncTarget,
 	})
 }
 
@@ -520,9 +558,26 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 	if err := cur.All(context.Background(), &veneerChartData); err != nil {
 		log.Println(err)
 	}
+	// get target for veneer
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "veneer total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var veneerTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &veneerTarget); err != nil {
+		log.Println(err)
+	}
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/veneer.html")).Execute(w, map[string]interface{}{
 		"veneerChartData": veneerChartData,
+		"veneerTarget":    veneerTarget,
 	})
 }
 
@@ -736,6 +791,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err := cur.All(context.Background(), &panelChartData); err != nil {
 			log.Println(err)
 		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_machinechart.html")).Execute(w, map[string]interface{}{
 			"panelChartData": panelChartData,
 		})
@@ -761,9 +817,26 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		if err := cur.All(context.Background(), &panelChartData); err != nil {
 			log.Println(err)
 		}
+		// get target of panelcnc
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "panelcnc total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var panelcncTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &panelcncTarget); err != nil {
+			log.Println(err)
+		}
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_totalchart.html")).Execute(w, map[string]interface{}{
 			"panelChartData": panelChartData,
+			"panelcncTarget": panelcncTarget,
 		})
 	}
 }
@@ -4758,7 +4831,7 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var bdoc []interface{}
-	for tmpdate := targetstart; tmpdate.Sub(targetend) <= 0; tmpdate = tmpdate.AddDate(0, 0, 1) {
+	for tmpdate := targetstart; tmpdate.Before(targetend.AddDate(0, 0, 1)); tmpdate = tmpdate.AddDate(0, 0, 1) {
 		if slices.Contains(intWeekDays, int(tmpdate.Weekday())) {
 			b := bson.M{
 				"name": targetname, "date": primitive.NewDateTimeFromTime(tmpdate), "value": target,

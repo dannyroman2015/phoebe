@@ -121,7 +121,11 @@
 <script>
   document.getElementById("reededlineToDate").valueAsDate = new Date();
   document.getElementById("reededlineFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
-  reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+  if ({{.reededlineTarget}} == undefined) {
+    reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+  } else {
+    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.reededlineTarget}}))
+  }
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{

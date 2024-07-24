@@ -3,6 +3,10 @@
 
 <script src="/static/js/charts/laminationchart.js"></script>
 <script>
-  laminationchart.append(drawLaminationChart({{.laminationChartData}}))
-</script>
+  if ({{.laminationTarget}} == undefined) {
+    laminationchart.append(drawLaminationChart({{.laminationChartData}}))
+  } else {
+    laminationchart.append(drawLaminationChart1({{.laminationChartData}}, {{.laminationTarget}}))
+  }
+ </script>
 {{end}}
