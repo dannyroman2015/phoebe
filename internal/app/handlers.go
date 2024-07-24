@@ -201,7 +201,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 		{{"$unset", "_id"}},
@@ -257,6 +257,19 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err := cur.All(context.Background(), &laminationChartData); err != nil {
 		log.Println(err)
 	}
+	// get target of lamination
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "lamination total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var laminationTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
 
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
@@ -291,6 +304,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"cuttingData":         cuttingData,
 		"cuttingTarget":       cuttingTarget,
 		"laminationChartData": laminationChartData,
+		"laminationTarget":    laminationTarget,
 		"packingData":         packchartData,
 	})
 }
