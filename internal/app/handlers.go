@@ -1274,7 +1274,7 @@ func (s *Server) sco_loadwoodremain(w http.ResponseWriter, r *http.Request, ps h
 func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "wrnote"}}},
-		{{"$sort", bson.M{"wrnotecode": 1}}},
+		{{"$sort", bson.M{"date": -1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
@@ -1288,6 +1288,7 @@ func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpr
 		Date       string  `bson:"date"`
 		WrnoteQty  float64 `bson:"wrnoteqty"`
 		WrRemain   float64 `bson:"wrremain"`
+		ProdType   string  `bson:"prodtype"`
 	}
 	if err := cur.All(context.Background(), &wrnotes); err != nil {
 		log.Println(err)
@@ -1316,6 +1317,7 @@ func (s *Server) sco_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 	var reports []struct {
 		Wrnote    string  `bson:"wrnote"`
 		Woodtype  string  `bson:"woodtype"`
+		ProdType  string  `bson:"prodtype"`
 		Thickness float64 `bson:"thickness"`
 		Date      string  `bson:"date"`
 		Qtycbm    float64 `bson:"qtycbm"`
@@ -2414,6 +2416,7 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
 	occurdate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 	woodtype := r.FormValue("woodtype")
+	prodtype := r.FormValue("prodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnote := r.FormValue("wrnote")
 	usernameToken, err := r.Cookie("username")
@@ -2429,7 +2432,7 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type": "report", "wrnote": wrnote, "woodtype": woodtype, "qtycbm": qty, "thickness": thickness, "reporter": usernameToken.Value,
+		"type": "report", "wrnote": wrnote, "woodtype": woodtype, "prodtype": prodtype, "qtycbm": qty, "thickness": thickness, "reporter": usernameToken.Value,
 		"date": primitive.NewDateTimeFromTime(occurdate), "createddate": primitive.NewDateTimeFromTime(time.Now()), "lastmodified": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {

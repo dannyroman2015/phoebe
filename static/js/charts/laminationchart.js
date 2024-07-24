@@ -88,15 +88,15 @@ const drawLaminationChart = (data) => {
 
   svg.append("text")
       .text("(m²)")
-      .attr("text-anchor", "middle")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", 30)
+      .attr("x", 0)
       .attr("y", 5)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", "16px")
 
-  const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
+const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
 innerChart.append("text")
     .text("RH")
     .attr("text-anchor", "start")
