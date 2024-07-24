@@ -1241,6 +1241,34 @@ func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/loadwoodremain - get woodremain area of page overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_loadwoodremain(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}}},
+		{{"$group", bson.M{"_id": "$thickness", "value": bson.M{"$sum": "$wrremain"}}}},
+		{{"$sort", bson.M{"value": -1}}},
+		{{"$set", bson.M{"name": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodremainChartData []struct {
+		Name  int     `bson:"name" json:"name"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &woodremainChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/woodremain.html")).Execute(w, map[string]interface{}{
+		"woodremainChartData": woodremainChartData,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
 // /sections/cutting/overview/loadwrnote - load wrnote section of overview of Cutting
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
