@@ -1442,6 +1442,7 @@ func (s *Server) sco_wrnotesearch(w http.ResponseWriter, r *http.Request, ps htt
 	var wrnotes []struct {
 		WrnoteCode string  `bson:"wrnotecode"`
 		WoodType   string  `bson:"woodtype"`
+		ProdType   string  `bson:"prodtype"`
 		Thickness  float64 `bson:"thickness"`
 		Date       string  `bson:"date"`
 		WrnoteQty  float64 `bson:"wrnoteqty"`
@@ -1491,6 +1492,54 @@ func (s *Server) sco_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
 		"reports":         reports,
 		"numberOfReports": numberOfReports,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/wrremainfilter - filter remain wrnote of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_wrnotefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnotefilter := r.FormValue("wrnotefilter")
+
+	var filter bson.M
+	switch wrnotefilter {
+	case "all":
+		filter = bson.M{"type": "wrnote"}
+	case "undone":
+		filter = bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}
+	case "done":
+		filter = bson.M{"type": "wrnote", "wrremain": 0}
+	}
+
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", filter}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var wrnotes []struct {
+		WrnoteCode string  `bson:"wrnotecode"`
+		WoodType   string  `bson:"woodtype"`
+		ProdType   string  `bson:"prodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		WrnoteQty  float64 `bson:"wrnoteqty"`
+		WrRemain   float64 `bson:"wrremain"`
+	}
+	if err = cur.All(context.Background(), &wrnotes); err != nil {
+		log.Println(err)
+	}
+
+	numberOfWrnotes := len(wrnotes)
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote_tbl.html")).Execute(w, map[string]interface{}{
+		"wrnotes":         wrnotes,
+		"numberOfWrnotes": numberOfWrnotes,
 	})
 }
 

@@ -1347,10 +1347,6 @@ select {
   flex-shrink: 0;
 }
 
-.flex-grow {
-  flex-grow: 1;
-}
-
 .origin-bottom-left {
   transform-origin: bottom left;
 }
@@ -1763,14 +1759,6 @@ select {
   border-width: 2px;
 }
 
-.border-\[3px\] {
-  border-width: 3px;
-}
-
-.border-\[2px\] {
-  border-width: 2px;
-}
-
 .border-b {
   border-bottom-width: 1px;
 }
@@ -1856,11 +1844,6 @@ select {
   border-color: rgb(23 23 23 / var(--tw-border-opacity));
 }
 
-.border-purple-400 {
-  --tw-border-opacity: 1;
-  border-color: rgb(192 132 252 / var(--tw-border-opacity));
-}
-
 .border-transparent {
   border-color: transparent;
 }
@@ -1868,11 +1851,6 @@ select {
 .border-white {
   --tw-border-opacity: 1;
   border-color: rgb(255 255 255 / var(--tw-border-opacity));
-}
-
-.border-black {
-  --tw-border-opacity: 1;
-  border-color: rgb(0 0 0 / var(--tw-border-opacity));
 }
 
 .border-s-gray-50 {
@@ -2314,10 +2292,6 @@ select {
   letter-spacing: 0.025em;
 }
 
-.tracking-widest {
-  letter-spacing: 0.1em;
-}
-
 .text-black {
   --tw-text-opacity: 1;
   color: rgb(0 0 0 / var(--tw-text-opacity));
@@ -2486,10 +2460,6 @@ select {
 
 .duration-100 {
   transition-duration: 100ms;
-}
-
-.duration-150 {
-  transition-duration: 150ms;
 }
 
 .duration-200 {
@@ -2862,35 +2832,6 @@ select {
 .peer:checked ~ .peer-checked\:bg-blue-600 {
   --tw-bg-opacity: 1;
   background-color: rgb(37 99 235 / var(--tw-bg-opacity));
-}
-
-.peer:checked ~ .peer-checked\:bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-.peer:checked ~ .peer-checked\:from-\[blueviolet\] {
-  --tw-gradient-from: blueviolet var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(138 43 226 / 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.peer:checked ~ .peer-checked\:from-\[black\] {
-  --tw-gradient-from: black var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
-.peer:checked ~ .peer-checked\:to-\[violet\] {
-  --tw-gradient-to: violet var(--tw-gradient-to-position);
-}
-
-.peer:checked ~ .peer-checked\:to-\[white\] {
-  --tw-gradient-to: white var(--tw-gradient-to-position);
-}
-
-.peer:checked ~ .peer-checked\:text-white {
-  --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity));
 }
 
 .peer:checked ~ .peer-checked\:after\:translate-x-full::after {
