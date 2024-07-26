@@ -614,7 +614,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -16))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
@@ -854,7 +854,7 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
 			{{"$unset", "_id"}},
 		})
@@ -870,8 +870,26 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &assemblyChartData); err != nil {
 			log.Println(err)
 		}
+		// get target of assembly
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var assemblyTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &assemblyTarget); err != nil {
+			log.Println(err)
+		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_generalchart.html")).Execute(w, map[string]interface{}{
 			"assemblyChartData": assemblyChartData,
+			"assemblyTarget":    assemblyTarget,
 		})
 
 	case "detail":
@@ -895,6 +913,7 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &assemblyChartData); err != nil {
 			log.Println(err)
 		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_detailchart.html")).Execute(w, map[string]interface{}{
 			"assemblyChartData": assemblyChartData,
 		})
@@ -914,7 +933,7 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
 			{{"$unset", "_id"}},
 		})
@@ -930,8 +949,26 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &woodfinishChartData); err != nil {
 			log.Println(err)
 		}
+		// get target of assembly
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var woodfinishTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &woodfinishTarget); err != nil {
+			log.Println(err)
+		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/wf_generalchart.html")).Execute(w, map[string]interface{}{
 			"woodfinishChartData": woodfinishChartData,
+			"woodfinishTarget":    woodfinishTarget,
 		})
 
 	case "detail":
@@ -1163,7 +1200,7 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.itemtype": -1}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
 			{{"$unset", "_id"}},
 		})
@@ -1179,8 +1216,25 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &packChartData); err != nil {
 			log.Println(err)
 		}
+		// get target for pack
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var packingTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &packingTarget); err != nil {
+			log.Println(err)
+		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/pack_generalchart.html")).Execute(w, map[string]interface{}{
 			"packChartData": packChartData,
+			"packingTarget": packingTarget,
 		})
 
 	case "detail":
@@ -1479,6 +1533,7 @@ func (s *Server) sco_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 	var reports []struct {
 		Wrnote    string  `bson:"wrnote"`
 		Woodtype  string  `bson:"woodtype"`
+		ProdType  string  `bson:"prodtype"`
 		Thickness float64 `bson:"thickness"`
 		Date      string  `bson:"date"`
 		Qtycbm    float64 `bson:"qtycbm"`
@@ -1540,6 +1595,47 @@ func (s *Server) sco_wrnotefilter(w http.ResponseWriter, r *http.Request, ps htt
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote_tbl.html")).Execute(w, map[string]interface{}{
 		"wrnotes":         wrnotes,
 		"numberOfWrnotes": numberOfWrnotes,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/overview/reportfilter - filter report of overview of Cutting
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_reportfilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportFromDate, _ := time.Parse("2006-01-02", r.FormValue("reportFromDate"))
+	reportToDate, _ := time.Parse("2006-01-02", r.FormValue("reportToDate"))
+
+	filter := bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(reportFromDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(reportToDate)}}}}
+
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", filter}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var reports []struct {
+		Wrnote    string  `bson:"wrnote"`
+		Woodtype  string  `bson:"woodtype"`
+		ProdType  string  `bson:"prodtype"`
+		Thickness float64 `bson:"thickness"`
+		Date      string  `bson:"date"`
+		Qtycbm    float64 `bson:"qtycbm"`
+		Reporter  string  `bson:"reporter"`
+	}
+	if err = cur.All(context.Background(), &reports); err != nil {
+		log.Println(err)
+	}
+
+	numberOfReports := len(reports)
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
+		"reports":         reports,
+		"numberOfReports": numberOfReports,
 	})
 }
 
@@ -2688,7 +2784,7 @@ func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-// /sections/cutting/admin/deletereport/:reportid - delete a report on page admin of cutting section
+// /sections/cutting/admin/deletewrnote/:wrnoteid - delete a wrnote on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sca_deletewrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
@@ -2698,6 +2794,27 @@ func (s *Server) sca_deletewrnote(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 		return
 	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/wrnoteupdateform/:wrnoteid - update a wrnote on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
+
+	result := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"_id": wrnoteid})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var wrnote struct {
+		ProdType string `bosn:"prodtype"`
+		Woodtype string `bson:"woodtype"`
+	}
+	if err := result.Decode(&wrnote); err != nil {
+		log.Println(err)
+	}
+	log.Println(wrnote)
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3350,6 +3467,67 @@ func (s *Server) sva_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/entry - load page entry of veneer section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sf_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/finemill/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/finemill/entry/loadform - load form of page entry of finemill section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sfe_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/finemill/entry/form.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/finemill/sendentry - post form of page entry of finemill section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sfe_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	itemtype := r.FormValue("itemtype")
+	// itemtype := "whole"
+	// if r.FormValue("switch") != "" {
+	// 	itemtype = r.FormValue("switch")
+	// }
+	itemcode := r.FormValue("itemcode")
+	// component := r.FormValue("component")
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	factory := r.FormValue("factory")
+	prodtype := r.FormValue("prodtype")
+	qty, _ := strconv.Atoi(r.FormValue("qty"))
+	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
+
+	if factory == "" || prodtype == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/finemill/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "itemcode": itemcode, "itemtype": itemtype,
+		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/finemill/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/finemill/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
 // ///////////////////////////////////////////////////////////////////////////////
 // /sections/assembly/overview - get page overview of assembly
 // ///////////////////////////////////////////////////////////////////////////////
@@ -3455,10 +3633,11 @@ func (s *Server) sae_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) sae_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
-	itemtype := "whole"
-	if r.FormValue("switch") != "" {
-		itemtype = r.FormValue("switch")
-	}
+	itemtype := r.FormValue("itemtype")
+	// itemtype := "whole"
+	// if r.FormValue("switch") != "" {
+	// 	itemtype = r.FormValue("switch")
+	// }
 	itemcode := r.FormValue("itemcode")
 	component := r.FormValue("component")
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
@@ -3467,7 +3646,7 @@ func (s *Server) sae_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
 
-	if factory == "" || prodtype == "" || qty == 0 {
+	if factory == "" || prodtype == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
@@ -3698,10 +3877,11 @@ func (s *Server) swe_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) swe_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
-	itemtype := "whole"
-	if r.FormValue("switch") != "" {
-		itemtype = r.FormValue("switch")
-	}
+	itemtype := r.FormValue("itemtype")
+	// itemtype := "whole"
+	// if r.FormValue("switch") != "" {
+	// 	itemtype = r.FormValue("switch")
+	// }
 	itemcode := r.FormValue("itemcode")
 	component := r.FormValue("component")
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
@@ -3710,7 +3890,7 @@ func (s *Server) swe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
 
-	if factory == "" || prodtype == "" || qty == 0 {
+	if factory == "" || prodtype == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/woodfinish/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
@@ -3941,10 +4121,11 @@ func (s *Server) spk_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
-	itemtype := "whole"
-	if r.FormValue("switch") != "" {
-		itemtype = r.FormValue("switch")
-	}
+	itemtype := r.FormValue("itemtype")
+	// itemtype := "whole"
+	// if r.FormValue("switch") != "" {
+	// 	itemtype = r.FormValue("switch")
+	// }
 	itemcode := r.FormValue("itemcode")
 	part := r.FormValue("part")
 	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
@@ -3953,7 +4134,7 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
 
-	if factory == "" || prodtype == "" || qty == 0 {
+	if factory == "" || prodtype == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
@@ -4902,6 +5083,74 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Đã đặt target thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /downtime/entry - copy paste report for downtime
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dt_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/downtime/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /downtime//entry/loadform - load form of report for downtime
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dte_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/downtime/entry/form.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /downtime/sendentry - post report for downtime
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dte_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	lines := strings.Split(strings.Trim(r.FormValue("list"), "\n"), "\n")
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+
+	var jsonStr = `[`
+	for _, line := range lines {
+		raw := strings.Fields(line)
+		section := raw[0]
+		checkedqty := raw[1]
+		failedqty := "0"
+		if len(raw) == 3 {
+			failedqty = raw[2]
+		}
+
+		jsonStr += `{
+			"date":"` + date.Format("2006-01-02") + `", 
+			"section":"` + section + `", 
+			"checkedqty":` + checkedqty + `,
+			"failedqty":` + failedqty + `
+			},`
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	var bdoc []interface{}
+	err := bson.UnmarshalExtJSON([]byte(jsonStr), true, &bdoc)
+	if err != nil {
+		log.Print(err)
+		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Lỗi decode. Vui lòng liên hệ admin.",
+		})
+		return
+	}
+	_, err = s.mgdb.Collection("quality").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối database thất bại. Vui lòng liên hệ admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
 }
 

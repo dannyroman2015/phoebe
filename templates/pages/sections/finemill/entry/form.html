@@ -1,12 +1,12 @@
 <section id="entry-container" class="fade-in">
   <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
-      <form x-data="{ switchOn: false }" class="space-y-5" hx-post="/sections/assembly/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
+      <form x-data="{ switchOn: false }" class="space-y-5" hx-post="/sections/finemill/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
         <div class="mt-4 text-center">
           <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
-            Assembly
+            Finemill
           </button>
-        </div>        
+        </div>
 
         <div class="flex justify-center mt-4 text-center">
           <select class="flex text-center justify-center w-1/2 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
@@ -71,8 +71,8 @@
           <div>
             <label for="factory1" tabindex="0"
               class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
-              <input class="sr-only" value="1" id="factory1" type="radio" tabindex="-1" name="factory" />
-              <span class="text-sm">Xưởng 1</span>
+              <input class="sr-only" value="1" id="factory1" type="radio" tabindex="-1" name="factory" checked/>
+              <span class="text-sm">Nhà máy 1</span>
             </label>
           </div>
 
@@ -80,7 +80,7 @@
             <label for="factory2" tabindex="0"
                   class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
               <input class="sr-only" value="2" id="factory2" type="radio" tabindex="-1" name="factory"/>
-              <span class="text-sm">Xưởng 2</span>
+              <span class="text-sm">Nhà máy 2</span>
             </label>
           </div>
         </div>
@@ -282,7 +282,7 @@
           <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
             Gửi
           </button>
-        </div> 
+        </div>
 
       </form>
     </div>

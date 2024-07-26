@@ -229,6 +229,8 @@ const drawLaminationChart1 = (data, target) => {
   })
 
 //draw target lines
+const dates = data.map(d => d.date)
+target = target.filter(t => dates.includes(t.date))
 innerChart
 .selectAll()
 .data(target)

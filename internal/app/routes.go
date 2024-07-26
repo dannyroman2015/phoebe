@@ -95,6 +95,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/overview/wrnotesearch", s.sco_wrnotesearch)
 	router.POST("/sections/cutting/overview/reportsearch", s.sco_reportsearch)
 	router.POST("/sections/cutting/overview/wrnotefilter", s.sco_wrnotefilter)
+	router.POST("/sections/cutting/overview/reportfilter", s.sco_reportfilter)
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
 	router.POST("/sections/cutting/entry/wrnoteinfo", s.sc_wrnoteinfo)
@@ -112,6 +113,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/admin/searchwrnote", s.sca_searchwrnote)
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	router.DELETE("/sections/cutting/admin/deletewrnote/:wrnoteid", s.sca_deletewrnote)
+	router.GET("/sections/cutting/admin/wrnoteupdateform/:wrnoteid", s.sca_wrnoteupdateform)
 	// end Cuttting/////////////////////////////////////////////////////////////
 
 	// Lamination ////////////////////////////////////////////////////////
@@ -157,6 +159,13 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/veneer/admin/loadreport", s.sva_loadreport)
 	router.POST("/sections/veneer/admin/searchreport", s.sva_searchreport)
 	router.DELETE("/sections/veneer/admin/deletereport/:reportid", s.sva_deletereport)
+	// end Veneer/////////////////////////////////////////////////////////////
+
+	// Finemill ////////////////////////////////////////////////////////
+	router.GET("/sections/finemill/entry", withAuth(s.sf_entry))
+	router.GET("/sections/finemill/entry/loadform", s.sfe_loadform)
+	router.POST("/sections/finemill/entry/sendentry", s.sfe_sendentry)
+
 	// end Veneer/////////////////////////////////////////////////////////////
 
 	// Assembly ////////////////////////////////////////////////////////
@@ -244,6 +253,14 @@ func (s *Server) routes() http.Handler {
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
 	router.POST("/target/entry/settarget", s.tge_settarget)
 	// end Target
+
+	////////////////////////////////////////////////////////////////////
+	// Downtime ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/downtime/entry", withAuth(s.dt_entry))
+	router.GET("/downtime/entry/loadform", withAuth(s.dte_loadform))
+	router.POST("/downtime/entry/sendentry", s.dte_sendentry)
+	// end Downtime
 
 	////////////////////////////////////////////////////////////////////
 	// Quality ////////////////////////////////////////////////////////
