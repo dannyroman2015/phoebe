@@ -2814,7 +2814,9 @@ func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps
 	if err := result.Decode(&wrnote); err != nil {
 		log.Println(err)
 	}
-	log.Println(wrnote)
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnoteupdate_form.html")).Execute(w, map[string]interface{}{
+		"wrnote": wrnote,
+	})
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
