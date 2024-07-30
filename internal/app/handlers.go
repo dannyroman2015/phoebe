@@ -2672,7 +2672,7 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// update remain qty of wrnote
-	_, err = s.mgdb.Collection("cutting").UpdateOne(context.Background(), bson.M{"type": "wrnote", "wrnotecode": wrnote}, bson.M{"$inc": bson.M{"wrremain": -qty}})
+	_, err = s.mgdb.Collection("cutting").UpdateOne(context.Background(), bson.M{"type": "wrnote", "wrnotecode": wrnote}, bson.M{"$set": bson.M{"wrremain": math.Round((remain-qty)*1000) / 1000}})
 	if err != nil {
 		log.Println(err)
 	}
