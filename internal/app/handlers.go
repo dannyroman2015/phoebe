@@ -766,6 +766,35 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loaddowntime - load downtime area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("downtime").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -10).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "downtime": bson.M{"$sum": "$downtime"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
+		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var downtimeChartData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Section  string  `bson:"section" json:"section"`
+		Downtime float64 `bson:"downtime" json:"downtime"`
+	}
+	if err := cur.All(context.Background(), &downtimeChartData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/downtime.html")).Execute(w, map[string]interface{}{
+		"downtimeChartData": downtimeChartData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/loadsixs - load 6S area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -5183,22 +5212,22 @@ func (s *Server) dte_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	err := bson.UnmarshalExtJSON([]byte(jsonStr), true, &bdoc)
 	if err != nil {
 		log.Print(err)
-		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+		template.Must(template.ParseFiles("templates/pages/downtime/entry/form.html")).Execute(w, map[string]interface{}{
 			"showErrDialog": true,
 			"msgDialog":     "Lỗi decode. Vui lòng liên hệ admin.",
 		})
 		return
 	}
-	_, err = s.mgdb.Collection("quality").InsertMany(context.Background(), bdoc)
+	_, err = s.mgdb.Collection("downtime").InsertMany(context.Background(), bdoc)
 	if err != nil {
 		log.Println(err)
-		template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+		template.Must(template.ParseFiles("templates/pages/downtime/entry/form.html")).Execute(w, map[string]interface{}{
 			"showErrDialog": true,
 			"msgDialog":     "Kết nối database thất bại. Vui lòng liên hệ admin.",
 		})
 		return
 	}
-	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/downtime/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})

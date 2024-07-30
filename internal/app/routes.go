@@ -37,6 +37,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadpack", s.d_loadpack)
 	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/loadquality", s.d_loadquality)
+	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
 	router.GET("/dashboard/loadsixs", s.d_loadsixs)
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.POST("/dashboard/assembly/getchart", s.da_getchart)
