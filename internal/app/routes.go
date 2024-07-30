@@ -259,7 +259,7 @@ func (s *Server) routes() http.Handler {
 	// Downtime ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	router.GET("/downtime/entry", withAuth(s.dt_entry))
-	router.GET("/downtime/entry/loadform", withAuth(s.dte_loadform))
+	router.GET("/downtime/entry/loadform", s.dte_loadform)
 	router.POST("/downtime/entry/sendentry", s.dte_sendentry)
 	// end Downtime
 

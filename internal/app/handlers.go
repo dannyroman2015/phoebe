@@ -5161,18 +5161,20 @@ func (s *Server) dte_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	var jsonStr = `[`
 	for _, line := range lines {
 		raw := strings.Fields(line)
-		section := raw[0]
-		checkedqty := raw[1]
-		failedqty := "0"
-		if len(raw) == 3 {
-			failedqty = raw[2]
+		if len(raw) < 2 {
+			template.Must(template.ParseFiles("templates/pages/downtime/entry/form.html")).Execute(w, map[string]interface{}{
+				"showErrDialog": true,
+				"msgDialog":     "Lỗi nhập liệu. Vui lòng thử lại.",
+			})
+			return
 		}
+		section := raw[0]
+		downtime := raw[1]
 
 		jsonStr += `{
 			"date":"` + date.Format("2006-01-02") + `", 
 			"section":"` + section + `", 
-			"checkedqty":` + checkedqty + `,
-			"failedqty":` + failedqty + `
+			"downtime":` + downtime + `
 			},`
 	}
 	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
