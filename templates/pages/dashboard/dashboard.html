@@ -21,6 +21,7 @@
   <script src="/static/js/charts/woodrecoverychart.js"></script>
   <script src="/static/js/charts/qualitychart.js"></script>
   <script src="/static/js/charts/sixschart.js"></script>
+  <script src="/static/js/charts/finemillchart.js"></script>
 
 
   <title>Dashboard</title>
@@ -280,34 +281,34 @@
         </div>
         <!-- end Lamination Chart -->
 
-        <!-- quality -->
-        <div hx-get="/dashboard/loadquality" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end quality -->
+        <!-- pack -->
+        <div hx-get="/dashboard/loadpack" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end pack -->
      
         <!-- Reededline chart -->
         <div hx-get="/dashboard/loadreededline" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end Reededline -->
       
-        <!-- Assembly -->
-        <div hx-get="/dashboard/loadassembly" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end Assembly -->
-        
+        <!-- WoodFinishing -->
+        <div hx-get="/dashboard/loadwoodfinish" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end WoodFinishing -->
+     
         <!-- Veneer -->
         <div hx-get="/dashboard/loadveneer" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end Veneer -->
 
-        <!-- WoodFinishing -->
-        <div hx-get="/dashboard/loadwoodfinish" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end WoodFinishing -->
+        <!-- Assembly -->
+        <div hx-get="/dashboard/loadassembly" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end Assembly -->
 
         <!-- Panelcnc -->
         <div hx-get="/dashboard/loadpanelcnc" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end Panelcnc -->
-
-        <!-- pack -->
-        <div hx-get="/dashboard/loadpack" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end pack -->
+        <!-- end Panelcnc -->  
         
+        <!-- WoodFinishing -->
+        <div hx-get="/dashboard/loadfinemill" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end WoodFinishing -->
+
         <!-- Packing Chart -->
         <!-- <div class="col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
           <div class="flex justify-between">
@@ -398,6 +399,10 @@
         <!-- wood recovery -->
         <div hx-get="/dashboard/loadwoodrecovery" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end wood recovery -->
+
+        <!-- quality -->
+        <div hx-get="/dashboard/loadquality" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end quality -->
 
         <!-- SixS chart -->
         <div hx-get="/dashboard/loadsixs" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>

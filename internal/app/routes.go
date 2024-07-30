@@ -33,6 +33,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadveneer", s.d_loadveneer)
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
+	router.GET("/dashboard/loadfinemill", s.d_loadfinemill)
 	router.GET("/dashboard/loadpack", s.d_loadpack)
 	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/loadquality", s.d_loadquality)

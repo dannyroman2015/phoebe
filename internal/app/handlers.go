@@ -638,6 +638,52 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadfinemill - load finemill area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadfinemill(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var finemillChartData []struct {
+		Date  string  `bson:"date" json:"date"`
+		Type  string  `bson:"type" json:"type"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &finemillChartData); err != nil {
+		log.Println(err)
+	}
+	// get target of finemill
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "finemill total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var finemillTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &finemillTarget); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/finemill.html")).Execute(w, map[string]interface{}{
+		"finemillChartData": finemillChartData,
+		"finemillTarget":    finemillTarget,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/loadpack - load pack area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -3512,7 +3558,7 @@ func (s *Server) sfe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		})
 		return
 	}
-	_, err := s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+	_, err := s.mgdb.Collection("finemill").InsertOne(context.Background(), bson.M{
 		"date": primitive.NewDateTimeFromTime(date), "itemcode": itemcode, "itemtype": itemtype,
 		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
 	})

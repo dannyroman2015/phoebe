@@ -1,4 +1,4 @@
-const drawWoodFinishChart = (data) => {
+const drawFinemillhChart = (data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -176,7 +176,7 @@ const drawWoodFinishChart = (data) => {
   return svg.node();
 }
 
-const drawWoodFinishChart1 = (data) => {
+const drawFinemillChart1 = (data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -319,7 +319,7 @@ const drawWoodFinishChart1 = (data) => {
   return svg.node();
 }
 
-const drawWoodFinishChart2 = (data, target) => {
+const drawFinemillChart2 = (data, target) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
