@@ -2776,6 +2776,7 @@ func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httpr
 		Date         time.Time `bson:"date"`
 		Wrnote       string    `bson:"wrnote"`
 		Woodtype     string    `bson:"woodtype"`
+		ProdType     string    `bson:"prodtype"`
 		Thickness    float64   `bson:"thickness"`
 		Qty          float64   `bson:"qtycbm"`
 		Type         string    `bson:"type"`
@@ -2908,8 +2909,9 @@ func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps
 func (s *Server) sca_updatewrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
 	prodtype := r.FormValue("prodtype")
+	date, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 
-	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"_id": wrnoteid}, bson.M{"$set": bson.M{"prodtype": prodtype}})
+	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"_id": wrnoteid}, bson.M{"$set": bson.M{"prodtype": prodtype, "date": primitive.NewDateTimeFromTime(date)}})
 	if result.Err() != nil {
 		log.Println(result.Err())
 		return
@@ -2929,6 +2931,13 @@ func (s *Server) sca_updatewrnote(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 	cuttingWrnote.ProdType = prodtype
+	cuttingWrnote.Date = date
+
+	// update reports
+	_, err := s.mgdb.Collection("cutting").UpdateMany(context.Background(), bson.M{"type": "report", "wrnote": cuttingWrnote.WrnoteCode}, bson.M{"$set": bson.M{"prodtype": prodtype}})
+	if err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnote_tr.html")).Execute(w, map[string]interface{}{
 		"cuttingWrnote": cuttingWrnote,
 	})
@@ -5135,6 +5144,93 @@ func (s *Server) sp_entrytmp(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // end bản tạm cho packing
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /production/overview - get page overview of production
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) p_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/production/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// /production/overview/loadprodtype - load chart prodtype of page overview of Production value
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	start := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Now().Location())
+
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": "$prodtype", "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"value": -1}}},
+		{{"$set", bson.M{"name": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var prodtypeChartData []struct {
+		Name  string  `bson:"name" json:"name"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &prodtypeChartData); err != nil {
+		log.Println(err)
+	}
+	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$limit", 1}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var latest []struct {
+		LatestTime time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &latest); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/production/overview/prodtypechart.html")).Execute(w, map[string]interface{}{
+		"prodtypeChartData": prodtypeChartData,
+		"lastestUpdate":     latest[0].LatestTime.Format("tới 15:04 ngày 02-01"),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /production/overview/loadreport - load report table of page overview of production
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y %H:%M", "date": "$createdat"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var prodvalueData []struct {
+		Id        string  `bson:"_id" json:"id"`
+		Date      string  `bson:"date" json:"date"`
+		Item      string  `bson:"item" json:"item"`
+		ProdType  string  `bson:"prodtype" json:"prodtype"`
+		ItemType  string  `bson:"itemtype" json:"itemtype"`
+		Qty       int     `bson:"qty" json:"qty"`
+		Value     float64 `bson:"value" json:"value"`
+		From      string  `bson:"from" json:"from"`
+		RefId     string  `bson:"refid" json:"refid"`
+		Factory   string  `bson:"factory" json:"factory"`
+		Reporter  string  `bson:"reporter" json:"reporter"`
+		CreatedAt string  `bson:"at" json:"at"`
+	}
+	if err = cur.All(context.Background(), &prodvalueData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/production/overview/report.html")).Execute(w, map[string]interface{}{
+		"prodvalueData":   prodvalueData,
+		"numberOfReports": len(prodvalueData),
+	})
+}
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /target/entry - get page target entry

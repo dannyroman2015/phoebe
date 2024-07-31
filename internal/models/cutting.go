@@ -63,6 +63,7 @@ func (m *CuttingModel) Search(searchWord string) []CuttingReport {
 		filter = bson.M{"type": "report", "$or": bson.A{
 			bson.M{"woodtype": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"wrnote": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"reporter": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"thickness": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"qtycbm": bson.M{"$regex": regexWord, "$options": "i"}},
@@ -96,6 +97,7 @@ func (m *CuttingModel) WrnoteSearch(searchWord string) []CuttingWrnote {
 		filter = bson.M{"type": "wrnote", "$or": bson.A{
 			bson.M{"wrnotecode": bson.M{"$regex": regexWord, "$options": "i"}},
 			bson.M{"woodtype": bson.M{"$regex": regexWord, "$options": "i"}},
+			bson.M{"prodtype": bson.M{"$regex": regexWord, "$options": "i"}},
 		},
 		}
 	} else {

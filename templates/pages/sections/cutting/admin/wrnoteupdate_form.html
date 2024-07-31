@@ -56,7 +56,7 @@
 
   <td class="px-4 py-4 text-sm whitespace-nowrap">
     <div class="flex items-center gap-x-2">
-      <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.cuttingWrnote.Date}}</p>
+       <input type="date" name="occurdate" id="date">
     </div>
   </td>
 
@@ -73,8 +73,12 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19.3,5.3L9,15.6l-4.3-4.3l-1.4,1.4l5,5L9,18.4l0.7-0.7l11-11L19.3,5.3z" />
           </svg>
-        </button>                    
+        </button>
 
     </div>
   </td>
 </tr>
+
+<script>
+  document.getElementById("date").valueAsDate = new Date({{.cuttingWrnote.Date}})
+</script>
