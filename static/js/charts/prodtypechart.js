@@ -53,7 +53,7 @@ const drawProdTypeChart = (data, latest) => {
         .attr("fill", "#f6fafc")
         .text(d => d3.format(".3s")(d.data.value)))
 
-  const MTDTotal = d3.format("$,.1f")(data.reduce((total, d) => total + d.value, 0))
+  const MTDTotal = d3.format("$,.0f")(data.reduce((total, d) => total + d.value, 0))
 
   svg.append("text")
       .attr("text-anchor", "middle")
