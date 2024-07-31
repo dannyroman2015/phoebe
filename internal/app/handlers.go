@@ -2807,6 +2807,7 @@ func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpro
 		WrnoteId    string    `bson:"_id"`
 		WrnoteCode  string    `bson:"wrnotecode"`
 		Woodtype    string    `bson:"woodtype"`
+		ProdType    string    `bson:"prodtype"`
 		Thickness   float64   `bson:"thickness"`
 		Qty         float64   `bson:"wrnoteqty"`
 		Remain      float64   `bson:"wrremain"`
@@ -2851,7 +2852,7 @@ func (s *Server) sca_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	// return quantity for wrnote
 	wrnote := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"type": "wrnote", "wrnotecode": report.Wrnote},
-		bson.M{"$inc": bson.M{"wrremain": report.Qty}})
+		bson.M{"$inc": bson.M{"wrremain": math.Round(report.Qty*1000) / 1000}})
 	if wrnote.Err() != nil {
 		log.Println(wrnote.Err())
 		return
@@ -2882,15 +2883,54 @@ func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps
 		log.Println(result.Err())
 		return
 	}
-	var wrnote struct {
-		ProdType string `bosn:"prodtype"`
-		Woodtype string `bson:"woodtype"`
+	var cuttingWrnote struct {
+		WrnoteId    string    `bson:"_id"`
+		WrnoteCode  string    `bson:"wrnotecode"`
+		Woodtype    string    `bson:"woodtype"`
+		ProdType    string    `bson:"prodtype"`
+		Thickness   float64   `bson:"thickness"`
+		Qty         float64   `bson:"wrnoteqty"`
+		Remain      float64   `bson:"wrremain"`
+		Date        time.Time `bson:"date"`
+		CreatedDate time.Time `bson:"createat"`
 	}
-	if err := result.Decode(&wrnote); err != nil {
+	if err := result.Decode(&cuttingWrnote); err != nil {
 		log.Println(err)
 	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnoteupdate_form.html")).Execute(w, map[string]interface{}{
-		"wrnote": wrnote,
+		"cuttingWrnote": cuttingWrnote,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/updatewrnote/:wrnoteid - update a wrnote on page admin of cutting section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_updatewrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
+	prodtype := r.FormValue("prodtype")
+
+	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"_id": wrnoteid}, bson.M{"$set": bson.M{"prodtype": prodtype}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var cuttingWrnote struct {
+		WrnoteId    string    `bson:"_id"`
+		WrnoteCode  string    `bson:"wrnotecode"`
+		Woodtype    string    `bson:"woodtype"`
+		ProdType    string    `bson:"prodtype"`
+		Thickness   float64   `bson:"thickness"`
+		Qty         float64   `bson:"wrnoteqty"`
+		Remain      float64   `bson:"wrremain"`
+		Date        time.Time `bson:"date"`
+		CreatedDate time.Time `bson:"createat"`
+	}
+	if err := result.Decode(&cuttingWrnote); err != nil {
+		log.Println(err)
+	}
+	cuttingWrnote.ProdType = prodtype
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnote_tr.html")).Execute(w, map[string]interface{}{
+		"cuttingWrnote": cuttingWrnote,
 	})
 }
 

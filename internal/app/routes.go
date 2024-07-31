@@ -116,6 +116,7 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/sections/cutting/admin/deletereport/:reportid", s.sca_deletereport)
 	router.DELETE("/sections/cutting/admin/deletewrnote/:wrnoteid", s.sca_deletewrnote)
 	router.GET("/sections/cutting/admin/wrnoteupdateform/:wrnoteid", s.sca_wrnoteupdateform)
+	router.PUT("/sections/cutting/admin/updatewrnote/:wrnoteid", s.sca_updatewrnote)
 	// end Cuttting/////////////////////////////////////////////////////////////
 
 	// Lamination ////////////////////////////////////////////////////////
