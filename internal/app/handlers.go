@@ -542,7 +542,7 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.type", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.type"}}},
 		{{"$unset", "_id"}},
 	})
@@ -5156,7 +5156,7 @@ func (s *Server) p_overview(w http.ResponseWriter, r *http.Request, ps httproute
 // /production/overview/loadprodtype - load chart prodtype of page overview of Production value
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	start := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Now().Location())
+	start := time.Date(time.Now().Year(), time.Now().Month()-1, 1, 0, 0, 0, 0, time.Now().Location())
 
 	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -5178,21 +5178,23 @@ func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps http
 	}
 	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$limit", 1}},
+		{{"$sort", bson.D{{"createdat", -1}, {"date", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
-	var latest []struct {
-		LatestTime time.Time `bson:"createdat"`
+
+	var rawData []struct {
+		Date      string `bson:"date" json:"date"`
+		CreatedAt string `bson:"createdat" json:"createdat"`
 	}
-	if err := cur.All(context.Background(), &latest); err != nil {
+	if err := cur.All(context.Background(), &rawData); err != nil {
 		log.Println(err)
 	}
-	template.Must(template.ParseFiles("templates/pages/production/overview/prodtypechart.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/production/overview/prodtype.html")).Execute(w, map[string]interface{}{
 		"prodtypeChartData": prodtypeChartData,
-		"lastestUpdate":     latest[0].LatestTime.Format("tới 15:04 ngày 02-01"),
+		"rawData":           rawData,
 	})
 }
 
@@ -5229,6 +5231,51 @@ func (s *Server) po_loadreport(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/production/overview/report.html")).Execute(w, map[string]interface{}{
 		"prodvalueData":   prodvalueData,
 		"numberOfReports": len(prodvalueData),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /production/overview/prodtypefilter
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_prodtypefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	start, _ := time.Parse("2006-01-02", r.FormValue("prodtypeFromDate"))
+	end, _ := time.Parse("2006-01-02", r.FormValue("prodtypeToDate"))
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(end)}}}}}},
+		{{"$group", bson.M{"_id": "$prodtype", "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"value": -1}}},
+		{{"$set", bson.M{"name": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var prodtypeChartData []struct {
+		Name  string  `bson:"name" json:"name"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &prodtypeChartData); err != nil {
+		log.Println(err)
+	}
+	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(end)}}}}}},
+		{{"$sort", bson.D{{"createdat", -1}, {"date", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var rawData []struct {
+		Date      string `bson:"date" json:"date"`
+		CreatedAt string `bson:"createdat" json:"createdat"`
+	}
+	if err := cur.All(context.Background(), &rawData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/production/overview/prodtypechart.html")).Execute(w, map[string]interface{}{
+		"prodtypeChartData": prodtypeChartData,
+		"rawData":           rawData,
 	})
 }
 
