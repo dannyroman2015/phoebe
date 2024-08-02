@@ -371,3 +371,155 @@ svg.append("text")
  
   return svg.node();
 }
+
+// efficiency
+const drawCuttingChart3 = (data, manhr) => {
+  const width = 900;
+  const height = 350;
+  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  const series = d3.stack()
+    .keys(d3.union(data.map(d => d.prodtype)))
+    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
+    (d3.index(data, d => d.date, d => d.prodtype))
+
+  const x = d3.scaleBand()
+    .domain(data.map(d => d.date))
+    .range([0, innerWidth])
+    .padding(0.1);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.qty)])
+    .rangeRound([innerHeight, 0])
+    .nice()
+
+  const color = d3.scaleOrdinal()
+    .domain(series.map(d => d.key))
+    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    .unknown("#ccc");
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, width, height])
+
+  const innerChart = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+
+  innerChart
+    .selectAll()
+    .data(series)
+    .join("g")
+      .attr("fill", d => color(d.key))
+      .attr("fill-opacity", 1)
+    .selectAll("rect")
+    .data(D => D.map(d => (d.key = D.key, d)))
+    .join("rect")
+      .attr("x", d => x(d.data[0]))
+      .attr("y", d => y(d[1]))
+      .attr("height", d => y(d[0]) - y(d[1]))
+      .attr("width", x.bandwidth()/2)
+
+  innerChart.append("g")
+    .attr("transform", `translate(0, ${innerHeight})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0))
+    .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"))
+
+  innerChart.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 12)
+  .selectAll()
+  .data(series[series.length-1])
+  .join("text")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
+    .attr("y", d => y(d[1]) - 10)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "12px")
+    .attr("font-weight", 600)
+    .text(d => `Σ${d3.format(".2s")(d[1])}`)
+
+  series.forEach(serie => {
+    innerChart.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
+      .selectAll()
+      .data(serie)
+      .join("text")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
+        .attr("dy", "0.35em")
+        .attr("fill", "#75485E")
+        .attr("font-size", "12px")
+        .text(d => {
+          if (d[1] - d[0] != 0) { return d3.format(".2s")(d[1]-d[0])}
+        })
+  })
+
+svg.append("text")
+    .text("RH")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", color("rh"))
+    .attr("font-weight", 600)
+    .attr("font-size", 16)
+
+svg.append("text")
+    .text("Brand")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 30)
+    .attr("dy", "0.35em")
+    .attr("fill", color("brand"))
+    .attr("font-weight", 600)
+    .attr("font-size", 16)
+
+svg.append("text")
+    .text("kxd")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 55)
+    .attr("dy", "0.35em")
+    .attr("fill", color(""))
+    .attr("font-weight", 600)
+    .attr("font-size", 16)
+
+svg.append("text")
+    .text("(m³)")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 80)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", 16)
+ 
+if (manhr != undefined) {
+  const y1 = d3.scaleLinear()
+    .domain([0, d3.max(manhr, d => d.workhr)])
+    .rangeRound([innerHeight, 0])
+    .nice()
+
+
+    
+  // innerChart.append("path")
+  //   .attr("fill", "none")
+  //   .attr("stroke", "red")
+  //   .attr("stroke-width", 1)
+  //   .attr("d", d => d3.line()
+  //       .x(d => x(d.date))
+  //       .y(d => y(d.workhr))(manhr));
+}
+
+  return svg.node();
+}

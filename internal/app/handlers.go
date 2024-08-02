@@ -1153,6 +1153,48 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_woodtypechart.html")).Execute(w, map[string]interface{}{
 			"cuttingData": cuttingData,
 		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var cuttingData []struct {
+			Date     string  `bson:"date" json:"date"`
+			ProdType string  `bson:"prodtype" json:"prodtype"`
+			Qty      float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &cuttingData); err != nil {
+			log.Println(err)
+		}
+
+		//get manhr of cutting
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "cutting", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var cuttingManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			WorkHr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &cuttingManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"cuttingData":  cuttingData,
+			"cuttingManhr": cuttingManhr,
+		})
 	}
 }
 
