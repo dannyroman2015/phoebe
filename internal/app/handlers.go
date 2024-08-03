@@ -1187,6 +1187,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		var cuttingManhr []struct {
 			Date   string  `bson:"date" json:"date"`
 			WorkHr float64 `bson:"workhr" json:"workhr"`
+			Qty    float64
 		}
 		if err = cur.All(context.Background(), &cuttingManhr); err != nil {
 			log.Println(err)
@@ -1228,6 +1229,52 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/lamination_generalchart.html")).Execute(w, map[string]interface{}{
 			"laminationChartData": laminationChartData,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var laminationData []struct {
+			Date   string  `bson:"date" json:"date"`
+			Qty    float64 `bson:"qty" json:"qty"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err := cur.All(context.Background(), &laminationData); err != nil {
+			log.Println(err)
+		}
+
+		//get manhr of lamination
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "lamination", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var tmp struct {
+			Date   string  `bson:"date"`
+			Workhr float64 `bson:"workhr"`
+		}
+		for cur.Next(context.Background()) {
+			if err := cur.Decode(&tmp); err != nil {
+				log.Println(err)
+			}
+			log.Println(tmp)
+		}
+		log.Println(laminationData)
+		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"laminationData": laminationData,
+			// "cuttingManhr": cuttingManhr,
 		})
 	}
 }
