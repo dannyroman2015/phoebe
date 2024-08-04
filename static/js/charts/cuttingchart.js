@@ -506,8 +506,9 @@ svg.append("text")
     .attr("fill", "#75485E")
     .attr("font-size", 16)
  
-const workinghrs = manhr.filter(d => dates.has(d.date))
 if (manhr != undefined) {
+  const workinghrs = manhr.filter(d => dates.has(d.date))
+  
   const y1 = d3.scaleLinear()
     .domain([0, d3.max(manhr, d => d.workhr)])
     .rangeRound([innerHeight, innerHeight/3])
@@ -531,11 +532,11 @@ if (manhr != undefined) {
       .text(d => d.workhr)
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
-      .attr("x", d => x(d.date) + x.bandwidth()/2 + 12)
+      .attr("x", d => x(d.date) + x.bandwidth()*3/4)
       .attr("y", d => y1(d.workhr))
       .attr("fill", "#75485E")
       .attr("font-size", 12)
-      .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()/2 + 12}, ${y1(d.workhr)})`)
+      .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()*3/4}, ${y1(d.workhr)})`)
 
   svg.append("text")
       .text("manhr (h)")
@@ -550,15 +551,14 @@ if (manhr != undefined) {
       .attr("transform", d => `rotate(-90, 10, ${innerHeight+20})`)
 
   // efficiency line
-
 const tmp = series[series.length-1]
 workinghrs.forEach(w => {
-  w.qty = tmp.filter(d => d.data[0] == w.date)[0][1]
+  w.efficiency = tmp.filter(d => d.data[0] == w.date)[0][1]  / w.workhr / 0.03 * 100
 })
 
 const y2 = d3.scaleLinear()
-    .domain([0, d3.max(manhr, d => d.qty/d.workhr/0.03)])
-    .rangeRound([innerHeight/2, 0])
+    .domain(d3.extent(workinghrs, d => d.efficiency))
+    .rangeRound([innerHeight/3, 0])
     .nice()
 
 innerChart.append("path")
@@ -567,29 +567,31 @@ innerChart.append("path")
     .attr("stroke-width", 1)
     .attr("d", d => d3.line()
         .x(d => x(d.date) + x.bandwidth()/2)
-        .y(d => y2(d.qty/d.workhr/0.03)).curve(d3.curveCatmullRom)(workinghrs));
+        .y(d => y2(d.efficiency)).curve(d3.curveCatmullRom)(workinghrs));
 
 innerChart.append("g")
   .selectAll()
   .data(workinghrs)
   .join("text")
-    .text(d => `${d3.format(".1s")(d.qty/d.workhr/0.03)}%`)
-      .attr("font-size", "14px")
+    .text(d => `${d3.format(".2s")(d.efficiency)}%`)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("font-size", "12px")
       .attr("dy", "0.35em")
       .attr("x", d => x(d.date) + x.bandwidth()/2)
-      .attr("y", d => y2(d.qty/d.workhr/0.03))
+      .attr("y", d => y2(d.efficiency))
     .clone(true).lower()
       .attr("fill", "none")
       .attr("stroke", "white")
       .attr("stroke-width", 6);
 
 const lastW = workinghrs[workinghrs.length-1]
-svg.append("text")
+innerChart.append("text")
       .text("Efficiency")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", x(lastW.date)+60)
-      .attr("y", y2(lastW.qty/lastW.workhr/0.03))
+      .attr("x", x(lastW.date) + x.bandwidth()/2 - 5)
+      .attr("y", y2(lastW.efficiency) - 15)
       .attr("dy", "0.35em")
       .attr("fill","#75485E")
       .attr("font-weight", 600)

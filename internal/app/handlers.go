@@ -237,6 +237,18 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err = cur.All(context.Background(), &cuttingTarget); err != nil {
 		log.Println(err)
 	}
+	// get last update time of cutting
+	cuttingSr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "report"}, options.FindOne().SetSort(bson.M{"createddate": -1}))
+	if cuttingSr.Err() != nil {
+		log.Println(cuttingSr.Err())
+	}
+	var cuttingLastReport struct {
+		CreatedDate time.Time `bson:"createddate" json:"createddate"`
+	}
+	if err := cuttingSr.Decode(&cuttingLastReport); err != nil {
+		log.Println(err)
+	}
+	cuttingUpTime := cuttingLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
 
 	// get data for lamination
 	cur, err = s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
@@ -273,6 +285,18 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err = cur.All(context.Background(), &laminationTarget); err != nil {
 		log.Println(err)
 	}
+	// get last update time of lamination
+	laminationSr := s.mgdb.Collection("lamination").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if cuttingSr.Err() != nil {
+		log.Println(cuttingSr.Err())
+	}
+	var laminationLastReport struct {
+		CreatedDate time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := laminationSr.Decode(&laminationLastReport); err != nil {
+		log.Println(err)
+	}
+	laminationUpTime := laminationLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
 
 	// get data for Packing Chart
 	cur, err = s.mgdb.Collection("packchart").Aggregate(context.Background(), mongo.Pipeline{
@@ -306,8 +330,10 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	)).Execute(w, map[string]interface{}{
 		"cuttingData":         cuttingData,
 		"cuttingTarget":       cuttingTarget,
+		"cuttingUpTime":       cuttingUpTime,
 		"laminationChartData": laminationChartData,
 		"laminationTarget":    laminationTarget,
+		"laminationUpTime":    laminationUpTime,
 		"packingData":         packchartData,
 	})
 }
@@ -446,7 +472,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 // /////////////////////////////////////////////////////////////
 func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
@@ -482,9 +508,23 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 
+	// get time of latest update
+	sr := s.mgdb.Collection("reededline").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	reededlineUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 	template.Must(template.ParseFiles("templates/pages/dashboard/reededline.html")).Execute(w, map[string]interface{}{
 		"reededlinedata":   reededlinedata,
 		"reededlineTarget": reededlineTarget,
+		"reededlineUpTime": reededlineUpTime,
 	})
 }
 
@@ -493,7 +533,7 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -100))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.M{"_id.date": 1}}},
 		{{"$set", bson.M{"date": "$_id.date"}}},
@@ -528,10 +568,23 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	if err = cur.All(context.Background(), &panelcncTarget); err != nil {
 		log.Println(err)
 	}
+	// get time of latest update
+	sr := s.mgdb.Collection("panelcnc").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	panelcncUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/panelcncchart.html")).Execute(w, map[string]interface{}{
 		"panelChartData": panelChartData,
 		"panelcncTarget": panelcncTarget,
+		"panelcncUpTime": panelcncUpTime,
 	})
 }
 
@@ -575,9 +628,23 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 		log.Println(err)
 	}
 
+	// get time of latest update
+	sr := s.mgdb.Collection("veneer").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	veneerUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 	template.Must(template.ParseFiles("templates/pages/dashboard/veneer.html")).Execute(w, map[string]interface{}{
 		"veneerChartData": veneerChartData,
 		"veneerTarget":    veneerTarget,
+		"veneerUpTime":    veneerUpTime,
 	})
 }
 
@@ -845,6 +912,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 	todate, _ := time.Parse("2006-01-02", r.FormValue("panelcncToDate"))
 
 	switch pickedChart {
+
 	case "machinechart":
 		pipeline := mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
@@ -871,7 +939,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			"panelChartData": panelChartData,
 		})
 
-	case "totalchart":
+	case "general":
 		pipeline := mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
@@ -894,7 +962,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		}
 		// get target of panelcnc
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "panelcnc total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "panelcnc total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})
@@ -913,6 +981,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			"panelChartData": panelChartData,
 			"panelcncTarget": panelcncTarget,
 		})
+
 	}
 }
 
@@ -1209,6 +1278,7 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	switch pickedChart {
 	case "general":
+		// get data for lamination
 		cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
@@ -1227,15 +1297,32 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &laminationChartData); err != nil {
 			log.Println(err)
 		}
+		// get target of lamination
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "lamination total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var laminationTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &laminationTarget); err != nil {
+			log.Println(err)
+		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/lamination_generalchart.html")).Execute(w, map[string]interface{}{
 			"laminationChartData": laminationChartData,
+			"laminationTarget":    laminationTarget,
 		})
 
 	case "efficiency":
 		cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
-			{{"$sort", bson.M{"date": 1}}},
+			{{"$sort", bson.M{"_id": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
 			{{"$unset", "_id"}},
 		})
@@ -1244,9 +1331,8 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var laminationData []struct {
-			Date   string  `bson:"date" json:"date"`
-			Qty    float64 `bson:"qty" json:"qty"`
-			Workhr float64 `bson:"workhr" json:"workhr"`
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
 		}
 		if err := cur.All(context.Background(), &laminationData); err != nil {
 			log.Println(err)
@@ -1261,20 +1347,16 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err != nil {
 			log.Println(err)
 		}
-		var tmp struct {
-			Date   string  `bson:"date"`
-			Workhr float64 `bson:"workhr"`
+		var laminationManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
 		}
-		for cur.Next(context.Background()) {
-			if err := cur.Decode(&tmp); err != nil {
-				log.Println(err)
-			}
-			log.Println(tmp)
+		if err = cur.All(context.Background(), &laminationManhr); err != nil {
+			log.Println(err)
 		}
-		log.Println(laminationData)
-		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_efficiencychart.html")).Execute(w, map[string]interface{}{
-			"laminationData": laminationData,
-			// "cuttingManhr": cuttingManhr,
+		template.Must(template.ParseFiles("templates/pages/dashboard/lamination_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"laminationData":  laminationData,
+			"laminationManhr": laminationManhr,
 		})
 	}
 }
@@ -1309,8 +1391,67 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 
+		// get target of reededline
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "reededline total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var reededlineTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &reededlineTarget); err != nil {
+			log.Println(err)
+		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/reededline_generalchart.html")).Execute(w, map[string]interface{}{
-			"reededlinedata": reededlinedata,
+			"reededlinedata":   reededlinedata,
+			"reededlineTarget": reededlineTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var reededlineData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &reededlineData); err != nil {
+			log.Println(err)
+		}
+
+		//get manhr of reededline
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "reededline", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var reededlineManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &reededlineManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/reededline_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"reededlineData":  reededlineData,
+			"reededlineManhr": reededlineManhr,
 		})
 	}
 }
@@ -1328,7 +1469,7 @@ func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.type", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.type"}}},
 			{{"$unset", "_id"}},
 		})
@@ -1344,9 +1485,67 @@ func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &veneerChartData); err != nil {
 			log.Println(err)
 		}
+		// get target for veneer
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "veneer total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var veneerTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &veneerTarget); err != nil {
+			log.Println(err)
+		}
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/veneer_generalchart.html")).Execute(w, map[string]interface{}{
 			"veneerChartData": veneerChartData,
+			"veneerTarget":    veneerTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var veneerData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &veneerData); err != nil {
+			log.Println(err)
+		}
+
+		//get manhr of veneer
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "veneer", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var veneerManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &veneerManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/veneer_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"veneerData":  veneerData,
+			"veneerManhr": veneerManhr,
 		})
 	}
 }
@@ -4668,6 +4867,7 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
 	end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
 	hours := math.Round(end.Sub(start).Hours()*10) / 10
+	date, _ := time.Parse("2006-01-02", start.Format("2006-01-02"))
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	operator := r.FormValue("operator")
 	paneltype := r.FormValue("type")
@@ -4680,7 +4880,7 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	_, err := s.mgdb.Collection("panelcnc").InsertOne(context.Background(), bson.M{
-		"date": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
+		"date": primitive.NewDateTimeFromTime(date), "startat": primitive.NewDateTimeFromTime(start), "endat": primitive.NewDateTimeFromTime(end),
 		"qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
 		"machine": machine, "operator": operator, "type": paneltype, "hours": hours,
 	})

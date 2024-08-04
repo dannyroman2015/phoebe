@@ -1,5 +1,9 @@
 <div class="fade-in" id="reededlinechart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
 
 <script>
-  reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+  if ({{.reededlineTarget}} == undefined) {
+    reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+  } else {
+    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.reededlineTarget}}))
+  }
 </script>

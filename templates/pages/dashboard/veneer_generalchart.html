@@ -1,5 +1,9 @@
 <div class="fade-in" id="veneerchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
 
 <script>
-  veneerchart.append(drawVeneerChart({{.veneerChartData}}))
+  if ({{.veneerTarget}} == undefined) {
+    veneerchart.append(drawVeneerChart({{.veneerChartData}}))
+  } else {
+    veneerchart.append(drawVeneerChart1({{.veneerChartData}}, {{.veneerTarget}}))
+  }
 </script>
