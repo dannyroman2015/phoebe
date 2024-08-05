@@ -7,8 +7,7 @@ const drawWoodRecoveryChart = (data) => {
 
   const rhdata = data.filter(d => d.prodtype == "rh")
   const branddata = data.filter(d => d.prodtype == "brand")
-  console.log(rhdata)
-  console.log(branddata)
+
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, innerWidth])
