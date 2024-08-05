@@ -782,23 +782,38 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 // /dashboard/loadwoodrecovery - load woodrecovery area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("woodrecovery").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"date": 1}))
+	cur, err := s.mgdb.Collection("woodrecovery").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.D{{"date", 1}, {"prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var woodrecoveryChartData []struct {
-		Date     time.Time `bson:"date" json:"date"`
-		Prodtype string    `bson:"prodtype" json:"prodtype"`
-		Rate     float64   `bson:"rate" json:"rate"`
+	var woodrecoveryData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Rate     float64 `bson:"rate" json:"rate"`
 	}
-
-	if err := cur.All(context.Background(), &woodrecoveryChartData); err != nil {
+	if err := cur.All(context.Background(), &woodrecoveryData); err != nil {
 		log.Println(err)
 	}
-
+	// get last update time
+	sr := s.mgdb.Collection("woodrecovery").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	woodrecoveryUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/woodrecovery.html")).Execute(w, map[string]interface{}{
-		"woodrecoveryChartData": woodrecoveryChartData,
+		"woodrecoveryData":   woodrecoveryData,
+		"woodrecoveryUpTime": woodrecoveryUpTime,
 	})
 }
 
@@ -1012,6 +1027,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		}
 		var panelcncManhr []struct {
 			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
 			Workhr float64 `bson:"workhr" json:"workhr"`
 		}
 		if err = cur.All(context.Background(), &panelcncManhr); err != nil {
@@ -1294,6 +1310,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		var cuttingManhr []struct {
 			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
 			WorkHr float64 `bson:"workhr" json:"workhr"`
 			Qty    float64
 		}
@@ -1388,6 +1405,7 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		var laminationManhr []struct {
 			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
 			Workhr float64 `bson:"workhr" json:"workhr"`
 		}
 		if err = cur.All(context.Background(), &laminationManhr); err != nil {
@@ -1483,6 +1501,7 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		var reededlineManhr []struct {
 			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
 			Workhr float64 `bson:"workhr" json:"workhr"`
 		}
 		if err = cur.All(context.Background(), &reededlineManhr); err != nil {
@@ -1577,6 +1596,7 @@ func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		var veneerManhr []struct {
 			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
 			Workhr float64 `bson:"workhr" json:"workhr"`
 		}
 		if err = cur.All(context.Background(), &veneerManhr); err != nil {

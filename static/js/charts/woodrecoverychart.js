@@ -5,16 +5,23 @@ const drawWoodRecoveryChart = (data) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  data.map(d => d.date = new Date(d.date))
+  const rhdata = data.filter(d => d.prodtype == "rh")
+  const branddata = data.filter(d => d.prodtype == "brand")
+  console.log(rhdata)
+  console.log(branddata)
+  const x = d3.scaleBand()
+    .domain(data.map(d => d.date))
+    .range([0, innerWidth])
+    .padding(0.1);
 
-  const x = d3.scaleUtc()
-      .domain([data[0].date, data[data.length - 1].date])
-      .range([0, innerWidth]);
+  const yBrand = d3.scaleLinear()
+      .domain(d3.extent(branddata, d => d.rate))
+      .range([innerHeight, innerHeight/2 + 20])
+      .nice();
 
-  const y = d3.scaleLinear()
-      // .domain(d3.extent(data, d => d.rate))
-      .domain([d3.min(data, d => d.rate)-5, 75])
-      .range([innerHeight, 0])
+  const yRh = d3.scaleLinear()
+      .domain(d3.extent(rhdata, d => d.rate))
+      .range([innerHeight/2 - 20, 0])
       .nice();
 
   const color = d3.scaleOrdinal()
@@ -28,109 +35,98 @@ const drawWoodRecoveryChart = (data) => {
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
   innerChart.append("g")
-    .attr("transform", `translate(0, ${innerHeight})`)
-    .call(d3.axisBottom(x).ticks(innerWidth / 80).tickSizeOuter(0));
+    .attr("transform", `translate(0, ${innerHeight/2 - 20})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0))
+    .call(g => g.selectAll(".domain").attr("transform", `translate(0, 13)`))
+    .call(g => g.selectAll("text").attr("font-size", "12px").clone(true).lower().attr("fill", "none").attr("stroke", "white").attr("stroke-width", 6))
+    .call(g => g.selectAll(".tick line").clone().attr("transform", `translate(0, 20)`))
     
-
-  const groupedData = d3.group(data, d => d.prodtype)
-  // Add a container for each series.
-  const serie = innerChart.append("g")
-    .selectAll()
-    .data(groupedData)
-    .join("g");
-
-  // Draw the lines.
-  serie.append("path")
+  // Draw the Brand line
+  innerChart.append("path")
       .attr("fill", "none")
-      .attr("stroke", d => color(d[0]))
+      .attr("stroke", d => color("brand"))
       .attr("stroke-width", 1.5)
       .attr("d", d => d3.line()
-          .x(d => x(d.date))
-          .y(d => y(d.rate))(d[1]));
+          .x(d => x(d.date) + x.bandwidth()/2)
+          .y(d => yBrand(d.rate)).curve(d3.curveCatmullRom)(branddata));
 
-  // Append the labels.
-  serie.append("g")
+  // Draw the Rh line
+  innerChart.append("path")
+      .attr("fill", "none")
+      .attr("stroke", d => color("rh"))
+      .attr("stroke-width", 1.5)
+      .attr("d", d => d3.line()
+          .x(d => x(d.date) + x.bandwidth()/2)
+          .y(d => yRh(d.rate)).curve(d3.curveCatmullRom)(rhdata));
+
+  // Append the labels of Brand
+  innerChart.append("g")
       .attr("stroke-linecap", "round")
       .attr("stroke-linejoin", "round")
       .attr("text-anchor", "middle")
     .selectAll()
-    .data(d => d[1])
+    .data(branddata)
     .join("text")
       .text(d => `${d.rate}%`)
-      .attr("font-size", "14px")
+      .attr("font-size", "12px")
       .attr("dy", "0.35em")
-      .attr("x", d => x(d.date))
-      .attr("y", d => y(d.rate))
-      // .call(text => text.filter((d, i, data) => i === 0)
-      //   .append("tspan")
-      //     .attr("font-size", "14px")
-      //     .attr("fill", d => color(d.prodtype))
-      //     .attr("dy", -10 )
-      //     .text(d => ` ${d.prodtype}`))
+      .attr("x", d => x(d.date) + x.bandwidth()/2)
+      .attr("y", d => yBrand(d.rate))
     .clone(true).lower()
       .attr("fill", "none")
       .attr("stroke", "white")
       .attr("stroke-width", 6);
 
-  innerChart.append("line")
-    .attr("x1", 0)
-    .attr("y1", y(60))
-    .attr("x2", innerWidth)
-    .attr("y2", y(60))
-    .attr("fill", "none")
-    .attr("stroke", "#06D001")
+  // Append the labels of Rh
+  innerChart.append("g")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
+      .attr("text-anchor", "middle")
+    .selectAll()
+    .data(rhdata)
+    .join("text")
+      .text(d => `${d.rate}%`)
+      .attr("font-size", "12px")
+      .attr("dy", "0.35em")
+      .attr("x", d => x(d.date) + x.bandwidth()/2)
+      .attr("y", d => yRh(d.rate))
+    .clone(true).lower()
+      .attr("fill", "none")
+      .attr("stroke", "white")
+      .attr("stroke-width", 6);
 
-  innerChart.append("text")
-    .text("target - 60%")
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 15)
-    .attr("y", y(60) - 12)
-    .attr("dy", "0.35em")
-    .attr("fill", "#06D001")
-    .attr("font-size", "12px")
-
-  const lastBrand = groupedData.get("brand")[groupedData.get("brand").length-2]
-  const lastrh = groupedData.get("rh")[groupedData.get("rh").length-2]
   innerChart.append("text")
     .text("Brand")
-    .attr("text-anchor", "middle")
+    .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .attr("x", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 60 : x(lastBrand.date) + 60)
-    .attr("y", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 40 : y(lastBrand.rate) + 40)
+    .attr("x", x(branddata[branddata.length-1].date) + x.bandwidth()/2 + 15)
+    .attr("y", yBrand(branddata[branddata.length-1].rate) - 10)
     .attr("dy", "0.35em")
     .attr("fill", color("brand"))
-    .attr("font-size", "16px") 
+    .attr("font-size", "14px")
     .attr("font-weight", 600)
-    
-  innerChart.append("line")
-    .attr("x1", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 40 : x(lastBrand.date) + 40)
-    .attr("y1", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 25 : y(lastBrand.rate) + 25)
-    .attr("x2", d => lastBrand.rate >= lastrh.rate ? x(lastBrand.date) - 15 : x(lastBrand.date) + 15)
-    .attr("y2", d => lastBrand.rate >= lastrh.rate ? y(lastBrand.rate) - 5 : y(lastBrand.rate) + 5)
-    .attr("fill", "none")
-    .attr("stroke", "#75485E")
-    .attr("stroke-width", "1px")
 
-  innerChart.append("text")
+    innerChart.append("text")
     .text("RH")
-    .attr("text-anchor", "middle")
+    .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    .attr("x", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 60 : x(lastrh.date) + 60)
-    .attr("y", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 30 : y(lastrh.rate) + 30)
+    .attr("x", x(rhdata[rhdata.length-1].date) + x.bandwidth()/2 + 15)
+    .attr("y", yRh(rhdata[rhdata.length-1].rate) - 10)
     .attr("dy", "0.35em")
     .attr("fill", color("rh"))
-    .attr("font-size", "16px")
+    .attr("font-size", "14px")
     .attr("font-weight", 600)
-    
-  innerChart.append("line")
-    .attr("x1", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 45 : x(lastrh.date) + 45)
-    .attr("y1", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 25 : y(lastrh.rate) + 25)
-    .attr("x2", d => lastBrand.rate <= lastrh.rate ? x(lastrh.date) - 15 : x(lastrh.date) + 15)
-    .attr("y2", d => lastBrand.rate <= lastrh.rate ? y(lastrh.rate) - 5 : y(lastrh.rate) + 5)
-    .attr("fill", "none")
-    .attr("stroke", "#75485E")
-    .attr("stroke-width", "1px")
+
+  svg.append("text")
+    .text("Target: 60%")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 5)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "14px")
+    .attr("font-weight", 600)
 
   return svg.node();
 }

@@ -529,7 +529,7 @@ if (manhr != undefined) {
     .selectAll()
     .data(workinghrs)
     .join("text")
-      .text(d => d.workhr)
+      .text(d => `👷 ${d.hc} = ${d.workhr}h`)
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.date) + x.bandwidth()*3/4)

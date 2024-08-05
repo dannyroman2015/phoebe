@@ -473,7 +473,7 @@ svg.append("text")
       .selectAll()
       .data(workinghrs)
       .join("text")
-        .text(d => d.workhr)
+        .text(d => `👷 ${d.hc} = ${d.workhr}h`)
         .attr("text-anchor", "end")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.date) + x.bandwidth()*3/4)
@@ -495,7 +495,7 @@ svg.append("text")
 
     // efficiency line
   workinghrs.forEach(w => {
-    w.efficiency = data.find(d => d.date == w.date).qty / w.workhr / 1.6 * 100
+    w.efficiency = data.find(d => d.date == w.date).qty / w.workhr / 5 * 100
   })
 
   const y2 = d3.scaleLinear()
@@ -540,7 +540,7 @@ svg.append("text")
         .attr("font-size", 12)
 
   svg.append("text")
-        .text("Demand: 1.6 m²/h")
+        .text("Demand: 5 sheets/h")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
         .attr("x", 0)
