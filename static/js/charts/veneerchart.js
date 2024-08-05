@@ -217,7 +217,7 @@ const drawVeneerChart1 = (data, target) => {
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".2s")(d[1])}`)
+    .text(d => `Σ ${d3.format(",.3s")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -234,11 +234,11 @@ const drawVeneerChart1 = (data, target) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format(".2s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format(".2s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format(".2s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format(".2s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format(".2s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
         })
   })
 

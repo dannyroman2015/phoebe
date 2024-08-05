@@ -382,3 +382,174 @@ innerChart.append("g")
 
   return svg.node();
 }
+
+// efficiency
+const drawPanelcncEfficiecyChart = (data, manhr) => {
+  const width = 900;
+  const height = 350;
+  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  const dates = new Set(data.map(d => d.date)) 
+
+  const x = d3.scaleBand()
+    .domain(data.map(d => d.date))
+    .range([0, innerWidth])
+    .padding(0.1);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.qty)])
+    .rangeRound([innerHeight, innerHeight/3])
+    .nice()
+
+  const svg = d3.create("svg")
+    .attr("viewBox", [0, 0, width, height])
+
+  const innerChart = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+
+  innerChart
+    .selectAll()
+    .data(data)
+    .join("rect")
+      .attr("x", d => x(d.date))
+      .attr("y", d => y(d.qty))
+      .attr("height", d => y(0) - y(d.qty))
+      .attr("width", x.bandwidth()/2)
+      .attr("fill", "#DFC6A2")
+
+  innerChart.append("g")
+    .attr("transform", `translate(0, ${innerHeight})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0))
+    .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", "12px"))
+
+  innerChart.append("g")
+    .selectAll()
+    .data(data)
+    .join("text")
+      .text(d => d3.format(".3s")(d.qty))
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("x", d => x(d.date) + x.bandwidth()/4)
+      .attr("y", d => y(d.qty))
+      .attr("dy", "0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", "12px")
+      .attr("font-weight", 600)
+      .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()/4}, ${y(d.qty)})`)
+      
+svg.append("text")
+    .text("Sản lượng(m²)")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 30)
+    .attr("dy", "0.35em")
+    .attr("fill", "#DFC6A2")
+    .attr("font-weight", 600)
+    .attr("font-size", 14)
+ 
+  if (manhr != undefined) {
+    const workinghrs = manhr.filter(d => dates.has(d.date))
+    const y1 = d3.scaleLinear()
+      .domain([0, d3.max(manhr, d => d.workhr)])
+      .rangeRound([innerHeight, innerHeight/3])
+      .nice()
+
+    innerChart.append("g")
+      .selectAll()
+      .data(workinghrs)
+      .join("rect")
+        .attr("x", d => x(d.date) + x.bandwidth()/2)
+        .attr("y", d => y1(d.workhr))
+        .attr("height", d => y1(0) - y1(d.workhr))
+        .attr("width", x.bandwidth()/2)
+        .attr("fill", "#90D26D")
+        .attr("fill-opacity", 0.3)
+      
+    innerChart.append("g")
+      .selectAll()
+      .data(workinghrs)
+      .join("text")
+        .text(d => d.workhr)
+        .attr("text-anchor", "end")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.date) + x.bandwidth()*3/4)
+        .attr("y", d => y1(d.workhr))
+        .attr("fill", "#75485E")
+        .attr("font-size", 12)
+        .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()*3/4 }, ${y1(d.workhr)})`)
+
+    svg.append("text")
+        .text("manhr (h)")
+        .attr("text-anchor", "start")
+        .attr("alignment-baseline", "middle")
+        .attr("x", 0)
+        .attr("y", 55)
+        .attr("dy", "0.35em")
+        .attr("fill","#90D26D")
+        .attr("font-weight", 600)
+        .attr("font-size", 14)
+
+    // efficiency line
+  workinghrs.forEach(w => {
+    w.efficiency = data.find(d => d.date == w.date).qty / w.workhr / 1.6 * 100
+  })
+
+  const y2 = d3.scaleLinear()
+      .domain(d3.extent(workinghrs, d => d.efficiency))
+      .rangeRound([innerHeight/3, 0])
+      .nice()
+
+  innerChart.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#75485E")
+      .attr("stroke-width", 1)
+      .attr("d", d => d3.line()
+          .x(d => x(d.date) + x.bandwidth()/2)
+          .y(d => y2(d.efficiency)).curve(d3.curveCatmullRom)(workinghrs));
+
+  innerChart.append("g")
+    .selectAll()
+    .data(workinghrs)
+    .join("text")
+      .text(d => `${d3.format(".2s")(d.efficiency)}%`)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("font-size", "14px")
+        .attr("dy", "0.35em")
+        .attr("x", d => x(d.date) + x.bandwidth()/2)
+        .attr("y", d => y2(d.efficiency))
+      .clone(true).lower()
+        .attr("fill", "none")
+        .attr("stroke", "white")
+        .attr("stroke-width", 6);
+
+  const lastW = workinghrs[workinghrs.length-1]
+  innerChart.append("text")
+        .text("Efficiency")
+        .attr("text-anchor", "start")
+        .attr("alignment-baseline", "middle")
+        .attr("x", x(lastW.date) + x.bandwidth()/2 - 5)
+        .attr("y", y2(lastW.efficiency) - 15)
+        .attr("dy", "0.35em")
+        .attr("fill","#75485E")
+        .attr("font-weight", 600)
+        .attr("font-size", 12)
+
+  svg.append("text")
+        .text("Demand: 1.6 m²/h")
+        .attr("text-anchor", "start")
+        .attr("alignment-baseline", "middle")
+        .attr("x", 0)
+        .attr("y", 5)
+        .attr("dy", "0.35em")
+        .attr("fill", "#75485E")
+        .attr("font-weight", 600)
+        .attr("font-size", 14)
+  }
+
+  return svg.node();
+}

@@ -982,6 +982,45 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			"panelcncTarget": panelcncTarget,
 		})
 
+	case "efficiency":
+		cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var panelcncData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &panelcncData); err != nil {
+			log.Println(err)
+		}
+		// get workhr of pannelcnc from manhr
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "panelcnc", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println("err")
+		}
+		var panelcncManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &panelcncManhr); err != nil {
+			log.Println("err")
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"panelcncData":  panelcncData,
+			"panelcncManhr": panelcncManhr,
+		})
 	}
 }
 
@@ -4872,7 +4911,7 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	operator := r.FormValue("operator")
 	paneltype := r.FormValue("type")
 
-	if paneltype == "" || machine == "" || r.FormValue("qty") == "" || hours <= 0 {
+	if machine == "" || r.FormValue("qty") == "" || hours <= 0 {
 		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
