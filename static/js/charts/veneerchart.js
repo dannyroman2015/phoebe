@@ -1,7 +1,7 @@
 const drawVeneerChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 20, right: 20, bottom: 20, left: 50};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 

@@ -681,26 +681,58 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -16))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
-		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var woodfinishChartData []struct {
+	var woodfinishData []struct {
 		Date  string  `bson:"date" json:"date"`
 		Type  string  `bson:"type" json:"type"`
 		Value float64 `bson:"value" json:"value"`
 	}
-	if err := cur.All(context.Background(), &woodfinishChartData); err != nil {
+	if err := cur.All(context.Background(), &woodfinishData); err != nil {
 		log.Println(err)
 	}
+
+	// get target
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var woodfinishTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &woodfinishTarget); err != nil {
+		log.Println(err)
+	}
+
+	// get time of latest update
+	sr := s.mgdb.Collection("woodfinish").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	woodfinishUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/woodfinish.html")).Execute(w, map[string]interface{}{
-		"woodfinishChartData": woodfinishChartData,
+		"woodfinishData":   woodfinishData,
+		"woodfinishTarget": woodfinishTarget,
+		"woodfinishUpTime": woodfinishUpTime,
 	})
 }
 
@@ -1225,6 +1257,89 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		template.Must(template.ParseFiles("templates/pages/dashboard/wf_detailchart.html")).Execute(w, map[string]interface{}{
 			"woodfinishChartData": woodfinishChartData,
+		})
+
+	case "value-target":
+		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var woodfinishData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &woodfinishData); err != nil {
+			log.Println(err)
+		}
+
+		// get target
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var woodfinishTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &woodfinishTarget); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/wf_valuetargetchart.html")).Execute(w, map[string]interface{}{
+			"woodfinishData":   woodfinishData,
+			"woodfinishTarget": woodfinishTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var woodfinishData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &woodfinishData); err != nil {
+			log.Println(err)
+		}
+		//get manhr of woodfinish
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "woodfinish", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var woodfinishManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &woodfinishManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/wf_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"woodfinishData":  woodfinishData,
+			"woodfinishManhr": woodfinishManhr,
 		})
 	}
 }
@@ -1755,6 +1870,47 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		template.Must(template.ParseFiles("templates/pages/dashboard/pack_valuechart.html")).Execute(w, map[string]interface{}{
 			"packChartData": packChartData,
 			"packingTarget": packingTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var packData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &packData); err != nil {
+			log.Println(err)
+		}
+		//get manhr of pack
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "pack", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var packManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &packManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/packing_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"packData":  packData,
+			"packManhr": packManhr,
 		})
 
 	}
