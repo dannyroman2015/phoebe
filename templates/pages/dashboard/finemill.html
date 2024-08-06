@@ -10,6 +10,15 @@
       Finemill
     </a>
 
+    <div class="flex">
+      <span class="inline-block">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      </span>
+      <p>&nbsp{{.finemillUpTime}}</p>
+    </div>
+
     <!-- menu popover -->
     <div x-data="{
       popoverOpen: false,
@@ -78,10 +87,12 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen"
-                      hx-post="/dashboard/finemill/getchart" hx-trigger="input, change" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
+                      hx-post="/dashboard/finemill/getchart" hx-trigger="input" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
                       name="finemillcharttype" id="finemillcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="detail">Detail</option>
-                      <option value="general">General</option>
+                      <option value="value-target">Value-Target</option>
+                      <option value="efficiency">Efficiency</option>
+                      <!-- <option value="detail">Detail</option>
+                      <option value="general">General</option> -->
                     </select>
                   </div>
                 </div>
@@ -90,7 +101,7 @@
                   <label for="finemillFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     From Date
                   </label>
-                  <input hx-post="/dashboard/finemill/getchart" hx-trigger="input, change" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
+                  <input hx-post="/dashboard/finemill/getchart" hx-trigger="input" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
                     type="date" id="finemillFromDate" name="finemillFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
 
@@ -98,7 +109,7 @@
                   <label for="finemillToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     To Date
                   </label>
-                  <input hx-post="/dashboard/finemill/getchart" hx-trigger="input, change" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
+                  <input hx-post="/dashboard/finemill/getchart" hx-trigger="input" hx-target="#finemill-container" hx-swap="innerHTML settle:200ms"
                     type="date" id="finemillToDate" name="finemillToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
 
@@ -123,11 +134,8 @@
   document.getElementById("finemillToDate").valueAsDate = new Date();
   document.getElementById("finemillFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
 
-  if ({{.finemillTarget}} == undefined) {
-    finemillchart.append(drawFinemillChart1({{.finemillChartData}}))
-  } else {
-    finemillchart.append(drawFinemillChart2({{.finemillChartData}}, {{.finemillTarget}}))
-  }
+  finemillchart.append(drawFinemillVTChart({{.finemillData}}, {{.finemillTarget}}))
+
 
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")

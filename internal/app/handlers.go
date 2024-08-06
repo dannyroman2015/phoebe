@@ -653,26 +653,58 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
-		{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var assemblyChartData []struct {
+	var assemblyData []struct {
 		Date  string  `bson:"date" json:"date"`
 		Type  string  `bson:"type" json:"type"`
 		Value float64 `bson:"value" json:"value"`
 	}
-	if err := cur.All(context.Background(), &assemblyChartData); err != nil {
+	if err := cur.All(context.Background(), &assemblyData); err != nil {
 		log.Println(err)
 	}
+
+	// get target
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var assemblyTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &assemblyTarget); err != nil {
+		log.Println(err)
+	}
+
+	// get time of latest update
+	sr := s.mgdb.Collection("assembly").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	assemblyUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/assembly.html")).Execute(w, map[string]interface{}{
-		"assemblyChartData": assemblyChartData,
+		"assemblyData":   assemblyData,
+		"assemblyTarget": assemblyTarget,
+		"assemblyUpTime": assemblyUpTime,
 	})
 }
 
@@ -742,24 +774,25 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 func (s *Server) d_loadfinemill(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
-		{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var finemillChartData []struct {
+	var finemillData []struct {
 		Date  string  `bson:"date" json:"date"`
 		Type  string  `bson:"type" json:"type"`
 		Value float64 `bson:"value" json:"value"`
 	}
-	if err := cur.All(context.Background(), &finemillChartData); err != nil {
+	if err := cur.All(context.Background(), &finemillData); err != nil {
 		log.Println(err)
 	}
-	// get target of finemill
+
+	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"name": "finemill total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
@@ -776,9 +809,22 @@ func (s *Server) d_loadfinemill(w http.ResponseWriter, r *http.Request, ps httpr
 		log.Println(err)
 	}
 
+	// get time of latest update
+	sr := s.mgdb.Collection("finemill").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	finemillUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/finemill.html")).Execute(w, map[string]interface{}{
-		"finemillChartData": finemillChartData,
-		"finemillTarget":    finemillTarget,
+		"finemillData":   finemillData,
+		"finemillTarget": finemillTarget,
+		"finemillUpTime": finemillUpTime,
 	})
 }
 
@@ -1180,6 +1226,89 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_detailchart.html")).Execute(w, map[string]interface{}{
 			"assemblyChartData": assemblyChartData,
+		})
+
+	case "value-target":
+		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var assemblyData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &assemblyData); err != nil {
+			log.Println(err)
+		}
+
+		// get target
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var assemblyTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &assemblyTarget); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_valuetargetchart.html")).Execute(w, map[string]interface{}{
+			"assemblyData":   assemblyData,
+			"assemblyTarget": assemblyTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var assemblyData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &assemblyData); err != nil {
+			log.Println(err)
+		}
+		//get manhr of assembly
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "assembly", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var assemblyManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &assemblyManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"assemblyData":  assemblyData,
+			"assemblyManhr": assemblyManhr,
 		})
 	}
 }
@@ -1753,6 +1882,168 @@ func (s *Server) dv_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		template.Must(template.ParseFiles("templates/pages/dashboard/veneer_efficiencychart.html")).Execute(w, map[string]interface{}{
 			"veneerData":  veneerData,
 			"veneerManhr": veneerManhr,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/finemill/getchart - change chart of finemill area in dashboard
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) df_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("finemillcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("finemillFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("finemillToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var finemillData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &finemillData); err != nil {
+			log.Println(err)
+		}
+		// get target of assembly
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "finemill total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var finemillTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &finemillTarget); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/finemill_generalchart.html")).Execute(w, map[string]interface{}{
+			"finemillData":   finemillData,
+			"finemillTarget": finemillTarget,
+		})
+
+	case "detail":
+		cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
+			// {{"$match", bson.M{"itemtype": "whole"}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"itemtype": "whole"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$sort", bson.D{{"type", 1}, {"date", 1}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var finemillData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &finemillData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/finemill_detailchart.html")).Execute(w, map[string]interface{}{
+			"finemillData": finemillData,
+		})
+
+	case "value-target":
+		cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var finemillData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &finemillData); err != nil {
+			log.Println(err)
+		}
+
+		// get target
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "finemill total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var finemillTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &finemillTarget); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/finemill_valuetargetchart.html")).Execute(w, map[string]interface{}{
+			"finemillData":   finemillData,
+			"finemillTarget": finemillTarget,
+		})
+
+	case "efficiency":
+		cur, err := s.mgdb.Collection("finemill").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var finemillData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &finemillData); err != nil {
+			log.Println(err)
+		}
+		//get manhr of assembly
+		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"section": "finemill", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var finemillManhr []struct {
+			Date   string  `bson:"date" json:"date"`
+			HC     int     `bson:"hc" json:"hc"`
+			Workhr float64 `bson:"workhr" json:"workhr"`
+		}
+		if err = cur.All(context.Background(), &finemillManhr); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/finemill_efficiencychart.html")).Execute(w, map[string]interface{}{
+			"finemillData":  finemillData,
+			"finemillManhr": finemillManhr,
 		})
 	}
 }
@@ -4859,21 +5150,20 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	//create a report for production value collection
-	if itemtype == "whole" {
-		_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
-			"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
-			"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
-			"from": "pack", "refid": insertedResult.InsertedID,
+	_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
+		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		"from": "pack", "refid": insertedResult.InsertedID,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
 		})
-		if err != nil {
-			log.Println(err)
-			template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
-				"showErrDialog": true,
-				"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
-			})
-			return
-		}
+		return
 	}
+
 	template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
