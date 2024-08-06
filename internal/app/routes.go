@@ -273,7 +273,11 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	router.GET("/manhr/admin", withAuth(s.m_admin))
 	router.GET("/manhr/admin/loadentry", s.ma_loadentry)
+	router.GET("/manhr/admin/loadreport", s.ma_loadreport)
 	router.POST("/manhr/admin/sendentry", s.ma_sendentry)
+	router.DELETE("/manhr/admin/deletereport/:id", s.ma_deletereport)
+	router.GET("/manhr/admin/updateform/:id", s.ma_updateform)
+	router.PUT("/manhr/admin/updatereport/:id", s.ma_updatereport)
 	// end Manhr
 
 	////////////////////////////////////////////////////////////////////

@@ -38,21 +38,21 @@
       </div>
     </div>
 
-    <!-- <div x-data="{ id: $id('accordion') }" :class="{ 'border-neutral-200/60 text-neutral-800' : activeAccordion==id, 'border-transparent text-neutral-600 hover:text-neutral-800' : activeAccordion!=id }" class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
+    <div x-data="{ id: $id('accordion') }" :class="{ 'border-neutral-200/60 text-neutral-800' : activeAccordion==id, 'border-transparent text-neutral-600 hover:text-neutral-800' : activeAccordion!=id }" class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
       <button @click="setActiveAccordion(id)" class="flex items-center space-x-6 w-full px-5 py-4 font-semibold text-left select-none">
         <div :class="{ 'rotate-90': activeAccordion==id }" class="relative flex items-center justify-center w-2.5 h-2.5 duration-300 ease-out">
             <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
             <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
         </div>
-          <span>Quản lý phiếu nhập gỗ</span>
+          <span>Bảng quản lý</span>
       </button>
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
           <div class="p-5 pt-0">
-            <div hx-get="/sections/cutting/admin/loadwrnote" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+            <div hx-get="/manhr/admin/loadreport" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
           </div>
       </div>
-    </div> -->
+    </div>
 
     <!-- <div x-data="{ id: $id('accordion') }" :class="{ 'border-neutral-200/60 text-neutral-800' : activeAccordion==id, 'border-transparent text-neutral-600 hover:text-neutral-800' : activeAccordion!=id }" class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
       <button @click="setActiveAccordion(id)" class="flex items-center justify-between w-full px-5 py-4 font-semibold text-left select-none">

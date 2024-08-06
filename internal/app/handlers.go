@@ -6233,6 +6233,36 @@ func (s *Server) ma_loadentry(w http.ResponseWriter, r *http.Request, ps httprou
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/loadreport - load manhr table section
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -5))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"section", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var manhrData []struct {
+		Id      string  `bson:"_id"`
+		Date    string  `bson:"date"`
+		Section string  `bson:"section"`
+		Hc      int     `bson:"hc"`
+		Workhr  float64 `bson:"workhr"`
+	}
+	if err := cur.All(context.Background(), &manhrData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/report.html")).Execute(w, map[string]interface{}{
+		"manhrData":       manhrData,
+		"numberOfReports": len(manhrData),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /manhr/admin/sendentry - send entry of manhr
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) ma_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -6261,6 +6291,77 @@ func (s *Server) ma_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Cập nhật thành công",
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/deletereport/:id
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	_, err := s.mgdb.Collection("manhr").DeleteOne(context.Background(), bson.M{"_id": id})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/updateform/:id
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_updateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	result := s.mgdb.Collection("manhr").FindOne(context.Background(), bson.M{"_id": id})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var manhrData struct {
+		Id      string    `bson:"_id"`
+		Date    time.Time `bson:"date"`
+		Section string    `bson:"section"`
+		Hc      int       `bson:"hc"`
+		Workhr  float64   `bson:"workhr"`
+	}
+	if err := result.Decode(&manhrData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/update_form.html")).Execute(w, map[string]interface{}{
+		"manhrData": manhrData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/updatereport/:id
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_updatereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+	hc, _ := strconv.Atoi(r.FormValue("hc"))
+	workhr, _ := strconv.ParseFloat(r.FormValue("workhr"), 64)
+
+	result := s.mgdb.Collection("manhr").FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{"hc": hc, "workhr": workhr}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var manhrData struct {
+		Id      string    `bson:"_id"`
+		Date    time.Time `bson:"date"`
+		Section string    `bson:"section"`
+		Hc      int       `bson:"hc"`
+		Workhr  float64   `bson:"workhr"`
+	}
+	if err := result.Decode(&manhrData); err != nil {
+		log.Println(err)
+	}
+	manhrData.Hc = hc
+	manhrData.Workhr = workhr
+
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/updated_tr.html")).Execute(w, map[string]interface{}{
+		"manhrData": manhrData,
 	})
 }
 
