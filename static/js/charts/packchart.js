@@ -642,10 +642,9 @@ const drawValueTargetChart = (data, target) => {
       .attr("font-size", 12)
 
   //draw target lines
-  if (target != undefined) { 
+  if (target != undefined && target.length != 0) { 
     const dates = data.map(d => d.date)
     target = target.filter(t => dates.includes(t.date))
-
     innerChart
       .selectAll()
       .data(target)
@@ -830,18 +829,6 @@ svg.append("text")
         .attr("stroke", "white")
         .attr("stroke-width", 6);
 
-  const lastW = workinghrs[workinghrs.length-1]
-  innerChart.append("text")
-        .text("Efficiency")
-        .attr("text-anchor", "start")
-        .attr("alignment-baseline", "middle")
-        .attr("x", x(lastW.date) + x.bandwidth()/2 - 5)
-        .attr("y", y2(lastW.efficiency) - 15)
-        .attr("dy", "0.35em")
-        .attr("fill","#75485E")
-        .attr("font-weight", 600)
-        .attr("font-size", 12)
-
   svg.append("text")
         .text("Demand: 192.8 $/h")
         .attr("text-anchor", "start")
@@ -851,7 +838,22 @@ svg.append("text")
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-weight", 600)
-        .attr("font-size", 14)
+        .attr("font-size", 14)      
+
+  if (workinghrs.length != 0) {
+    const lastW =  workinghrs[workinghrs.length-1]
+    innerChart.append("text")
+          .text("Efficiency")
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "middle")
+          .attr("x", x(lastW.date) + x.bandwidth()/2 - 5)
+          .attr("y", y2(lastW.efficiency) - 15)
+          .attr("dy", "0.35em")
+          .attr("fill","#75485E")
+          .attr("font-weight", 600)
+          .attr("font-size", 12)
+  }
+  
   }
 
   return svg.node();

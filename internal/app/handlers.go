@@ -6216,6 +6216,55 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin - get page manhr admin
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) m_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/manhr/admin/admin.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/loadentry - load entry section
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_loadentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/sendentry - send entry of manhr
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	section := r.FormValue("section")
+	date, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+	hc, _ := strconv.Atoi(r.FormValue("hc"))
+	workhr, _ := strconv.ParseFloat(r.FormValue("workhr"), 64)
+	if hc == 0 || workhr == 0 {
+		template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin nhập liệu",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("manhr").InsertOne(context.Background(), bson.M{
+		"section": section, "date": primitive.NewDateTimeFromTime(date), "hc": hc, "workhr": workhr,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Record này có thể đã có rồi, check và update thay vì tạo mới.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Cập nhật thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /downtime/entry - copy paste report for downtime
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dt_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

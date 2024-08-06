@@ -1,4 +1,5 @@
 const drawAssemblyChart = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -176,6 +177,7 @@ const drawAssemblyChart = (data) => {
 }
 
 const drawAssemblyChart1 = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -321,6 +323,7 @@ const drawAssemblyChart1 = (data) => {
 }
 
 const drawAssemblyChart2 = (data, target) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -507,6 +510,7 @@ innerChart.append("g")
 }
 
 const drawAssemblyVTChart = (data, target) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -694,6 +698,7 @@ const drawAssemblyVTChart = (data, target) => {
 
 // efficiency
 const drawAssemblyEfficiencyChart = (data, manhr) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -836,8 +841,9 @@ svg.append("text")
         .attr("stroke", "white")
         .attr("stroke-width", 6);
 
-  const lastW = workinghrs[workinghrs.length-1]
-  innerChart.append("text")
+  if (workinghrs.length != 0) {  
+    const lastW = workinghrs[workinghrs.length-1]
+    innerChart.append("text")
         .text("Efficiency")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
@@ -847,7 +853,8 @@ svg.append("text")
         .attr("fill","#75485E")
         .attr("font-weight", 600)
         .attr("font-size", 12)
-
+  }
+  
   svg.append("text")
         .text("Demand: 57.5 $/h")
         .attr("text-anchor", "start")

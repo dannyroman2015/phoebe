@@ -1,4 +1,5 @@
 const drawPanelcncChart1 = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -189,6 +190,7 @@ const drawPanelcncChart1 = (data) => {
 }
 
 const drawPanelcncChart = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -266,6 +268,7 @@ const drawPanelcncChart = (data) => {
 }
 
 const drawPanelcncChart2 = (data, target) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -385,6 +388,7 @@ innerChart.append("g")
 
 // efficiency
 const drawPanelcncEfficiecyChart = (data, manhr) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};

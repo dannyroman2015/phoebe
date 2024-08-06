@@ -1,4 +1,5 @@
 const drawWoodFinishChart = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -177,6 +178,7 @@ const drawWoodFinishChart = (data) => {
 }
 
 const drawWoodFinishChart1 = (data) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -320,6 +322,7 @@ const drawWoodFinishChart1 = (data) => {
 }
 
 const drawWoodFinishChart2 = (data, target) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -504,6 +507,7 @@ innerChart.append("g")
 }
 
 const drawWoodFinishVTChart = (data, target) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -691,6 +695,7 @@ const drawWoodFinishVTChart = (data, target) => {
 
 // efficiency
 const drawWfEfficiencyChart = (data, manhr) => {
+  if (data == undefined) return;
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};
