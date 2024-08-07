@@ -228,12 +228,21 @@ const drawProdMtdChart = (data) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
+  const curmonthData = data[data.length-1].dat
+  const pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
+  const avg = curmonthData[curmonthData.length-2].value / pastDays
+  const estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
+  for (let i = pastDays+2; i < 31; i++) {
+    estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
+  }
+
   const x = d3.scaleLinear()
     .domain([1, 31])
     .range([0, innerWidth])
 
   const y = d3.scaleLinear()
-    .domain([0, d3.max(data.map(d => d.dat[d.dat.length-1].value)) ])
+    // .domain([0, d3.max(data.map(d => d.dat[d.dat.length-1].value))])
+    .domain([0, estimateData[estimateData.length-1].value])
     .range([innerHeight, 0])
     .nice();
 
@@ -255,9 +264,9 @@ const drawProdMtdChart = (data) => {
 
   data.forEach(serie => {
     innerChart.append("path")
-    .attr("d", area(serie.dat))
-    .attr("fill", color(serie.month))
-    .attr("fill-opacity", 0.1)
+      .attr("d", area(serie.dat))
+      .attr("fill", color(serie.month))
+      .attr("fill-opacity", 0.3)
 
     innerChart.append("text")
       .text(`${serie.month} - $ ${serie.dat[serie.dat.length-1].value.toLocaleString("en-US")}`)
@@ -300,6 +309,46 @@ const drawProdMtdChart = (data) => {
       .attr("font-size", "12px")
       .attr("font-weight", 500)
       .attr("font-family", "Roboto, sans-serif"))
+
+  // draw estimate line
+  innerChart.append("path")
+    .attr("d", area(estimateData))
+    .attr("fill", color(data[data.length-1].month))
+    .attr("fill-opacity", 0.05)
+
+  innerChart.append("text")
+    .text(`Estimate: $ ${estimateData[estimateData.length-1].value.toLocaleString("en-US")}`)
+    .attr("text-anchor", "end")
+    .attr("alignment-baseline", "middle")
+    .attr("font-size", "14px")
+    .attr("x", x(estimateData[estimateData.length-1].days) - 20)
+    .attr("y", y(estimateData[estimateData.length-1].value) - 18)
+    .attr("fill", "#75485E")
+
+  innerChart.append("line")
+    .attr("x1",  x(estimateData[estimateData.length-1].days))
+    .attr("y1", y(estimateData[estimateData.length-1].value) - 1)
+    .attr("x2",  x(estimateData[estimateData.length-1].days) - 20)
+    .attr("y2", y(estimateData[estimateData.length-1].value) - 11)
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", 1);
+
+    innerChart.append("text")
+    .text(`$ ${estimateData[estimateData.length-5].value.toLocaleString("en-US")}`)
+    .attr("text-anchor", "end")
+    .attr("alignment-baseline", "middle")
+    .attr("font-size", "14px")
+    .attr("x", x(estimateData[estimateData.length-5].days) - 20)
+    .attr("y", y(estimateData[estimateData.length-5].value) - 18)
+    .attr("fill", "#75485E")
+
+  innerChart.append("line")
+    .attr("x1",  x(estimateData[estimateData.length-5].days))
+    .attr("y1", y(estimateData[estimateData.length-5].value) - 1)
+    .attr("x2",  x(estimateData[estimateData.length-5].days) - 20)
+    .attr("y2", y(estimateData[estimateData.length-5].value) - 11)
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", 1);
 
   return svg.node()
 }
