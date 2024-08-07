@@ -2184,7 +2184,7 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		//get manhr of pack
 		cur, err = s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"section": "pack", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"section": "packing", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})

@@ -461,8 +461,9 @@ svg.append("text")
         .attr("stroke", "white")
         .attr("stroke-width", 6);
 
-  const lastW = workinghrs[workinghrs.length-1]
-  innerChart.append("text")
+  if (workinghrs.length != 0) {
+    const lastW = workinghrs[workinghrs.length-1]
+    innerChart.append("text")
         .text("Efficiency")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
@@ -472,6 +473,7 @@ svg.append("text")
         .attr("fill","#75485E")
         .attr("font-weight", 600)
         .attr("font-size", 12)
+  }
 
   svg.append("text")
         .text("Demand: 1.6 m²/h")

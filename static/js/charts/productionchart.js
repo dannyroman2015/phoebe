@@ -350,5 +350,14 @@ const drawProdMtdChart = (data) => {
     .attr("stroke", "#75485E")
     .attr("stroke-width", 1);
 
+  innerChart.append("text")
+    .text(`AVG of This Month up to ${pastDays}th: $ ${avg.toLocaleString("en-US")}`)
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("font-size", "14px")
+    .attr("x", 100)
+    .attr("y", 50)
+    .attr("fill", "#75485E")
+
   return svg.node()
 }
