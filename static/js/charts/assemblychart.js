@@ -534,7 +534,7 @@ const drawAssemblyVTChart = (data, target) => {
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(series.map(d => d.key))
+    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh"])
     .range(["#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE"])
     .unknown("white");
 
