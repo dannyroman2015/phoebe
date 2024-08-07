@@ -416,7 +416,8 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		mtdFromDate := time.Date(time.Now().Year(), time.Now().Month()-time.Month(mtds), 1, 0, 0, 0, 0, time.Now().Location())
 		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(mtdFromDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"$month": "$date"}, "value": bson.M{"$push": "$value"}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$group", bson.M{"_id": bson.M{"$month": "$_id"}, "value": bson.M{"$push": "$value"}}}},
 			{{"$set", bson.M{"month": "$_id"}}},
 			{{"$unset", "_id"}},
 			{{"$sort", bson.M{"month": 1}}},
@@ -441,7 +442,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			} `json:"dat"`
 		}
 
-		var kk []PP
+		var productiondata []PP
 		for _, re := range resu {
 			var a PP
 			a.Month = time.Month(re.Month).String()
@@ -458,11 +459,10 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 					}{Days: i + 1, AccValue: a.Data[i-1].AccValue + re.Value[i]})
 				}
 			}
-			kk = append(kk, a)
+			productiondata = append(productiondata, a)
 		}
-
 		template.Must(template.ParseFiles("templates/pages/dashboard/prod_mtd.html")).Execute(w, map[string]interface{}{
-			"productiondata": kk,
+			"productiondata": productiondata,
 		})
 	}
 }
