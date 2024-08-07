@@ -451,7 +451,7 @@ svg.append("text")
 
     // efficiency line
   workinghrs.forEach(w => {
-    w.efficiency = data.find(d => d.date == w.date).qty / w.workhr / 1 * 100
+    w.efficiency = data.find(d => d.date == w.date).qty / w.workhr / 1.5 * 100
   })
 
   const y2 = d3.scaleLinear()
@@ -497,7 +497,7 @@ svg.append("text")
           .attr("font-size", 12)
   }
   svg.append("text")
-        .text("Demand: 1 m²/h")
+        .text("Demand: 1.5 m²/h")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
         .attr("x", 0)
