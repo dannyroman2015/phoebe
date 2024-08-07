@@ -346,7 +346,7 @@ func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps htt
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype", "item": "$item"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.M{"_id.date": -1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": "$_id.factory", "type": "$_id.prodtype", "item": "$_id.item"}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "factory": bson.M{"$concat": bson.A{"Fac ", "$_id.factory"}}, "type": bson.M{"$toUpper": "$_id.prodtype"}, "item": "$_id.item"}}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), pvPipeline)
