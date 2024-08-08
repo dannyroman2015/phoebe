@@ -23,6 +23,7 @@
   <script src="/static/js/charts/sixschart.js"></script>
   <script src="/static/js/charts/finemillchart.js"></script>
   <script src="/static/js/charts/downtimechart.js"></script>
+  <script src="/static/js/charts/outputchart.js"></script>
 
 
   <title>Dashboard</title>
@@ -349,9 +350,9 @@
         <div hx-get="/dashboard/loadwoodfinish" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end WoodFinishing -->
      
-        <!-- Veneer -->
-        <div hx-get="/dashboard/loadveneer" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
-        <!-- end Veneer -->
+        <!-- Reeded Output -->
+        <div hx-get="/dashboard/loadoutput" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end Reeded Output -->    
 
         <!-- Assembly -->
         <div hx-get="/dashboard/loadassembly" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
@@ -362,8 +363,12 @@
         <!-- end Panelcnc -->  
         
         <!-- Finemill -->
-        <div hx-get="/dashboard/loadfinemill" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- <div hx-get="/dashboard/loadfinemill" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div> -->
         <!-- end Finemill -->
+
+        <!-- Veneer -->
+        <div hx-get="/dashboard/loadveneer" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end Veneer -->
 
         <!-- Packing Chart -->
         <!-- <div class="col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">

@@ -528,6 +528,48 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 	})
 }
 
+// /////////////////////////////////////////////////////////////
+// /dashboard/loadreededoutput - load reededoutput area in dashboard
+// /////////////////////////////////////////////////////////////
+func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "reeded"}}},
+		{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var reededoutputData []struct {
+		Section string  `bson:"section" json:"section"`
+		Type    string  `bson:"type" json:"type"`
+		Qty     float64 `bson:"qty" json:"qty"`
+		Avg     float64 `bson:"avg" json:"avg"`
+	}
+	if err := cur.All(context.Background(), &reededoutputData); err != nil {
+		log.Println(err)
+	}
+	// get last update time
+	sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var latestOne struct {
+		Date time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&latestOne); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/output.html")).Execute(w, map[string]interface{}{
+		"reededoutputData": reededoutputData,
+		"outputUpTime":     latestOne.Date.Add(7 * time.Hour).Format("15:00 ngày 02-01-2006"),
+	})
+}
+
 // //////////////////////////////////////////////////////////
 // /dashboard/loadpanelcnc - load panelcnc area in dashboard
 // //////////////////////////////////////////////////////////
@@ -933,7 +975,7 @@ func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps h
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("quality").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -10).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -15).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "checkedqty": bson.M{"$sum": "$checkedqty"}, "failedqty": bson.M{"$sum": "$failedqty"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
 		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
@@ -952,7 +994,10 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 	if err := cur.All(context.Background(), &qualityChartData); err != nil {
 		log.Println(err)
 	}
-
+	for i := 0; i < len(qualityChartData); i++ {
+		tmp, _ := time.Parse("2006-01-02", qualityChartData[i].Date)
+		qualityChartData[i].Date = tmp.Format("02 Jan")
+	}
 	template.Must(template.ParseFiles("templates/pages/dashboard/quality.html")).Execute(w, map[string]interface{}{
 		"qualityChartData": qualityChartData,
 	})
@@ -1696,7 +1741,7 @@ func (s *Server) dl_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
-// /dashboard/lamination/getchart - change chart of cutting area in dashboard
+// /dashboard/reededline/getchart
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pickedChart := r.FormValue("reededlinecharttype")
@@ -1789,6 +1834,70 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			"reededlineManhr": reededlineManhr,
 		})
 	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/output/getchart
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("outputcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("outputFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("outputToDate"))
+
+	switch pickedChart {
+	case "reeded":
+		cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"type": "reeded", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var reededoutputData []struct {
+			Section string  `bson:"section" json:"section"`
+			Type    string  `bson:"type" json:"type"`
+			Qty     float64 `bson:"qty" json:"qty"`
+			Avg     float64 `bson:"avg" json:"avg"`
+		}
+		if err := cur.All(context.Background(), &reededoutputData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/reededoutput_totalchart.html")).Execute(w, map[string]interface{}{
+			"reededoutputData": reededoutputData,
+		})
+
+	case "fir":
+		cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"type": "fir", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var firoutputData []struct {
+			Section string  `bson:"section" json:"section"`
+			Type    string  `bson:"type" json:"type"`
+			Qty     float64 `bson:"qty" json:"qty"`
+			Avg     float64 `bson:"avg" json:"avg"`
+		}
+		if err := cur.All(context.Background(), &firoutputData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/firoutput_totalchart.html")).Execute(w, map[string]interface{}{
+			"firoutputData": firoutputData,
+		})
+	}
+
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
