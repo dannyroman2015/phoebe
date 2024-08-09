@@ -6176,6 +6176,52 @@ func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /production/overview/loadsummary - load summary table of page overview of Production value
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{bson.M{"$month": "$date"}, 8}}}}},
+		{{"$group", bson.M{"_id": "$prodtype", "value": bson.M{"$sum": "$value"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"prodtype": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var data []struct {
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Value    float64 `bson:"value" json:"value"`
+		Qty      int     `bson:"qty" json:"qty"`
+	}
+	if err = cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+	log.Println(data)
+	// cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+	// 	{{"$sort", bson.D{{"createdat", -1}, {"date", -1}}}},
+	// 	{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	// var rawData []struct {
+	// 	Date      string `bson:"date" json:"date"`
+	// 	CreatedAt string `bson:"createdat" json:"createdat"`
+	// }
+	// if err := cur.All(context.Background(), &rawData); err != nil {
+	// 	log.Println(err)
+	// }
+	// template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
+	// 	"prodtypeChartData": prodtypeChartData,
+	// 	"rawData":           rawData,
+	// })
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /production/overview/loadreport - load report table of page overview of production
 // ////////////////////////////////////////////////////////////////////////////////////////////

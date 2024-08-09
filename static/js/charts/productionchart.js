@@ -330,14 +330,14 @@ const drawProdMtdChart = (data) => {
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")
     .attr("x", x(estimateData[estimateData.length-1].days) - 20)
-    .attr("y", y(estimateData[estimateData.length-1].value) - 15)
+    .attr("y", y(estimateData[estimateData.length-1].value) - 10)
     .attr("fill", "#75485E")
 
   innerChart.append("line")
     .attr("x1",  x(estimateData[estimateData.length-1].days))
     .attr("y1", y(estimateData[estimateData.length-1].value) - 1)
     .attr("x2",  x(estimateData[estimateData.length-1].days) - 20)
-    .attr("y2", y(estimateData[estimateData.length-1].value) - 10)
+    .attr("y2", y(estimateData[estimateData.length-1].value) - 5)
     .attr("stroke", "#75485E")
     .attr("stroke-width", 1);
 
