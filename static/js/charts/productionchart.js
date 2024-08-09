@@ -243,7 +243,7 @@ const drawProdMtdChart = (data) => {
   for (let i = pastDays+2; i < 31; i++) {
     estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
   }
-
+  
   const x = d3.scaleLinear()
     .domain([1, 31])
     .range([0, innerWidth])

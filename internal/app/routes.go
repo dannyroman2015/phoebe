@@ -27,7 +27,6 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/dashboard", s.dashboard)
 	router.GET("/dashboard/loadproduction", s.d_loadproduction)
-	router.POST("/dashboard/production/getchart", s.dpr_getchart)
 	router.GET("/dashboard/loadreededline", s.d_loadreededline)
 	router.GET("/dashboard/loadoutput", s.d_loadoutput)
 	router.GET("/dashboard/loadpanelcnc", s.d_loadpanelcnc)
@@ -40,6 +39,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadquality", s.d_loadquality)
 	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
 	router.GET("/dashboard/loadsixs", s.d_loadsixs)
+	router.POST("/dashboard/production/getchart", s.dpr_getchart)
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.POST("/dashboard/assembly/getchart", s.da_getchart)
 	router.POST("/dashboard/woodfinish/getchart", s.dw_getchart)
@@ -151,6 +151,13 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/reededline/admin/searchreport", s.sra_searchreport)
 	router.DELETE("/sections/reededline/admin/deletereport/:reportid", s.sra_deletereport)
 	// end Reededline/////////////////////////////////////////////////////////////
+
+	// Output ////////////////////////////////////////////////////////
+	router.GET("/sections/output/entry", withAuth(s.so_entry))
+	router.GET("/sections/output/entry/loadentry", s.soe_loadentry)
+	router.POST("/sections/output/entry/sendentry", s.soe_sendentry)
+
+	// end Output/////////////////////////////////////////////////////////////
 
 	// Veneer ////////////////////////////////////////////////////////
 	router.GET("/sections/veneer/overview", s.sv_overview)
@@ -266,7 +273,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// Target ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/target/entry", s.tg_entry)
+	router.GET("/target/entry", withAuth(s.tg_entry))
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
 	router.POST("/target/entry/settarget", s.tge_settarget)
 	// end Target

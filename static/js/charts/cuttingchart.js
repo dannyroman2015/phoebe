@@ -120,7 +120,7 @@ const drawCuttingChart = (data) => {
 const drawCuttingChart1 = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 30, left: 40};
+  const margin = {top: 20, right: 20, bottom: 30, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -202,7 +202,7 @@ const drawCuttingChart2 = (data, target) => {
   }
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 30, right: 20, bottom: 20, left: 50};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -327,48 +327,33 @@ innerChart.append("g")
    .attr("stroke-width", 6)
 
 svg.append("text")
-    .text("Gỗ 25")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 5)
-    .attr("dy", "0.35em")
-    .attr("fill", "#A5A0DE")
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
+  .text("Sản lượng (m³) cắt ")
+  .attr("text-anchor", "start")
+  .attr("alignment-baseline", "start")
+  .attr("x", 10)
+  .attr("y", height-margin.bottom)
+  .attr("dy", "0.35em")
+  .attr("fill", "#75485E")
+  .attr("font-weight", 300)
+  .attr("font-size", 14)
+  .attr("transform", `rotate(-90, 10, ${height-margin.bottom})`)
+    .append("tspan")
+      .text("Gỗ 25mm")
+      .attr("fill", "#A5A0DE")
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(", Gỗ Còn Lại")
+      .attr("fill", "#DFC6A2")
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(" cùng ")
+      .attr("font-weight", 300)
+      .attr("fill", "#75485E")
+    .append("tspan")
+      .text(" Target")
+      .attr("fill", "#FA7070")
+      .attr("font-weight", 600)
 
-svg.append("text")
-    .text("Còn lại")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 30)
-    .attr("dy", "0.35em")
-    .attr("fill", "#DFC6A2")
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
-
-svg.append("text")
-    .text("Target")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 55)
-    .attr("dy", "0.35em")
-    .attr("fill", "#FA7070")
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
-
-svg.append("text")
-    .text("(m³)")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 80)
-    .attr("dy", "0.35em")
-    .attr("fill", "#75485E")
-    .attr("font-size", 16)
- 
   return svg.node();
 }
 
@@ -376,7 +361,7 @@ svg.append("text")
 const drawCuttingChart3 = (data, manhr) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 10, right: 10, bottom: 20, left: 30};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -462,49 +447,6 @@ const drawCuttingChart3 = (data, manhr) => {
           if (d[1] - d[0] != 0) { return d3.format(".2s")(d[1]-d[0])}
         })
   })
-
-svg.append("text")
-    .text("RH")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 30)
-    .attr("dy", "0.35em")
-    .attr("fill", color("rh"))
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
-
-svg.append("text")
-    .text("Brand")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 55)
-    .attr("dy", "0.35em")
-    .attr("fill", color("brand"))
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
-
-svg.append("text")
-    .text("kxd")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 80)
-    .attr("dy", "0.35em")
-    .attr("fill", color(""))
-    .attr("font-weight", 600)
-    .attr("font-size", 16)
-
-svg.append("text")
-    .text("(m³)")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 105)
-    .attr("dy", "0.35em")
-    .attr("fill", "#75485E")
-    .attr("font-size", 16)
  
 if (manhr != undefined) {
   const workinghrs = manhr.filter(d => dates.has(d.date))
@@ -537,18 +479,6 @@ if (manhr != undefined) {
       .attr("fill", "#75485E")
       .attr("font-size", 12)
       .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()*3/4}, ${y1(d.workhr)})`)
-
-  svg.append("text")
-      .text("manhr (h)")
-      .attr("text-anchor", "start")
-      .attr("alignment-baseline", "middle")
-      .attr("x", 10)
-      .attr("y", innerHeight + 20)
-      .attr("dy", "0.35em")
-      .attr("fill","#90D26D")
-      .attr("font-weight", 600)
-      .attr("font-size", 16)
-      .attr("transform", d => `rotate(-90, 10, ${innerHeight+20})`)
 
   // efficiency line
 const tmp = series[series.length-1]
@@ -597,17 +527,53 @@ innerChart.append("text")
       .attr("font-weight", 600)
       .attr("font-size", 12)
 
-svg.append("text")
-      .text("Demand: 0.03 m³/h")
+  svg.append("text")
+      .text("với ")
       .attr("text-anchor", "start")
-      .attr("alignment-baseline", "middle")
-      .attr("x", 0)
-      .attr("y", 5)
+      .attr("alignment-baseline", "start")
+      .attr("x", 20)
+      .attr("y", 7)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
-      .attr("font-weight", 600)
+      .attr("font-weight", 300)
       .attr("font-size", 14)
+    .append("tspan")
+      .text("Demand: 0.03 m³/h")
+      .attr("fill", "#75485E")
+      .attr("font-weight", 600)
 }
+
+svg.append("text")
+  .text("Sản lượng (m³) cắt cho hàng ")
+  .attr("text-anchor", "start")
+  .attr("alignment-baseline", "start")
+  .attr("x", 10)
+  .attr("y", height-margin.bottom)
+  .attr("dy", "0.35em")
+  .attr("fill", "#75485E")
+  .attr("font-weight", 300)
+  .attr("font-size", 14)
+  .attr("transform", `rotate(-90, 10, ${height-margin.bottom})`)
+    .append("tspan")
+      .text("Brand")
+      .attr("fill", color("brand"))
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(", RH")
+      .attr("fill", color("rh"))
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(" cùng ")
+      .attr("font-weight", 300)
+      .attr("fill", "#75485E")
+    .append("tspan")
+      .text(" Nhân lực")
+      .attr("fill", "#90D26D")
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(" Nhân lực")
+      .attr("fill", "#FA7070")
+      .attr("font-weight", 600)
 
   return svg.node();
 }

@@ -417,6 +417,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(mtdFromDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
 			{{"$group", bson.M{"_id": bson.M{"$month": "$_id"}, "value": bson.M{"$push": "$value"}}}},
 			{{"$set", bson.M{"month": "$_id"}}},
 			{{"$unset", "_id"}},
@@ -4359,6 +4360,57 @@ func (s *Server) sra_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 		return
 	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/entry - load page entry of output section
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) so_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/output/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/entry/loadentry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soe_loadentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/entry/sendentry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soe_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+	outputtype := r.FormValue("outputtype")
+	section := r.FormValue("section")
+	if r.FormValue("outputtype") == "" || r.FormValue("qty") == "" || r.FormValue("section") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("output").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "type": outputtype, "section": section, "qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
 }
 
 // ///////////////////////////////////////////////////////////////////////////////
