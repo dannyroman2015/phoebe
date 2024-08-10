@@ -157,6 +157,12 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/output/entry/loadentry", s.soe_loadentry)
 	router.POST("/sections/output/entry/sendentry", s.soe_sendentry)
 
+	router.GET("/sections/output/admin", withAuth(s.so_admin))
+	router.GET("/sections/output/admin/loadreport", s.soa_loadreport)
+	router.DELETE("/sections/output/admin/deletereport/:reportid", s.soa_deletereport)
+	router.GET("/sections/output/admin/updateform/:reportid", s.soa_updateform)
+	router.PUT("/sections/output/admin/updatereport/:reportid", s.soa_updatereport)
+
 	// end Output/////////////////////////////////////////////////////////////
 
 	// Veneer ////////////////////////////////////////////////////////
@@ -240,6 +246,14 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/panelcnc/admin/searchreport", s.spca_searchreport)
 	router.DELETE("/sections/panelcnc/admin/deletereport/:reportid", s.spca_deletereport)
 	// end Panelcnc/////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////
+	// Outsource ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/sections/outsource/entry", withAuth(s.sos_entry))
+	router.GET("/sections/outsource/entry/loadform", s.sose_loadform)
+	router.POST("/sections/outsource/entry/sendentry", s.sose_sendentry)
+	// end Outsource
 
 	////////////////////////////////////////////////////////////////////
 	// packing ////////////////////////////////////////////////////////

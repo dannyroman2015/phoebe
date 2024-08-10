@@ -20,6 +20,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 // //////////////////////////////////////////////////////////
@@ -4413,6 +4415,118 @@ func (s *Server) soe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/output/admin
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) so_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/output/admin/loadreport
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) soa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("output").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var outputReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Section     string    `bson:"section"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := cur.All(context.Background(), &outputReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/report.html")).Execute(w, map[string]interface{}{
+		"outputReports":   outputReports,
+		"numberOfReports": len(outputReports),
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/admin/deletereport/:reportid
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soa_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	_, err := s.mgdb.Collection("output").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/admin/updateform/:reportid
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soa_updateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+
+	result := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{"_id": id})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var outputReports struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Section     string    `bson:"section"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := result.Decode(&outputReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/update_form.html")).Execute(w, map[string]interface{}{
+		"outputReports": outputReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// "/sections/output/admin/updatereport/:reportid"
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soa_updatereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+	outputtype := r.FormValue("outputtype")
+	section := r.FormValue("section")
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+
+	result := s.mgdb.Collection("output").FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{"type": outputtype, "section": section, "qty": qty}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var outputReports struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Section     string    `bson:"section"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := result.Decode(&outputReports); err != nil {
+		log.Println(err)
+	}
+	outputReports.Qty = qty
+	outputReports.Type = outputtype
+	outputReports.Section = section
+
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/updated_tr.html")).Execute(w, map[string]interface{}{
+		"outputReports": outputReports,
+	})
+}
+
 // ///////////////////////////////////////////////////////////////////////////////
 // /sections/veneer/overview - get page overview of veneer
 // ///////////////////////////////////////////////////////////////////////////////
@@ -5736,6 +5850,75 @@ func (s *Server) spca_deletereport(w http.ResponseWriter, r *http.Request, ps ht
 	}
 }
 
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/outsource/entry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sos_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/outsource/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/outsource/entry/loadform
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sose_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/outsource/entry/form.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/outsource/entry/sendentry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sose_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
+	factory := r.FormValue("factory")
+	item := r.FormValue("item")
+	qty, _ := strconv.Atoi(r.FormValue("qty"))
+
+	if r.FormValue("value") == "" || r.FormValue("factory") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/outsource/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	insertedResult, err := s.mgdb.Collection("outsource").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "item": item, "factory": factory, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/outsource/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+
+	//create a report for production value collection
+	_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
+		"date":    primitive.NewDateTimeFromTime(date),
+		"factory": factory, "prodtype": "outsource", "item": item, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		"from": "outsource", "refid": insertedResult.InsertedID,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/outsource/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/outsource/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /6s/overview - get page overview of 6S
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -6233,10 +6416,10 @@ func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps http
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{bson.M{"$month": "$date"}, 8}}}}},
-		{{"$group", bson.M{"_id": "$prodtype", "value": bson.M{"$sum": "$value"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"prodtype": "$_id"}}},
+		{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{bson.M{"$month": "$date"}, int(time.Now().Month())}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -6244,6 +6427,7 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var data []struct {
+		Date     string  `bson:"date" json:"date"`
 		Prodtype string  `bson:"prodtype" json:"prodtype"`
 		Value    float64 `bson:"value" json:"value"`
 		Qty      int     `bson:"qty" json:"qty"`
@@ -6251,27 +6435,74 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	if err = cur.All(context.Background(), &data); err != nil {
 		log.Println(err)
 	}
-	log.Println(data)
-	// cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
-	// 	{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-	// 	{{"$sort", bson.D{{"createdat", -1}, {"date", -1}}}},
-	// 	{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	var mtdv, rhmtdv, brandmtdv, outsourcemtdv float64
+	var mtdp, rhmtdp, brandmtdp, outsourcemtdp int
+	var dates []string
+	for _, i := range data {
+		mtdv += i.Value
+		mtdp += i.Qty
+		switch i.Prodtype {
+		case "brand":
+			brandmtdv += i.Value
+			brandmtdp += i.Qty
+		case "rh":
+			rhmtdv += i.Value
+			rhmtdp += i.Qty
+		case "outsource":
+			outsourcemtdv += i.Value
+			outsourcemtdp += i.Qty
+		}
+		if !slices.Contains(dates, i.Date) {
+			dates = append(dates, i.Date)
+		}
+	}
 
-	// var rawData []struct {
-	// 	Date      string `bson:"date" json:"date"`
-	// 	CreatedAt string `bson:"createdat" json:"createdat"`
-	// }
-	// if err := cur.All(context.Background(), &rawData); err != nil {
-	// 	log.Println(err)
-	// }
-	// template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
-	// 	"prodtypeChartData": prodtypeChartData,
-	// 	"rawData":           rawData,
-	// })
+	pastdays := len(dates)
+	var todayv, todaybrandv, todayrhv, todayoutsourcev float64
+	var todayp int
+	if time.Now().Add(7*time.Hour).Format("2006-01-02") == dates[len(dates)-1] {
+		pastdays--
+		for i := len(data) - 1; i > 0; i-- {
+			if data[i].Date != dates[len(dates)-1] {
+				break
+			}
+			todayv += data[i].Value
+			todayp += data[i].Qty
+			switch data[i].Prodtype {
+			case "brand":
+				todaybrandv += data[i].Value
+			case "rh":
+				todayrhv += data[i].Value
+			case "outsource":
+				todayoutsourcev += data[i].Value
+			}
+		}
+	}
+	var estdays int
+	start := time.Now()
+	end := time.Date(2024, time.Now().Month()+1, 1, 0, 0, 0, 0, time.Local)
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		if d.Weekday() != time.Sunday {
+			estdays++
+		}
+	}
+	p := message.NewPrinter(language.English)
+	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
+		"mtdv":          p.Sprintf("%.0f", mtdv),
+		"mtdp":          p.Sprintf("%.0f", mtdp),
+		"brandmtdv":     p.Sprintf("%.0f", brandmtdv),
+		"rhmtdv":        p.Sprintf("%.0f", rhmtdv),
+		"outsourcemtdv": p.Sprintf("%.0f", outsourcemtdv),
+		"pastdays":      pastdays,
+		"avgv":          p.Sprintf("%.0f", mtdv/float64(pastdays)),
+		"brandavgv":     p.Sprintf("%.0f", brandmtdv/float64(pastdays)),
+		"rhavgv":        p.Sprintf("%.0f", rhmtdv/float64(pastdays)),
+		"outsourceavgv": p.Sprintf("%.0f", outsourcemtdv/float64(pastdays)),
+		"estv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)*float64(estdays)+(mtdv-todayv)),
+		"estbrandv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)*float64(estdays)+(brandmtdv-todaybrandv)),
+		"estrhv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)*float64(estdays)+(rhmtdv-todayrhv)),
+		"estoutsourcev": p.Sprintf("%.0f", (outsourcemtdv-todayoutsourcev)/float64(pastdays)*float64(estdays)+(outsourcemtdv-todayoutsourcev)),
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
