@@ -513,7 +513,7 @@ const drawAssemblyVTChart = (data, target) => {
   if (data == undefined) return;
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 30};
+  const margin = {top: 20, right: 20, bottom: 20, left: 40};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   
@@ -562,11 +562,11 @@ const drawAssemblyVTChart = (data, target) => {
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
     .call(g => g.selectAll(".domain").remove())
-    .call(g => g.selectAll("text").attr("font-size", "14px"))
+    .call(g => g.selectAll("text").attr("font-size", "12px"))
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 15)
+    .attr("font-size", 14)
   .selectAll()
   .data(series[series.length-1])
   .join("text")
@@ -577,7 +577,7 @@ const drawAssemblyVTChart = (data, target) => {
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format("~s")(d[1])}` )
+    .text(d => `Σ ${d3.format(",.0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -586,17 +586,49 @@ const drawAssemblyVTChart = (data, target) => {
       .selectAll()
       .data(serie)
       .join("text")
+        .attr("class", d => d.key.substring(0,2))
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - (y(d[1]) - y(d[0]))/2 - 5 : y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
         .attr("fill", "#75485E")
-        .attr("fill", d => d.key.startsWith("X1") ? "#EB455F" : "#102C57")
+        .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
         .text(d => {
-          if (d[1] - d[0] >= 60) { return `${d3.format("~s")(d[1]-d[0])}` }
+          if (d[1] - d[0] >= 60) { return `${d3.format(",.0f")(d[1]-d[0])}` }
         })
   })
+
+  const x1data = series.filter(s => s.key.startsWith("X1"))
+  const x1rhdata = x1data[x1data.length-1]
+  if (x1rhdata != undefined) {
+    innerChart.append("g")
+      .selectAll()
+      .data(x1rhdata)
+      .join("text")
+        .text(d => `Σ ${d3.format(",.0f")(d[1])}`)
+        .attr("class", "x1total")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+        .attr("y", d => y(d[0]))
+        .attr("dy", "0.1em")
+        .attr("fill", "#921A40")
+        .attr("font-size", 14)
+        .attr("opacity", 0)
+    let flag = true;
+    setInterval(() => {
+      if (flag) {
+        innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))
+        innerChart.call(g => g.selectAll(".x1total").attr("opacity", 0))
+      } else {
+        innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
+        innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
+      }
+      flag = !flag
+    }, 10000);
+  }
+
   svg.append("text")
     .text("RH")
     .attr("text-anchor", "start")
@@ -606,7 +638,7 @@ const drawAssemblyVTChart = (data, target) => {
     .attr("dy", "0.35em")
     .attr("fill", "#A5A0DE")
     .attr("font-weight", 600)
-    .attr("font-size", 16)
+    .attr("font-size", 12)
 
   svg.append("text")
       .text("Brand")
@@ -637,7 +669,7 @@ const drawAssemblyVTChart = (data, target) => {
       .attr("x", 0)
       .attr("y", 80)
       .attr("dy", "0.35em")
-      .attr("fill", "#EB455F")
+      .attr("fill", "#921A40")
       .attr("font-weight", 600)
       .attr("font-size", 12)
       

@@ -1,15 +1,16 @@
 <section id="entry-container" class="fade-in">
   <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
-      <form class="space-y-4" hx-post="/sections/panelcnc/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
+      <form x-data="{showTimePicker: false,}"
+        class="space-y-4" hx-post="/sections/panelcnc/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
         <div class="mt-4 text-center">
           <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
             Gửi</button>
         </div>
 
-        <div class="flex justify-center mt-4 text-center">
-          <select class="flex text-center justify-center w-1/2 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-              name="machine" id="machine" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+        <div class="grid grid-cols-1 gap-4 text-center sm:grid-cols-2">  
+          <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+              name="machine" id="machine">
             <option value="" disabled selected>Chọn Máy CNC</option>
             <option value="nesting 1">Nesting 1</option>
             <option value="nesting 2">Nesting 2</option>
@@ -18,9 +19,28 @@
             <option value="panel saw 3">Panel Saw 3</option>
             <option value="rover c">Rover C</option>
           </select>
+
+          <select @change="if ($el.value=='other') {showTimePicker=true;} else {showTimePicker=false;};"
+              class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+              name="timerange" id="timerange">
+            <option value="" disabled selected>Chọn khung giờ (hôm nay)</option>
+            <option value="6h - 8h">6h - 8h</option>
+            <option value="8h - 10h">8h - 10h</option>
+            <option value="10h - 11h30">10h - 11h30</option>
+            <option value="12h15 - 14h">12h15 - 14h</option>
+            <option value="14h - 16h">14h - 16h</option>
+            <option value="16h30 - 18h">16h30 - 18h</option>
+            <option value="18h - 20h">18h - 20h</option>
+            <option value="20h - 22h">20h - 22h</option>
+            <option value="22h30 - 0h">22h30 - 0h</option>
+            <option value="0h - 2h">0h - 2h</option>
+            <option value="2h45 - 4h">2h45 - 4h</option>
+            <option value="4h - 6h">4h - 6h</option>
+            <option value="other">Khác</option>
+          </select>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 text-center sm:grid-cols-2">       
+        <div x-show="showTimePicker" class="grid grid-cols-1 gap-4 text-center sm:grid-cols-2">       
 
           <div class="mt-4 text-center">
             <label for="start" class="relative block rounded-md border">

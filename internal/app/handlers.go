@@ -5625,7 +5625,7 @@ func (s *Server) spco_loadreport(w http.ResponseWriter, r *http.Request, ps http
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.M{"createdat": -1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
-			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$date", "timezone": "Asia/Bangkok"}},
+			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$startat", "timezone": "Asia/Bangkok"}},
 			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},
 			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
@@ -5648,7 +5648,6 @@ func (s *Server) spco_loadreport(w http.ResponseWriter, r *http.Request, ps http
 	if err := cur.All(context.Background(), &panelcncReports); err != nil {
 		log.Println(err)
 	}
-
 	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/overview/report.html")).Execute(w, map[string]interface{}{
 		"panelcncReports": panelcncReports,
 		"numberOfReports": len(panelcncReports),
@@ -5718,16 +5717,59 @@ func (s *Server) spc_loadform(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	usernameToken, _ := r.Cookie("username")
 	username := usernameToken.Value
-	machine := r.FormValue("machine")
-	start, _ := time.Parse("2006-01-02T15:04", r.FormValue("start"))
-	end, _ := time.Parse("2006-01-02T15:04", r.FormValue("end"))
-	hours := math.Round(end.Sub(start).Hours()*10) / 10
-	date, _ := time.Parse("2006-01-02", start.Format("2006-01-02"))
 	qty, _ := strconv.Atoi(r.FormValue("qty"))
 	operator := r.FormValue("operator")
 	paneltype := r.FormValue("type")
+	machine := r.FormValue("machine")
+	var start, end time.Time
+	var hours float64
+	now := time.Now()
+	switch r.FormValue("timerange") {
+	case "6h - 8h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+		hours = 2
+	case "8h - 10h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Local)
+	case "10h - 11h30":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 11, 30, 0, 0, time.Local)
+	case "12h15 - 14h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 12, 15, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Local)
+	case "14h - 16h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 16, 0, 0, 0, time.Local)
+	case "16h30 - 18h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 16, 30, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Local)
+	case "18h - 20h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Local)
+	case "20h - 22h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
+	case "22h30 - 0h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.Local)
+	case "0h - 2h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 2, 0, 0, 0, time.Local)
+	case "2h45 - 4h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 2, 45, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Local)
+	case "4h - 6h":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Local)
+		end = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Local)
+	case "other":
+		start, _ = time.Parse("2006-01-02T15:04", r.FormValue("start"))
+		end, _ = time.Parse("2006-01-02T15:04", r.FormValue("end"))
+	}
+	hours = math.Round(end.Sub(start).Hours()*10) / 10
+	date, _ := time.Parse("2006-01-02", start.Format("2006-01-02"))
 
-	if machine == "" || r.FormValue("qty") == "" || hours <= 0 {
+	if machine == "" || r.FormValue("qty") == "" || hours <= 0 || r.FormValue("timerange") == "" {
 		template.Must(template.ParseFiles("templates/pages/sections/panelcnc/entry/form.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thông tin bị thiếu hoặc sai, vui lòng nhập lại.",
