@@ -6411,8 +6411,6 @@ func (s *Server) p_overview(w http.ResponseWriter, r *http.Request, ps httproute
 // /production/overview/loadprodtype - load chart prodtype of page overview of Production value
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) po_loadprodtype(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// start := time.Date(time.Now().Year(), time.Now().Month()-1, 1, 0, 0, 0, 0, time.Now().Location())
-
 	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{bson.M{"$month": "$date"}, int(time.Now().Month())}}}}},
 		{{"$group", bson.M{"_id": "$prodtype", "value": bson.M{"$sum": "$value"}}}},
@@ -6609,7 +6607,7 @@ func (s *Server) po_prodtypefilter(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	cur, err = s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(start)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(end)}}}}}},
-		{{"$sort", bson.D{{"createdat", -1}, {"date", -1}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -6639,10 +6637,17 @@ func (s *Server) tg_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
-// /target/entry - get page target entry
+// /target/entry/loadsectionentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) tge_loadsectionentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/loadreport
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/target/entry/report.html")).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -6717,7 +6722,6 @@ func (s *Server) ma_loadentry(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) ma_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -5))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.D{{"date", -1}, {"section", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
@@ -6833,12 +6837,14 @@ func (s *Server) ma_updatereport(w http.ResponseWriter, r *http.Request, ps http
 		Section string    `bson:"section"`
 		Hc      int       `bson:"hc"`
 		Workhr  float64   `bson:"workhr"`
+		DateStr string
 	}
 	if err := result.Decode(&manhrData); err != nil {
 		log.Println(err)
 	}
 	manhrData.Hc = hc
 	manhrData.Workhr = workhr
+	manhrData.DateStr = manhrData.Date.Format("02-01-2006")
 
 	template.Must(template.ParseFiles("templates/pages/manhr/admin/updated_tr.html")).Execute(w, map[string]interface{}{
 		"manhrData": manhrData,

@@ -289,6 +289,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	router.GET("/target/entry", withAuth(s.tg_entry))
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
+	router.GET("/target/entry/loadreport", s.tge_loadreport)
 	router.POST("/target/entry/settarget", s.tge_settarget)
 	// end Target
 
