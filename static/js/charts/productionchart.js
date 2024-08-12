@@ -3,7 +3,7 @@
 ///////////////////////////////////
 const drawProductionChart = (data) => {
 
-  const margin = {top: 30, right: 50, bottom: 10, left: 50};
+  const margin = {top: 30, right: 50, bottom: 10, left: 60};
   const width = 900;
   const height = 350;
   

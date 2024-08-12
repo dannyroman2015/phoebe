@@ -19,7 +19,8 @@ const drawWoodRemainChart = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(data.map(d => d.name))
-    .range(d3.quantize(t => d3.interpolateSpectral(t * 0.8 + 0.1), data.length).reverse());
+    .range(d3.schemeTableau10)
+    // .range(d3.quantize(t => d3.interpolateSpectral(t * 0.8 + 0.1), data.length).reverse());
 
   const svg = d3.create("svg")
     .attr("viewBox", [-width/2, -height/2, width, height])
