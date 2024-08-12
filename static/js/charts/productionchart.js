@@ -243,14 +243,15 @@ const drawProdMtdChart = (data) => {
   for (let i = pastDays+2; i < 31; i++) {
     estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
   }
-  
+
   const x = d3.scaleLinear()
     .domain([1, 31])
     .range([0, innerWidth])
 
   const y = d3.scaleLinear()
     // .domain([0, d3.max(data.map(d => d.dat[d.dat.length-1].value))])
-    .domain([0, estimateData[estimateData.length-1].value])
+    // .domain([0, estimateData[estimateData.length-1].value])
+    .domain([0, d3.max(data.map(d => d.dat[d.dat.length-1]), d => d.value)])
     .range([innerHeight, 0])
     .nice();
 
@@ -279,7 +280,7 @@ const drawProdMtdChart = (data) => {
     innerChart.append("text")
       .text(`${serie.month} - $ ${serie.dat[serie.dat.length-1].value.toLocaleString("en-US")}`)
       .attr("font-size", "14px")
-      .attr("x", x(serie.dat[serie.dat.length-1].days) + 17)
+      .attr("x", x(serie.dat[serie.dat.length-1].days) + 14)
       .attr("y", y(serie.dat[serie.dat.length-1].value) - 13)
       .attr("fill", "#75485E")
 
