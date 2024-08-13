@@ -6647,7 +6647,26 @@ func (s *Server) tge_loadsectionentry(w http.ResponseWriter, r *http.Request, ps
 // /target/entry/loadreport
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) tge_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/target/entry/report.html")).Execute(w, nil)
+	cur, err := s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.D{{"date", -1}, {"name", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var targetData []struct {
+		Id    string  `bson:"_id"`
+		Date  string  `bson:"date"`
+		Name  string  `bson:"name"`
+		Value float64 `bson:"value"`
+	}
+	if err := cur.All(context.Background(), &targetData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/target/entry/report.html")).Execute(w, map[string]interface{}{
+		"targetData": targetData,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -6698,6 +6717,76 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Đã đặt target thành công",
 	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/search
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_search(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("targetSearch") + ".*"
+	cur, err := s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": bson.M{"$regex": searchRegex, "$options": "i"}}}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var targetData []struct {
+		Id    string  `bson:"_id"`
+		Date  string  `bson:"date"`
+		Name  string  `bson:"name"`
+		Value float64 `bson:"value"`
+	}
+	if err := cur.All(context.Background(), &targetData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/target/entry/target_tbody.html")).Execute(w, map[string]interface{}{
+		"targetData": targetData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/filterbydate
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_filterbydate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	occurdate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+
+	cur, err := s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"date": primitive.NewDateTimeFromTime(occurdate)}}},
+		{{"$sort", bson.M{"name": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var targetData []struct {
+		Id    string  `bson:"_id"`
+		Date  string  `bson:"date"`
+		Name  string  `bson:"name"`
+		Value float64 `bson:"value"`
+	}
+	if err := cur.All(context.Background(), &targetData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/target/entry/target_tbody.html")).Execute(w, map[string]interface{}{
+		"targetData": targetData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/deletereport/:id
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	_, err := s.mgdb.Collection("target").DeleteOne(context.Background(), bson.M{"_id": id})
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -6847,6 +6936,65 @@ func (s *Server) ma_updatereport(w http.ResponseWriter, r *http.Request, ps http
 	manhrData.DateStr = manhrData.Date.Format("02-01-2006")
 
 	template.Must(template.ParseFiles("templates/pages/manhr/admin/updated_tr.html")).Execute(w, map[string]interface{}{
+		"manhrData": manhrData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/search
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_search(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("manhrSearch") + ".*"
+	cur, err := s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"section": bson.M{"$regex": searchRegex, "$options": "i"}}}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var manhrData []struct {
+		Id      string  `bson:"_id"`
+		Date    string  `bson:"date"`
+		Section string  `bson:"section"`
+		Hc      int     `bson:"hc"`
+		Workhr  float64 `bson:"workhr"`
+	}
+	if err := cur.All(context.Background(), &manhrData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/manhr_tbody.html")).Execute(w, map[string]interface{}{
+		"manhrData": manhrData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /manhr/admin/filterbydate
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) ma_filterbydate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	occurdate, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+
+	cur, err := s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"date": primitive.NewDateTimeFromTime(occurdate)}}},
+		{{"$sort", bson.M{"section": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var manhrData []struct {
+		Id      string  `bson:"_id"`
+		Date    string  `bson:"date"`
+		Section string  `bson:"section"`
+		Hc      int     `bson:"hc"`
+		Workhr  float64 `bson:"workhr"`
+	}
+	if err := cur.All(context.Background(), &manhrData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/manhr/admin/manhr_tbody.html")).Execute(w, map[string]interface{}{
 		"manhrData": manhrData,
 	})
 }

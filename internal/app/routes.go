@@ -291,6 +291,10 @@ func (s *Server) routes() http.Handler {
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
 	router.GET("/target/entry/loadreport", s.tge_loadreport)
 	router.POST("/target/entry/settarget", s.tge_settarget)
+	router.POST("/target/entry/search", s.tge_search)
+	router.POST("/target/entry/filterbydate", s.tge_filterbydate)
+	router.DELETE("/target/entry/deletereport/:id", s.tge_deletereport)
+
 	// end Target
 
 	////////////////////////////////////////////////////////////////////
@@ -303,6 +307,9 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/manhr/admin/deletereport/:id", s.ma_deletereport)
 	router.GET("/manhr/admin/updateform/:id", s.ma_updateform)
 	router.PUT("/manhr/admin/updatereport/:id", s.ma_updatereport)
+	router.POST("/manhr/admin/search", s.ma_search)
+	router.POST("/manhr/admin/filterbydate", s.ma_filterbydate)
+
 	// end Manhr
 
 	////////////////////////////////////////////////////////////////////
