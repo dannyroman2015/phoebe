@@ -156,6 +156,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/output/entry", withAuth(s.so_entry))
 	router.GET("/sections/output/entry/loadentry", s.soe_loadentry)
 	router.POST("/sections/output/entry/sendentry", s.soe_sendentry)
+	router.GET("/sections/output/entry/loadformentry", s.soe_loadformentry)
+	router.POST("/sections/output/entry/sendfastentry", s.soe_sendfastentry)
 
 	router.GET("/sections/output/admin", withAuth(s.so_admin))
 	router.GET("/sections/output/admin/loadreport", s.soa_loadreport)

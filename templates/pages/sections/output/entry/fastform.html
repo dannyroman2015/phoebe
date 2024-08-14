@@ -1,12 +1,21 @@
 <section id="entry-container" class="fade-in">
-  <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-screen-md px-4 py-16 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
-      <form x-data="{ switchOn: false }" class="space-y-5" hx-post="/sections/output/entry/sendentry" hx-target="#entry-container" hx-swap="outerHTML">
+      <form class="space-y-4" hx-post="/sections/output/entry/sendfastentry" hx-target="#entry-container" hx-swap="outerHTML">
         <div class="mt-4 text-center">
-          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
-            Output
-          </button>
-        </div>        
+          <button type="submit" class="inline-block w-full rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+            Gửi</button>
+        </div>
+
+        <div class="relative flex justify-center w-full max-w-xs mx-auto text-center">
+          <select class="flex text-center justify-center w-64 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+              name="outputtype" id="outputtype" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+            <option value="" disabled selected>Chọn loại Output</option>
+            <option value="reeded">Reeded</option>
+            <option value="fir">Fir</option>
+          </select>
+        </div>
+          
 
         <div class="mt-4 text-center">
           <div x-data="{
@@ -163,44 +172,21 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 text-center">
-          <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-              name="outputtype" id="outputtype" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
-            <option value="" disabled selected>Chọn loại Output</option>
-            <option value="reeded">Reeded</option>
-            <option value="fir">Fir</option>
-          </select>
-
-          <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-              name="section" id="section" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
-            <option value="" disabled selected>Chọn công đoạn</option>
-            <option value="1.Slice">1.Slice</option>
-            <option value="2.Selection">2.Selection</option>
-            <option value="3.Lamination">3.Lamination</option>
-            <option value="4.Drying">4.Drying</option>
-            <option value="5.Reeding">5.Reeding</option>
-            <option value="6.Selection-2">6.Selection-2</option>
-            <option value="7.Tubi">7.Tubi</option>
-            <option value="8.Veneer">8.Veneer</option>
-            <option value="8.Delivery">9.Delivery</option>
-          </select>
-        </div>   
-
-        <div class="mt-4 flex justify-center text-center">
-          <label for="qty" class="relative block rounded-md border">
-            <input type="number" id="qty" name="qty" placeholder="" min="0" step="any"
-              class="p-3 peer flex w-64 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-            <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-              Sản lượng</span>
-          </label>
+        <div class="relative w-full max-w-xs mx-auto">
+          <textarea x-data="{ 
+                  resize () { 
+                      $el.style.height = '0px'; 
+                      $el.style.height = $el.scrollHeight + 'px' 
+                  } 
+              }"
+              x-init="resize()"
+              @input="resize()"
+              type="text" name="outputlist"
+              placeholder="Khung nhập nhanh điểm 6S. Copy 2 cột (tên khu vực + điểm) và paste vào đây. Hoặc nhập 'tên khu vực' + 'cách' + 'điểm' + 'enter'. Trường hợp muốn tên khu vực có dấu cách, vui lòng thay bằng dấu '_'. Vd: muốn lưu 'Panel CNC', nhập 'Panel_CNC'. PS: 1 khu vực trong 1 ngày chỉ chấm điểm 1 lần. Nếu sai sót, vui lòng vào trang managment để chỉnh sửa."
+              class="flex relative z-20 peer w-full h-auto min-h-[80px] px-3 py-2 text-sm bg-white border-2 border-neutral-900 placeholder:text-neutral-500 focus:text-neutral-800 focus:border-neutral-900 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+          ></textarea>
+          <div class="absolute inset-0 z-10 w-full h-full -m-1 duration-300 ease-out translate-x-2 translate-y-2 bg-black peer-focus:m-0 peer-focus:translate-x-0 peer-focus:translate-y-0"></div>
         </div>
-
-        <div class="mt-4 text-center">
-          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
-            Gửi
-          </button>
-        </div> 
-
       </form>
     </div>
   </div>

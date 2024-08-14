@@ -4415,6 +4415,77 @@ func (s *Server) soe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/entry/loadformentry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soe_loadformentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/output/entry/fastform.html")).Execute(w, nil)
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/output/entry/sendfastentry
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) soe_sendfastentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	outputtype := r.FormValue("outputtype")
+	outputlistraw := strings.Fields(r.FormValue("outputlist"))
+	var outputlist = make([]float64, len(outputlistraw))
+	for i := 0; i < len(outputlistraw); i++ {
+		var a float64
+		a, err := strconv.ParseFloat(outputlistraw[i], 64)
+		if err != nil {
+			log.Println(err)
+			template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, map[string]interface{}{
+				"showErrDialog": true,
+				"msgDialog":     "Phải nhập chuỗi số.",
+			})
+			return
+		}
+		outputlist[i] = a
+	}
+	if r.FormValue("outputtype") == "" || r.FormValue("outputlist") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/output/entry/fastform.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	var bdoc []interface{}
+	var firsection = []string{"1.Slice", "2.Selection", "3.Lamination", "9.Delivery"}
+	var reededsection = []string{"1.Slice", "2.Selection", "3.Lamination", "4.Drying", "5.Reeding", "6.Selection-2", "7.Tubi", "8.Veneer"}
+	if outputtype == "fir" && len(outputlist) == 4 {
+		for i := 0; i < len(firsection); i++ {
+			b := bson.M{
+				"date": primitive.NewDateTimeFromTime(date), "type": outputtype, "section": firsection[i], "qty": outputlist[i], "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+			}
+			bdoc = append(bdoc, b)
+		}
+	}
+	if outputtype == "reeded" && len(outputlist) == 8 {
+		for i := 0; i < len(reededsection); i++ {
+			b := bson.M{
+				"date": primitive.NewDateTimeFromTime(date), "type": outputtype, "section": reededsection[i], "qty": outputlist[i], "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+			}
+			bdoc = append(bdoc, b)
+		}
+	}
+	_, err := s.mgdb.Collection("output").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/output/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/output/entry/fastform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
 // ///////////////////////////////////////////////////////////////////////
 // /sections/output/admin
 // ///////////////////////////////////////////////////////////////////////

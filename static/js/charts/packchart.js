@@ -584,6 +584,7 @@ const drawValueTargetChart = (data, target) => {
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - (y(d[1]) - y(d[0]))/2 - 5 : y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
         .attr("fill", "#75485E")
+        .attr("opacity", 0)
         .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
         .text(d => {
           if (d[1] - d[0] >= 60) { return `${d3.format(",.0f")(d[1]-d[0])}` }
@@ -605,7 +606,7 @@ const drawValueTargetChart = (data, target) => {
         .attr("dy", "0.1em")
         .attr("fill", "#921A40")
         .attr("font-size", 14)
-        .attr("opacity", 0)
+        .attr("opacity", 1)
     let flag = true;
     setInterval(() => {
       if (flag) {
@@ -616,7 +617,7 @@ const drawValueTargetChart = (data, target) => {
         innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
       }
       flag = !flag
-    }, 10000);
+    }, 8000);
   }
   svg.append("text")
     .text("RH")
