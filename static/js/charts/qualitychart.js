@@ -63,7 +63,7 @@ const drawQualityChart = (data) => {
   series.forEach(serie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
-        .attr("font-size", 10)
+        .attr("font-size", 12)
       .selectAll()
       .data(serie)
       .join("text")
@@ -73,7 +73,7 @@ const drawQualityChart = (data) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 9)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
-        .attr("font-size", "10px")
+        .attr("font-size", "12px")
         .text(d =>  d[1] - d[0] >= 15 ? d.key : "")
           .append("tspan")
             .text(d => {

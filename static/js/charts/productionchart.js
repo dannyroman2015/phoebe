@@ -3,7 +3,7 @@
 ///////////////////////////////////
 const drawProductionChart = (data) => {
 
-  const margin = {top: 30, right: 50, bottom: 10, left: 60};
+  const margin = {top: 30, right: 50, bottom: 10, left: 85};
   const width = 900;
   const height = 350;
   
@@ -278,7 +278,7 @@ const drawProdMtdChart = (data) => {
       .attr("fill-opacity", 0.3)
 
     innerChart.append("text")
-      .text(`${serie.month} - $ ${serie.dat[serie.dat.length-1].value.toLocaleString("en-US")}`)
+      .text(`${serie.month} - $ ${d3.format(",.0f")(serie.dat[serie.dat.length-1].value)}`)
       .attr("font-size", "14px")
       .attr("x", x(serie.dat[serie.dat.length-1].days) + 14)
       .attr("y", y(serie.dat[serie.dat.length-1].value) - 13)
@@ -326,7 +326,8 @@ const drawProdMtdChart = (data) => {
     .attr("fill-opacity", 0.05)
 
   innerChart.append("text")
-    .text(`Estimate: $ ${estimateData[estimateData.length-1].value.toLocaleString("en-US")}`)
+    // .text(`Estimate: $ ${estimateData[estimateData.length-1].value.toLocaleString("en-US")}`)
+    .text(`Estimate: $ ${d3.format(",.0f")(estimateData[estimateData.length-1].value)}`)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")
@@ -343,7 +344,7 @@ const drawProdMtdChart = (data) => {
     .attr("stroke-width", 1);
 
     innerChart.append("text")
-    .text(`$ ${estimateData[estimateData.length-5].value.toLocaleString("en-US")}`)
+    .text(`$ ${d3.format(",.0f")(estimateData[estimateData.length-5].value)}`)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")
@@ -360,7 +361,7 @@ const drawProdMtdChart = (data) => {
     .attr("stroke-width", 1);
 
   innerChart.append("text")
-    .text(`AVG of This Month up to ${pastDays}th: $ ${avg.toLocaleString("en-US")}`)
+    .text(`AVG of This Month up to ${pastDays}th: $ ${d3.format(",.0f")(avg)}`)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")

@@ -44,7 +44,7 @@
     x-transition:leave-end="translate-y-10"
     x-init="
         setTimeout(()=>{ bannerVisible = true }, bannerVisibleAfter);
-        setTimeout(()=>{ bannerVisible = false }, 10000);
+        setTimeout(()=>{ bannerVisible = false }, 20000);
     "
   class="fixed bottom-0 left-0 w-full h-auto py-2 z-50 duration-300 ease-out bg-white shadow-sm sm:py-0 sm:h-10" x-cloak>
   <div class="flex items-center justify-between w-full h-full px-3 mx-auto max-w-7xl ">
@@ -590,7 +590,7 @@
 
 <script>
   document.getElementById("cuttingToDate").valueAsDate = new Date();
-  document.getElementById("cuttingFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
+  document.getElementById("cuttingFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
   document.getElementById("laminationToDate").valueAsDate = new Date();
-  document.getElementById("laminationFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
+  document.getElementById("laminationFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
 </script>

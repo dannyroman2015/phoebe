@@ -266,7 +266,7 @@ const drawCuttingChart2 = (data, target) => {
     .attr("fill", "#75485E")
     .attr("font-size", "15px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".3s")(d[1])}`)
+    .text(d => `Σ ${d3.format(".1f")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -283,7 +283,7 @@ const drawCuttingChart2 = (data, target) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format(".2s")(d[1]-d[0])}
+          if (d[1] - d[0] >= 1.5) { return d3.format(".1f")(d[1]-d[0])}
         })
   })
 
@@ -384,7 +384,7 @@ const drawCuttingChart3 = (data, manhr) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    .range(["#A5A0DE", "#DFC6A2", "#A0D9DE"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -427,7 +427,7 @@ const drawCuttingChart3 = (data, manhr) => {
     .attr("fill", "#75485E")
     .attr("font-size", "12px")
     .attr("font-weight", 600)
-    .text(d => `Σ${d3.format(".2s")(d[1])}`)
+    .text(d => `Σ${d3.format(".1f")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -444,7 +444,7 @@ const drawCuttingChart3 = (data, manhr) => {
         .attr("fill", "#75485E")
         .attr("font-size", "12px")
         .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format(".2s")(d[1]-d[0])}
+          if (d[1] - d[0] >= 1) { return d3.format(".1f")(d[1]-d[0])}
         })
   })
  
@@ -520,7 +520,7 @@ innerChart.append("text")
       .text("Efficiency")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
-      .attr("x", x(lastW.date) + x.bandwidth()/2 - 5)
+      .attr("x", x(lastW.date) + x.bandwidth()/2 - 15)
       .attr("y", y2(lastW.efficiency) - 15)
       .attr("dy", "0.35em")
       .attr("fill","#75485E")
@@ -531,7 +531,7 @@ innerChart.append("text")
       .text("với ")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "start")
-      .attr("x", 20)
+      .attr("x", 5)
       .attr("y", 7)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
@@ -563,16 +563,12 @@ svg.append("text")
       .attr("fill", color("rh"))
       .attr("font-weight", 600)
     .append("tspan")
-      .text(" cùng ")
+      .text(" và ")
       .attr("font-weight", 300)
       .attr("fill", "#75485E")
     .append("tspan")
       .text(" Nhân lực")
       .attr("fill", "#90D26D")
-      .attr("font-weight", 600)
-    .append("tspan")
-      .text(" Nhân lực")
-      .attr("fill", "#FA7070")
       .attr("font-weight", 600)
 
   return svg.node();
