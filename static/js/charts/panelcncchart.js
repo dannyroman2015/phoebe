@@ -20,7 +20,7 @@ const drawPanelcncChart1 = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(machines)
-    .range(d3.schemePastel1)
+    .range(d3.schemeTableau10)
     .unknown("#ccc");
 
   const y = d3.scaleLinear()
@@ -33,7 +33,6 @@ const drawPanelcncChart1 = (data) => {
     .attr("height", height)
     .attr("viewBox", [0, 0, width, height])
     .attr("style", "max-width: 100%; height: auto;")
-    // .call(zoom); //nguyên cứu sau
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
@@ -46,11 +45,13 @@ const drawPanelcncChart1 = (data) => {
     .selectAll()
     .data(([, d]) => d)
     .join("rect")
-      .attr("x", d => x(d.machine))
-      .attr("y", d => y(d.qty))
-      .attr("width", x.bandwidth())
-      .attr("height", d => y(0) - y(d.qty))
-      .attr("fill", d => color(d.machine))
+        .attr("x", d => x(d.machine))
+        .attr("y", d => y(d.qty))
+        .attr("width", x.bandwidth())
+        .attr("height", d => y(0) - y(d.qty))
+        .attr("fill", d => color(d.machine))
+      .append("title")
+        .text(d => d.qty)
 
   innerChart.append("g")
     .selectAll()
@@ -60,26 +61,14 @@ const drawPanelcncChart1 = (data) => {
     .selectAll()
     .data(([, d]) => d)
     .join("text")
-      .text(d => d.qty)
+      .text(d => x.bandwidth() >= 20 ? d.qty : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.machine) + x.bandwidth()/2)
       .attr("y", d => y(d.qty) + 8)
-      .attr("fill", "#75485E")
+      .attr("fill", "white")
       .attr("font-size", "14px")
-      
-  // innerChart
-  //   .selectAll()
-  //   .data(d3.group(data, d => d.date).get(data[0].date))
-  //   .join("text")
-  //     .text(d => d.machine)
-  //     .attr("text-anchor", "start")
-  //     .attr("x", d => x(d.machine) + x.bandwidth()/2)
-  //     .attr("y", d => y(d.qty) - 5)
-  //     .attr("fill", d => color(d.machine))
-  //     .attr("font-weight", 600)
-  //     .attr("transform", d => `rotate(-90, ${x(d.machine) + x.bandwidth()}, ${y(d.qty) - 20})`)
-      
+        
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -87,20 +76,22 @@ const drawPanelcncChart1 = (data) => {
     .call(g => g.selectAll(".domain").remove())
     .call(g => g.selectAll("text").attr("font-size", "12px"));
 
-  // innerChart.append("g")
-  //   .attr("transform", `translate(${margin.left}, 0)`)
-  //   .call(d3.axisLeft(y).ticks(null, "s"))
-  //   .call(g => g.selectAll(".domain").remove())
+  innerChart.append("g")
+    .attr("transform", `translate(${margin.left}, 0)`)
+    .call(d3.axisLeft(y).ticks(null, "s"))
+    .call(g => g.selectAll(".domain").remove())
+    .call(g => g.selectAll("text").attr("font-size", 14))
+    .call(g => g.selectAll(".tick line").clone().attr("x2", innerWidth).attr("stroke-opacity", 0.1))
 
   svg.append("text")
     .text("(sheet)")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("x", 30)
+    .attr("x", 60)
     .attr("y", 5)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
-    .attr("font-size", 12)
+    .attr("font-size", 14)
 
   svg.append("text")
     .text("rover c")
@@ -175,30 +166,6 @@ const drawPanelcncChart1 = (data) => {
     .attr("transform", d => `rotate(-90, 820, 90)`)
 
   return svg.node();
-
-  function zoom(svg) {
-    const extent = [[0, 0], [innerWidth, innerHeight]];
-
-    svg.call(d3.zoom()
-      .scaleExtent([1, 8])
-      .translateExtent(extent)
-      .extent(extent)
-      .on("zoom", zoomed));
-
-    function zoomed(event) {
-      x.range([0, innerWidth].map(d => event.transform.applyX(d)));
-      svg.selectAll(".bars rect").attr("x", d => x(d.date)).attr("width", x.bandwidth());
-      svg.selectAll(".x-axis").call(xAxis).call(g => g.selectAll(".domain").remove());
-      svg.selectAll(".label text").attr("x", d => x(d.date) + x.bandwidth()/2).call(t => {
-        if (x.bandwidth() < 50) {
-          t.attr("hidden", true)
-        }
-        else {
-          t.attr("hidden", null)
-        }
-      })
-    }
-  }
 }
 
 const drawPanelcncChart = (data) => {
