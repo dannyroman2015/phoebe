@@ -553,10 +553,12 @@ const drawAssemblyVTChart = (data, target) => {
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
-      .attr("x", d => x(d.data[0]))
-      .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - 5 : y(d[1]))
-      .attr("height", d => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth())
+        .attr("x", d => x(d.data[0]))
+        .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - 5 : y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth())
+      .append("title")
+        .text(d => d[1] - d[0])
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -595,7 +597,7 @@ const drawAssemblyVTChart = (data, target) => {
         .attr("fill", "#75485E")
         .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
         .text(d => {
-          if (d[1] - d[0] >= 60) { return `${d3.format(",.0f")(d[1]-d[0])}` }
+          if (d[1] - d[0] >= 3500) { return `${d3.format(",.0f")(d[1]-d[0])}` }
         })
   })
 
@@ -606,10 +608,10 @@ const drawAssemblyVTChart = (data, target) => {
       .selectAll()
       .data(x1rhdata)
       .join("text")
-        .text(d => `Σ ${d3.format(",.0f")(d[1])}`)
+        .text(d => d[1] > 3500 ? `Σ ${d3.format(",.0f")(d[1])}` : "")
         .attr("class", "x1total")
         .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "middle")
+        .attr("dominant-baseline", "hanging")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
         .attr("y", d => y(d[0]))
         .attr("dy", "0.1em")
@@ -617,6 +619,8 @@ const drawAssemblyVTChart = (data, target) => {
         .attr("font-size", 14)
         .attr("opacity", 0)
     let flag = true;
+    innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
+    innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
     setInterval(() => {
       if (flag) {
         innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))

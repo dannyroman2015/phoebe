@@ -5440,6 +5440,42 @@ func (s *Server) pko_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) pko_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("packingFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("packingToDate"))
+	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Part        string  `bson:"part"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/pack/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/pack/entry - load page entry of pack section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) spk_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

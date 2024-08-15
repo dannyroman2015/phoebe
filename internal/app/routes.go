@@ -223,6 +223,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/pack/overview", s.spk_overview)
 	router.GET("/sections/pack/overview/loadreport", s.pko_loadreport)
 	router.POST("/sections/pack/overview/reportsearch", s.pko_reportsearch)
+	router.POST("/sections/pack/overview/reportdatefilter", s.pko_reportdatefilter)
 
 	router.GET("/sections/pack/entry", withAuth(s.spk_entry))
 	router.GET("/sections/pack/entry/loadform", s.spk_loadform)
