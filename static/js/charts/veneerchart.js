@@ -41,10 +41,12 @@ const drawVeneerChart = (data) => {
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
-      .attr("x", d => x(d.data[0]))
-      .attr("y", d => y(d[1]))
-      .attr("height", d => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth())
+        .attr("x", d => x(d.data[0]))
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth())
+      .append("title")
+        .text(d => d[1] - d[0])
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -83,11 +85,11 @@ const drawVeneerChart = (data) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format(".3s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format(".3s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 100 && d.key == "rework") { return `🔧${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "straight") { return `⏌${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "curve") { return `⌒${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "reeded") { return `≊${d3.format(".3s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 100 && d.key == "reeded") {return d3.format(".3s")(d[1]-d[0])} }
         })
   })
 
@@ -234,11 +236,11 @@ const drawVeneerChart1 = (data, target) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 60 && d.key == "rework") { return `🔧${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 60 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 60 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 100 && d.key == "rework") { return `🔧${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 100 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 100 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
         })
   })
 

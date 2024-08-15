@@ -41,10 +41,12 @@ const drawReededlineChart = (data) => {
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
-      .attr("x", d => x(d.data[0]))
-      .attr("y", d => y(d[1]))
-      .attr("height", d => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth())
+        .attr("x", d => x(d.data[0]))
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth())
+      .append("title")
+        .text(d => d3.format(".1f")(d[1] - d[0]))
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -66,7 +68,7 @@ const drawReededlineChart = (data) => {
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".3s")(d[1])}` )
+    .text(d => `Σ ${d3.format(".0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -82,9 +84,7 @@ const drawReededlineChart = (data) => {
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
-        .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format(".3s")(d[1]-d[0])}
-        })
+        .text(d => d[1] - d[0] >= 25 ?  d3.format(".0f")(d[1]-d[0]) : "")
   })
 
   svg.append("text")
@@ -206,7 +206,7 @@ const drawReededlineChart1 = (data, target) => {
     .attr("fill", "#75485E")
     .attr("font-size", "14px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".3s")(d[1])}` )
+    .text(d => `Σ ${d3.format(".0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -222,9 +222,9 @@ const drawReededlineChart1 = (data, target) => {
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
-        .text(d => {
-          if (d[1] - d[0] != 0) { return d3.format(".3s")(d[1]-d[0])}
-        })
+        .text(d => 
+          d[1] - d[0] >= 30 ? d3.format(".0f")(d[1]-d[0]) : ""
+        )
   })
 
   //draw target lines
@@ -352,6 +352,8 @@ const drawReededlineChart2 = (data, manhr) => {
       .attr("height", d => y(0) - y(d.qty))
       .attr("width", x.bandwidth()/2)
       .attr("fill", "#DFC6A2")
+      .append("title")
+        .text(d => d.qty)
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -363,7 +365,7 @@ const drawReededlineChart2 = (data, manhr) => {
     .selectAll()
     .data(data)
     .join("text")
-      .text(d => d3.format(".3s")(d.qty))
+      .text(d => d.qty >= 60 ? d3.format(".3s")(d.qty) : "")
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.date) + x.bandwidth()/4)
@@ -407,7 +409,7 @@ svg.append("text")
       .selectAll()
       .data(workinghrs)
       .join("text")
-        .text(d => `👷 ${d.hc} = ${d.workhr}h`)
+        .text(d => `👷 ${d.hc} = ${d3.format(".0f")(d.workhr)}h`)
         .attr("text-anchor", "end")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.date) + x.bandwidth()*3/4)
