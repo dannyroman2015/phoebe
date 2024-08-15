@@ -3959,7 +3959,7 @@ func (s *Server) sl_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) slo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat"}}}}},
 	})
 	if err != nil {
@@ -3994,7 +3994,8 @@ func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -4002,15 +4003,48 @@ func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 	defer cur.Close(context.Background())
 
 	var laminationReports []struct {
-		Date     string  `bson:"date"`
-		ProdType string  `bson:"prodtype"`
-		Qty      float64 `bson:"qty"`
-		Reporter string  `bson:"reporter"`
+		Date      string  `bson:"date"`
+		ProdType  string  `bson:"prodtype"`
+		Qty       float64 `bson:"qty"`
+		Reporter  string  `bson:"reporter"`
+		CreatedAt string  `bson:"createdat"`
 	}
 	if err = cur.All(context.Background(), &laminationReports); err != nil {
 		log.Println(err)
 	}
-	template.Must(template.ParseFiles("templates/pages/sections/lamination/overview/report_tbl.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"laminationReports": laminationReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/lamination/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) slo_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("laminationFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("laminationToDate"))
+
+	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var laminationReports []struct {
+		Date      string  `bson:"date"`
+		ProdType  string  `bson:"prodtype"`
+		Qty       float64 `bson:"qty"`
+		Reporter  string  `bson:"reporter"`
+		CreatedAt string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &laminationReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/lamination/overview/report_tbody.html")).Execute(w, map[string]interface{}{
 		"laminationReports": laminationReports,
 	})
 }
@@ -4169,7 +4203,7 @@ func (s *Server) sr_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sro_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -4204,6 +4238,40 @@ func (s *Server) sro_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var reededlineReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Tone        string  `bson:"tone"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"at"`
+	}
+	if err = cur.All(context.Background(), &reededlineReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/reededline/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"reededlineReports": reededlineReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/reededline/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sro_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("reededlineFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("reededlineToDate"))
+
+	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -4613,7 +4681,7 @@ func (s *Server) sv_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) svo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -4648,6 +4716,39 @@ func (s *Server) svo_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var veneerReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &veneerReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/veneer/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"veneerReports": veneerReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/veneer/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) svo_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("veneerFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("veneerToDate"))
+
+	cur, err := s.mgdb.Collection("veneer").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -4884,7 +4985,7 @@ func (s *Server) sa_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sao_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -4924,6 +5025,43 @@ func (s *Server) sao_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &assemblyReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"assemblyReports": assemblyReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/assembly/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sao_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("assemblyFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("assemblyToDate"))
+
+	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdad", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -5128,7 +5266,7 @@ func (s *Server) sw_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) swo_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -5168,6 +5306,43 @@ func (s *Server) swo_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishReports []struct {
+		ReportId    string  `bson:"_id"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		Value       float64 `bson:"value"`
+		ProdType    string  `bson:"prodtype"`
+		Itemcode    string  `bson:"itemcode"`
+		ItemType    string  `bson:"itemtype"`
+		Component   string  `bson:"component"`
+		Factory     string  `bson:"factory"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &woodfinishReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/woodfinish/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"woodfinishReports": woodfinishReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/woodfinish/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) swo_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("woodfinishFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("woodfinishToDate"))
+
+	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -5372,7 +5547,7 @@ func (s *Server) spk_overview(w http.ResponseWriter, r *http.Request, ps httprou
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) pko_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
@@ -5730,7 +5905,7 @@ func (s *Server) spc_overview(w http.ResponseWriter, r *http.Request, ps httprou
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) spco_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
 			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$startat", "timezone": "Asia/Bangkok"}},
 			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},
@@ -5771,6 +5946,46 @@ func (s *Server) spco_reportsearch(w http.ResponseWriter, r *http.Request, ps ht
 
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
+			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$date", "timezone": "Asia/Bangkok"}},
+			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var panelcncReports []struct {
+		ReportId    string  `bson:"_id"`
+		Machine     string  `bson:"machine"`
+		Date        string  `bson:"date"`
+		Qty         float64 `bson:"qty"`
+		StartAt     string  `bson:"startat"`
+		EndAt       string  `bson:"endat"`
+		Hours       float64 `bson:"hours"`
+		Type        string  `bson:"type"`
+		Reporter    string  `bson:"reporter"`
+		CreatedDate string  `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &panelcncReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/panelcnc/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"panelcncReports": panelcncReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/panelcnc/overview/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spco_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("panelcncFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("panelcncToDate"))
+
+	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
 			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$date", "timezone": "Asia/Bangkok"}},
 			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat", "timezone": "Asia/Bangkok"}},

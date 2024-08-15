@@ -126,6 +126,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/lamination/overview", s.sl_overview)
 	router.GET("/sections/lamination/overview/loadreport", s.slo_loadreport)
 	router.POST("/sections/lamination/overview/reportsearch", s.slo_reportsearch)
+	router.POST("/sections/lamination/overview/reportdatefilter", s.slo_reportdatefilter)
 
 	router.GET("/sections/lamination/entry", withAuth(s.sl_entry))
 	router.GET("/sections/lamination/entry/loadform", s.sle_loadform)
@@ -141,6 +142,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/reededline/overview", s.sr_overview)
 	router.GET("/sections/reededline/overview/loadreport", s.sro_loadreport)
 	router.POST("/sections/reededline/overview/reportsearch", s.sro_reportsearch)
+	router.POST("/sections/reededline/overview/reportdatefilter", s.sro_reportdatefilter)
 
 	router.GET("/sections/reededline/entry", withAuth(s.sr_entry))
 	router.GET("/sections/reededline/entry/loadform", s.sre_loadform)
@@ -171,6 +173,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/veneer/overview", s.sv_overview)
 	router.GET("/sections/veneer/overview/loadreport", s.svo_loadreport)
 	router.POST("/sections/veneer/overview/reportsearch", s.svo_reportsearch)
+	router.POST("/sections/veneer/overview/reportdatefilter", s.svo_reportdatefilter)
 
 	router.GET("/sections/veneer/entry", withAuth(s.sv_entry))
 	router.GET("/sections/veneer/entry/loadform", s.sve_loadform)
@@ -193,6 +196,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/assembly/overview", s.sa_overview)
 	router.GET("/sections/assembly/overview/loadreport", s.sao_loadreport)
 	router.POST("/sections/assembly/overview/reportsearch", s.sao_reportsearch)
+	router.POST("/sections/assembly/overview/reportdatefilter", s.sao_reportdatefilter)
 
 	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
@@ -208,6 +212,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/woodfinish/overview", s.sw_overview)
 	router.GET("/sections/woodfinish/overview/loadreport", s.swo_loadreport)
 	router.POST("/sections/woodfinish/overview/reportsearch", s.swo_reportsearch)
+	router.POST("/sections/woodfinish/overview/reportdatefilter", s.swo_reportdatefilter)
 
 	router.GET("/sections/woodfinish/entry", withAuth(s.sw_entry))
 	router.GET("/sections/woodfinish/entry/loadform", s.swe_loadform)
@@ -239,6 +244,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/panelcnc/overview", s.spc_overview)
 	router.GET("/sections/panelcnc/overview/loadreport", s.spco_loadreport)
 	router.POST("/sections/panelcnc/overview/reportsearch", s.spco_reportsearch)
+	router.POST("/sections/panelcnc/overview/reportdatefilter", s.spco_reportdatefilter)
 
 	router.GET("/sections/panelcnc/entry", withAuth(s.spc_entry))
 	router.GET("/sections/panelcnc/entry/loadform", s.spc_loadform)
