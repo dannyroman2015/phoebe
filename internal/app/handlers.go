@@ -6954,6 +6954,116 @@ func (s *Server) po_prodtypefilter(w http.ResponseWriter, r *http.Request, ps ht
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////////////
+// /production/overview/loadsummary - load summary table of page overview of Production value
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_summarydatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	month, _ := strconv.Atoi(r.FormValue("summarymonth"))
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{bson.M{"$month": "$date"}, month}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var data []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Value    float64 `bson:"value" json:"value"`
+		Qty      int     `bson:"qty" json:"qty"`
+	}
+	if err = cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+	if len(data) == 0 {
+		template.Must(template.ParseFiles("templates/pages/production/overview/summary_tbody.html")).Execute(w, map[string]interface{}{})
+		return
+	}
+
+	var mtdv, rhmtdv, brandmtdv, outsourcemtdv float64
+	var mtdp, rhmtdp, brandmtdp, outsourcemtdp int
+	var dates []string
+	for _, i := range data {
+		mtdv += i.Value
+		mtdp += i.Qty
+		switch i.Prodtype {
+		case "brand":
+			brandmtdv += i.Value
+			brandmtdp += i.Qty
+		case "rh":
+			rhmtdv += i.Value
+			rhmtdp += i.Qty
+		case "outsource":
+			outsourcemtdv += i.Value
+			outsourcemtdp += i.Qty
+		}
+		if !slices.Contains(dates, i.Date) {
+			dates = append(dates, i.Date)
+		}
+	}
+
+	pastdays := len(dates)
+	var todayv, todaybrandv, todayrhv, todayoutsourcev float64
+	var todayp int
+	if time.Now().Add(7*time.Hour).Format("2006-01-02") == dates[len(dates)-1] {
+		pastdays--
+		for i := len(data) - 1; i > 0; i-- {
+			if data[i].Date != dates[len(dates)-1] {
+				break
+			}
+			todayv += data[i].Value
+			todayp += data[i].Qty
+			switch data[i].Prodtype {
+			case "brand":
+				todaybrandv += data[i].Value
+			case "rh":
+				todayrhv += data[i].Value
+			case "outsource":
+				todayoutsourcev += data[i].Value
+			}
+		}
+	}
+	var estdays int
+	if month != int(time.Now().Month()) {
+		estdays = 0
+	} else {
+		start := time.Now()
+		end := time.Date(2024, time.Now().Month()+1, 1, 0, 0, 0, 0, time.Local)
+		for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+			if d.Weekday() != time.Sunday {
+				estdays++
+			}
+		}
+	}
+
+	p := message.NewPrinter(language.English)
+	template.Must(template.ParseFiles("templates/pages/production/overview/summary_tbody.html")).Execute(w, map[string]interface{}{
+		"mtdv":          p.Sprintf("%.0f", mtdv),
+		"mtdp":          p.Sprintf("%d", mtdp),
+		"brandmtdv":     p.Sprintf("%.0f", brandmtdv),
+		"brandmtdp":     p.Sprintf("%d", brandmtdp),
+		"rhmtdv":        p.Sprintf("%.0f", rhmtdv),
+		"rhmtdp":        p.Sprintf("%d", rhmtdp),
+		"outsourcemtdv": p.Sprintf("%.0f", outsourcemtdv),
+		"pastdays":      pastdays,
+		"avgv":          p.Sprintf("%.0f", mtdv/float64(pastdays)),
+		"avgp":          p.Sprintf("%d", mtdp/pastdays),
+		"brandavgv":     p.Sprintf("%.0f", brandmtdv/float64(pastdays)),
+		"brandavgp":     p.Sprintf("%d", brandmtdp/pastdays),
+		"rhavgv":        p.Sprintf("%.0f", rhmtdv/float64(pastdays)),
+		"rhavgp":        p.Sprintf("%d", rhmtdp/pastdays),
+		"outsourceavgv": p.Sprintf("%.0f", outsourcemtdv/float64(pastdays)),
+		"estv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)*float64(estdays)+(mtdv-todayv)),
+		"estbrandv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)*float64(estdays)+(brandmtdv-todaybrandv)),
+		"estrhv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)*float64(estdays)+(rhmtdv-todayrhv)),
+		"estoutsourcev": p.Sprintf("%.0f", (outsourcemtdv-todayoutsourcev)/float64(pastdays)*float64(estdays)+(outsourcemtdv-todayoutsourcev)),
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /target/entry - get page target entry
 // ////////////////////////////////////////////////////////////////////////////////////////////
