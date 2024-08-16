@@ -1078,6 +1078,44 @@ func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httproute
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/loadsafety
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) d_loadsafety(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// fromdate := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
+	// todate := time.Now().Format("2006-01-02")
+	// cur, err := s.mgdb.Collection("sixs").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"$and": bson.A{bson.M{"datestr": bson.M{"$gte": fromdate}}, bson.M{"datestr": bson.M{"$lte": todate}}}}}},
+	// 	{{"$sort", bson.M{"datestr": 1}}},
+	// })
+	// if err != nil {
+	// 	log.Println("dashboard: ", err)
+	// }
+
+	// type ScoreReport struct {
+	// 	Area  string `bson:"area"`
+	// 	Date  string `bson:"datestr"`
+	// 	Score int    `bson:"score"`
+	// }
+	// var s6Data []ScoreReport
+	// var s6areas []string
+	// var s6dates []string
+	// for cur.Next(context.Background()) {
+	// 	var a ScoreReport
+	// 	cur.Decode(&a)
+	// 	t, _ := time.Parse("2006-01-02", a.Date)
+	// 	a.Date = t.Format("2 Jan")
+	// 	if !slices.Contains(s6areas, a.Area) {
+	// 		s6areas = append(s6areas, a.Area)
+	// 	}
+	// 	if !slices.Contains(s6dates, a.Date) {
+	// 		s6dates = append(s6dates, a.Date)
+	// 	}
+	// 	s6Data = append(s6Data, a)
+	// }
+	template.Must(template.ParseFiles("templates/pages/dashboard/safety.html")).Execute(w, map[string]interface{}{})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/panelcnc/getchart - change chart of panelcnc area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
