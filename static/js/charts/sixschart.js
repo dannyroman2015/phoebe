@@ -1,5 +1,5 @@
 const drawSixSChart = (data, dates, areas) => {
-  const margin = {top: 0, right: 10, bottom: 20, left: 40}
+  const margin = {top: 0, right: 10, bottom: 30, left: 40}
   const width = 900
   const height = 300
   const innerWidth = width - margin.left - margin.right
@@ -27,7 +27,7 @@ const drawSixSChart = (data, dates, areas) => {
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(xAxis)
     .call(g => g.select(".domain").remove())
-
+    .call(g => g.selectAll(".tick text").attr("font-size", 12).attr("stroke", "75485E").style("text-transform", "uppercase"))
   const yScale = d3.scaleBand()
     .domain(s6dates)
     .range([innerHeight, 0])
@@ -39,47 +39,19 @@ const drawSixSChart = (data, dates, areas) => {
     .call(yAxis)
     .call(g => g.select(".domain").remove())
 
- 
   const colorScale = d3.scaleThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9], d3.schemeRdYlGn[10]);
   
-  const tooltip = d3.select("tooltip")
-    .append("div")
-    .attr("class", "tooltip")
-    .style("position", "absolute")
-    .style("opacity", 0)
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "2px")
-    .style("border-radius", "5px")
-    .style("padding", "5px")
-
-  const mouseover = (e, d) => {
-    tooltip.style("opacity", 1)
-  }
-
-  const mousemove = (e, d) => {
-    tooltip
-      .html("The score: " + d.Score)
-      .style("left", (e.x) + "px")
-      .style("top", (e.y)/3 + "px")
-  }
-
-  const mouseleave = (d) => {
-    tooltip.style("opacity", 0)
-  }
-
   innerChart
     .selectAll()
     .data(s6data)
     .join("rect")
-      .attr("x", d => xScale(d.Area))
-      .attr("y", d => yScale(d.Date))
-      .attr("width", xScale.bandwidth())
-      .attr("height", yScale.bandwidth())
-      .style("fill", d => colorScale(d.Score))
-    .on("mouseover", mouseover)
-    .on("mousemove", mousemove)
-    .on("mouseleave", mouseleave)
+        .attr("x", d => xScale(d.Area))
+        .attr("y", d => yScale(d.Date))
+        .attr("width", xScale.bandwidth())
+        .attr("height", yScale.bandwidth())
+        .style("fill", d => colorScale(d.Score))
+      .append("title")
+        .text(d => d.Score)
   
   return svg.node();
 }

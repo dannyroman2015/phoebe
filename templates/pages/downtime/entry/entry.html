@@ -10,7 +10,7 @@
 
   <title>Downtime Entry</title>
 </head>
-<body>
+<body class="bg-gray-100">
   {{template "navbar"}}
 
   <div hx-get="/downtime/entry/loadform" hx-target="this" hx-trigger="load" hx-swap="outerHTML settle:100ms"></div>  

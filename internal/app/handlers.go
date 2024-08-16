@@ -477,7 +477,7 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 	cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.tone", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
 		{{"$unset", "_id"}},
 	})

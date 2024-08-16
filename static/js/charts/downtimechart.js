@@ -59,7 +59,7 @@ const drawDowntimeChart = (data) => {
   series.forEach(serie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
-        .attr("font-size", 10)
+        .attr("font-size", 14)
       .selectAll()
       .data(serie)
       .join("text")
@@ -69,7 +69,8 @@ const drawDowntimeChart = (data) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 9)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
-        .attr("font-size", "10px")
+        .attr("font-size", "14px")
+        .style("text-transform", "uppercase")
         .text(d =>  d[1] - d[0] >= 0.1 ? d.key : "")
           .append("tspan")
             .text(d => {
