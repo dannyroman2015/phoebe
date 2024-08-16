@@ -1,8 +1,9 @@
 const drawDowntimeChart = (data) => {
   const width = 900;
+  const totalWidth = 2 * width;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
-  const innerWidth = width - margin.left - margin.right;
+  const innerWidth = totalWidth - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
   const series = d3.stack()
@@ -26,8 +27,25 @@ const drawDowntimeChart = (data) => {
     .range(d3.schemeSet3)
     .unknown("#ccc");
 
-  const svg = d3.create("svg")
-    .attr("viewBox", [0, 0, width, height])
+  const parent = d3.create("div")
+
+  parent.append("svg")
+      .attr("viewBox", [0, 0, width, height])
+      .style("position", "absolute")
+      .style("pointer-events", "none")
+      .style("z-index", 1)
+    .append("g")
+      .attr("transform", `translate(${margin.left}, 0)`)
+  
+  const body = parent.append("div")
+    .attr("class", "sss")
+    .style("overflow-x", "scroll")
+    .style("-webkit-overflow-scrolling", "touch")
+
+  const svg = body.append("svg")
+    .attr("width", totalWidth)
+    .attr("height", height)
+    .style("display", "block")
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
@@ -69,13 +87,11 @@ const drawDowntimeChart = (data) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 9)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
-        .attr("font-size", "14px")
-        .style("text-transform", "uppercase")
+        .attr("font-size", "12px")
+        .style("text-transform", "capitalize")
         .text(d =>  d[1] - d[0] >= 0.1 ? d.key : "")
           .append("tspan")
-            .text(d => {
-              return  d[1] - d[0] >= 0.1 ? `${d[1]-d[0]}` : ""
-            })
+            .text(d => d[1] - d[0] >= 0.1 ? `${d[1]-d[0]}` : "")
             .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
             .attr("dy", "1.5em")
   })
@@ -90,5 +106,5 @@ const drawDowntimeChart = (data) => {
       .attr("fill", "#75485E")
       .attr("font-size", 16)
 
-  return svg.node();
+  return parent.node();
 }

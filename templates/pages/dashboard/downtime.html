@@ -105,12 +105,12 @@
 
   <!-- chart -->
    <div id="downtime-container">
-    <div id="downtimeChart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+    <div class="overflow-scroll" id="downtimeChart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
    </div>
 </div>
 
 <script>
   document.getElementById("downtimeToDate").valueAsDate = new Date();
-  document.getElementById("downtimeFromDate").valueAsDate = new Date(Date.now() - 10*86400000);
+  document.getElementById("downtimeFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
   downtimeChart.append(drawDowntimeChart({{.downtimeChartData}}))
 </script>

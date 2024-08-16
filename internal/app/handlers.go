@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bufio"
 	"context"
 	"dannyroman2015/phoebe/internal/models"
 	"encoding/json"
@@ -1011,9 +1012,9 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("downtime").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -10).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -20).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "downtime": bson.M{"$sum": "$downtime"}}}},
-		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
+		{{"$sort", bson.D{{"_id.date", -1}, {"_id.section", 1}}}},
 		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
 		{{"$unset", "_id"}},
 	})
@@ -1029,7 +1030,10 @@ func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httpr
 	if err := cur.All(context.Background(), &downtimeChartData); err != nil {
 		log.Println(err)
 	}
-
+	for i := 0; i < len(downtimeChartData); i++ {
+		tmp, _ := time.Parse("2006-01-02", downtimeChartData[i].Date)
+		downtimeChartData[i].Date = tmp.Format("02 Jan")
+	}
 	template.Must(template.ParseFiles("templates/pages/dashboard/downtime.html")).Execute(w, map[string]interface{}{
 		"downtimeChartData": downtimeChartData,
 	})
@@ -6348,42 +6352,50 @@ func (s *Server) s6_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /6s/entry - send fast entry of 6S
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) s6_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	rawdate := r.FormValue("occurdate")
-	date, _ := time.Parse("Jan 02, 2006", rawdate)
-	strdate := date.Format("2006-01-02")
-
-	rawscorelist := r.FormValue("scorelist")
-	scores := strings.Fields(rawscorelist)
-
-	if len(scores)%2 != 0 || len(scores) == 0 {
-		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-			"showSuccessDialog": false,
-			"showErrorDialog":   true,
-		})
-		return
+	// rawdate := r.FormValue("occurdate")
+	// date, _ := time.Parse("Jan 02, 2006", rawdate)
+	// strdate := date.Format("2006-01-02")
+	var scores []string
+	scanner := bufio.NewScanner(strings.NewReader(r.FormValue("scorelist")))
+	for scanner.Scan() {
+		line := scanner.Text()
+		arr := strings.Fields(line)
+		score := arr[len(arr)-1]
+		section := strings.Join(arr[:len(arr)-1], " ")
+		scores = append(scores, section)
+		scores = append(scores, score)
 	}
+	log.Println(scores)
+	// scores := strings.Fields(rawscorelist)
+	// if len(scores)%2 != 0 || len(scores) == 0 {
+	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 		"showSuccessDialog": false,
+	// 		"showErrorDialog":   true,
+	// 	})
+	// 	return
+	// }
 
-	// convert to json string
-	var jsonStr = `[`
-	for i := 0; i < len(scores); i += 2 {
-		scores[i] = strings.ToLower(strings.Replace(scores[i], "_", " ", -1))
-		jsonStr += `{"area":"` + scores[i] + `", "score":` + scores[i+1] + `,"datestr":"` + strdate + `"},`
-	}
-	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+	// // convert to json string
+	// var jsonStr = `[`
+	// for i := 0; i < len(scores); i += 2 {
+	// 	scores[i] = strings.ToLower(strings.Replace(scores[i], "_", " ", -1))
+	// 	jsonStr += `{"area":"` + scores[i] + `", "score":` + scores[i+1] + `,"datestr":"` + strdate + `"},`
+	// }
+	// jsonStr = jsonStr[:len(jsonStr)-1] + `]`
 
-	model := models.NewSixSModel(s.mgdb)
-	if err := model.InsertMany(jsonStr); err != nil {
-		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-			"showSuccessDialog": false,
-			"showErrorDialog":   true,
-		})
-		return
-	}
+	// model := models.NewSixSModel(s.mgdb)
+	// if err := model.InsertMany(jsonStr); err != nil {
+	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 		"showSuccessDialog": false,
+	// 		"showErrorDialog":   true,
+	// 	})
+	// 	return
+	// }
 
-	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-		"showSuccessDialog": true,
-		"showErrorDialog":   false,
-	})
+	// template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+	// 	"showSuccessDialog": true,
+	// 	"showErrorDialog":   false,
+	// })
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
