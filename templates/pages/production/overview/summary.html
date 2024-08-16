@@ -1,9 +1,9 @@
-<div class="fade-in col-span-full lg:col-span-4 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class="fade-in col-span-full lg:col-span-4 relative p-2 space-y-4 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <!-- title & control -->
   <div class="flex justify-between">
     <a id="title"
       href="Javascript:void(0);" class="mb-1 font-bold hover:underline">
-      Summary
+      Production Value Summary Of {{.month}}
     </a>
 
     <!-- menu popover -->
@@ -121,13 +121,22 @@
                       MTD
                   </th>
                   <td class="px-6 py-4">
-                     $ {{.mtdv}}
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.mtdv}}</div>
+                      <div class="font-normal text-gray-500">{{.mtdp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
-                     $ {{.brandmtdv}}
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.brandmtdv}}</div>
+                      <div class="font-normal text-gray-500">{{.brandmtdp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
-                     $ {{.rhmtdv}}
+                     <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.rhmtdv}}</div>
+                      <div class="font-normal text-gray-500">{{.rhmtdp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
                      $ {{.outsourcemtdv}}
@@ -138,13 +147,22 @@
                       AVG
                   </th>
                   <td class="px-6 py-4">
-                     $ {{.avgv}}
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.avgv}}</div>
+                      <div class="font-normal text-gray-500">{{.avgp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
-                     $ {{.brandavgv}}
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.brandavgv}}</div>
+                      <div class="font-normal text-gray-500">{{.brandavgp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
-                     $ {{.rhavgv}}
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.rhavgv}}</div>
+                      <div class="font-normal text-gray-500">{{.rhavgp}} pcs</div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
                      $ {{.outsourceavgv}}

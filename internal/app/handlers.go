@@ -6850,15 +6850,21 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	p := message.NewPrinter(language.English)
 	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
+		"month":         time.Now().Month().String(),
 		"mtdv":          p.Sprintf("%.0f", mtdv),
-		"mtdp":          p.Sprintf("%.0f", mtdp),
+		"mtdp":          p.Sprintf("%d", mtdp),
 		"brandmtdv":     p.Sprintf("%.0f", brandmtdv),
+		"brandmtdp":     p.Sprintf("%d", brandmtdp),
 		"rhmtdv":        p.Sprintf("%.0f", rhmtdv),
+		"rhmtdp":        p.Sprintf("%d", rhmtdp),
 		"outsourcemtdv": p.Sprintf("%.0f", outsourcemtdv),
 		"pastdays":      pastdays,
 		"avgv":          p.Sprintf("%.0f", mtdv/float64(pastdays)),
+		"avgp":          p.Sprintf("%d", mtdp/pastdays),
 		"brandavgv":     p.Sprintf("%.0f", brandmtdv/float64(pastdays)),
+		"brandavgp":     p.Sprintf("%d", brandmtdp/pastdays),
 		"rhavgv":        p.Sprintf("%.0f", rhmtdv/float64(pastdays)),
+		"rhavgp":        p.Sprintf("%d", rhmtdp/pastdays),
 		"outsourceavgv": p.Sprintf("%.0f", outsourcemtdv/float64(pastdays)),
 		"estv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)*float64(estdays)+(mtdv-todayv)),
 		"estbrandv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)*float64(estdays)+(brandmtdv-todaybrandv)),

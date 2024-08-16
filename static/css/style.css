@@ -2241,6 +2241,10 @@ select {
   padding-top: 0.75rem;
 }
 
+.ps-3 {
+  padding-inline-start: 0.75rem;
+}
+
 .text-left {
   text-align: left;
 }
