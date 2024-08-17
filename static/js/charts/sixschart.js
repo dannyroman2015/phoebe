@@ -1,7 +1,7 @@
 const drawSixSChart = (data, dates, areas) => {
-  const margin = {top: 0, right: 10, bottom: 30, left: 40}
+  const margin = {top: 0, right: 10, bottom: 10, left: 40}
   const width = 900
-  const height = 300
+  const height = 350
   const innerWidth = width - margin.left - margin.right
   const innerHeight = height - margin.top - margin.bottom
 
@@ -23,11 +23,12 @@ const drawSixSChart = (data, dates, areas) => {
 
   const xAxis = d3.axisBottom(xScale)
 
-  innerChart.append("g")
-    .attr("transform", `translate(0, ${innerHeight})`)
-    .call(xAxis)
-    .call(g => g.select(".domain").remove())
-    .call(g => g.selectAll(".tick text").attr("font-size", 12).attr("stroke", "75485E").style("text-transform", "uppercase"))
+  // innerChart.append("g")
+  //   .attr("transform", `translate(0, ${innerHeight})`)
+  //   .call(xAxis)
+  //   .call(g => g.select(".domain").remove())
+  //   .call(g => g.selectAll(".tick text").attr("font-size", 12).attr("stroke", "75485E").style("text-transform", "uppercase"))
+    
   const yScale = d3.scaleBand()
     .domain(s6dates)
     .range([innerHeight, 0])
@@ -39,8 +40,8 @@ const drawSixSChart = (data, dates, areas) => {
     .call(yAxis)
     .call(g => g.select(".domain").remove())
 
-  const colorScale = d3.scaleThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9], d3.schemeRdYlGn[10]);
-  
+  const colorScale = d3.scaleDiverging([0, 5, 10], d3.interpolatePiYG);
+
   innerChart
     .selectAll()
     .data(s6data)
@@ -51,7 +52,22 @@ const drawSixSChart = (data, dates, areas) => {
         .attr("height", yScale.bandwidth())
         .style("fill", d => colorScale(d.Score))
       .append("title")
-        .text(d => d.Score)
+        .text(d => `${d.Area.toUpperCase()} - ${d.Score}`)
   
+  innerChart
+    .selectAll()
+    .data(s6data)
+    .join("text")
+        .text(d => d.Area)
+        .attr("x", d => xScale(d.Area) + xScale.bandwidth()/2)
+        .attr("y", innerHeight)
+        .attr("dx", "0.5em")
+        .attr("text-anchor", "start")
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "#75485E")
+        .attr("font-weight", 500)
+        .style("text-transform", "uppercase")
+        .attr("transform", d => `rotate(-90, ${xScale(d.Area)+xScale.bandwidth()/2}, ${innerHeight})`)
+
   return svg.node();
 }

@@ -1043,7 +1043,7 @@ func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httpr
 // /dashboard/loadsixs - load 6S area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fromdate := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
+	fromdate := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
 	todate := time.Now().Format("2006-01-02")
 	cur, err := s.mgdb.Collection("sixs").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"datestr": bson.M{"$gte": fromdate}}, bson.M{"datestr": bson.M{"$lte": todate}}}}}},
@@ -1054,9 +1054,9 @@ func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 
 	type ScoreReport struct {
-		Area  string `bson:"area"`
-		Date  string `bson:"datestr"`
-		Score int    `bson:"score"`
+		Area  string  `bson:"area"`
+		Date  string  `bson:"datestr"`
+		Score float64 `bson:"score"`
 	}
 	var s6Data []ScoreReport
 	var s6areas []string
@@ -1087,36 +1087,26 @@ func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httproute
 func (s *Server) d_loadsafety(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// fromdate := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
 	// todate := time.Now().Format("2006-01-02")
-	// cur, err := s.mgdb.Collection("sixs").Aggregate(context.Background(), mongo.Pipeline{
-	// 	{{"$match", bson.M{"$and": bson.A{bson.M{"datestr": bson.M{"$gte": fromdate}}, bson.M{"datestr": bson.M{"$lte": todate}}}}}},
-	// 	{{"$sort", bson.M{"datestr": 1}}},
-	// })
-	// if err != nil {
-	// 	log.Println("dashboard: ", err)
-	// }
+	cur, err := s.mgdb.Collection("safety").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.D{{"date", -1}, {"area", -1}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
 
-	// type ScoreReport struct {
-	// 	Area  string `bson:"area"`
-	// 	Date  string `bson:"datestr"`
-	// 	Score int    `bson:"score"`
-	// }
-	// var s6Data []ScoreReport
-	// var s6areas []string
-	// var s6dates []string
-	// for cur.Next(context.Background()) {
-	// 	var a ScoreReport
-	// 	cur.Decode(&a)
-	// 	t, _ := time.Parse("2006-01-02", a.Date)
-	// 	a.Date = t.Format("2 Jan")
-	// 	if !slices.Contains(s6areas, a.Area) {
-	// 		s6areas = append(s6areas, a.Area)
-	// 	}
-	// 	if !slices.Contains(s6dates, a.Date) {
-	// 		s6dates = append(s6dates, a.Date)
-	// 	}
-	// 	s6Data = append(s6Data, a)
-	// }
-	template.Must(template.ParseFiles("templates/pages/dashboard/safety.html")).Execute(w, map[string]interface{}{})
+	var safetyData []struct {
+		Date     time.Time `bson:"date" json:"date"`
+		Area     string    `bson:"area" json:"area"`
+		Severity int       `bson:"severity" json:"severity"`
+	}
+	if err := cur.All(context.Background(), &safetyData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/safety.html")).Execute(w, map[string]interface{}{
+		"safetyData": safetyData,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
@@ -2380,9 +2370,9 @@ func (s *Server) ds_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 
 		type ScoreReport struct {
-			Area  string `bson:"area"`
-			Date  string `bson:"datestr"`
-			Score int    `bson:"score"`
+			Area  string  `bson:"area"`
+			Date  string  `bson:"datestr"`
+			Score float64 `bson:"score"`
 		}
 		var s6Data []ScoreReport
 		var s6areas []string
@@ -6352,9 +6342,9 @@ func (s *Server) s6_entry(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /6s/entry - send fast entry of 6S
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) s6_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// rawdate := r.FormValue("occurdate")
-	// date, _ := time.Parse("Jan 02, 2006", rawdate)
-	// strdate := date.Format("2006-01-02")
+	rawdate := r.FormValue("occurdate")
+	date, _ := time.Parse("Jan 02, 2006", rawdate)
+	strdate := date.Format("2006-01-02")
 	var scores []string
 	scanner := bufio.NewScanner(strings.NewReader(r.FormValue("scorelist")))
 	for scanner.Scan() {
@@ -6365,37 +6355,35 @@ func (s *Server) s6_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 		scores = append(scores, section)
 		scores = append(scores, score)
 	}
-	log.Println(scores)
-	// scores := strings.Fields(rawscorelist)
-	// if len(scores)%2 != 0 || len(scores) == 0 {
-	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-	// 		"showSuccessDialog": false,
-	// 		"showErrorDialog":   true,
-	// 	})
-	// 	return
-	// }
+	if len(scores)%2 != 0 || len(scores) == 0 {
+		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+		})
+		return
+	}
 
-	// // convert to json string
-	// var jsonStr = `[`
-	// for i := 0; i < len(scores); i += 2 {
-	// 	scores[i] = strings.ToLower(strings.Replace(scores[i], "_", " ", -1))
-	// 	jsonStr += `{"area":"` + scores[i] + `", "score":` + scores[i+1] + `,"datestr":"` + strdate + `"},`
-	// }
-	// jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+	// convert to json string
+	var jsonStr = `[`
+	for i := 0; i < len(scores); i += 2 {
+		scores[i] = strings.ToLower(strings.Replace(scores[i], "_", " ", -1))
+		jsonStr += `{"area":"` + scores[i] + `", "score":` + scores[i+1] + `,"datestr":"` + strdate + `"},`
+	}
+	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
 
-	// model := models.NewSixSModel(s.mgdb)
-	// if err := model.InsertMany(jsonStr); err != nil {
-	// 	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-	// 		"showSuccessDialog": false,
-	// 		"showErrorDialog":   true,
-	// 	})
-	// 	return
-	// }
+	model := models.NewSixSModel(s.mgdb)
+	if err := model.InsertMany(jsonStr); err != nil {
+		template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showSuccessDialog": false,
+			"showErrorDialog":   true,
+		})
+		return
+	}
 
-	// template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
-	// 	"showSuccessDialog": true,
-	// 	"showErrorDialog":   false,
-	// })
+	template.Must(template.ParseFiles("templates/pages/6s/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"showErrorDialog":   false,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

@@ -38,7 +38,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('sixsFromDate').focus();  }
         });
       "
       class="relative">
@@ -75,7 +75,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/dashboard/sixs/getchart" hx-trigger="input, change" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
+                      hx-post="/dashboard/sixs/getchart" hx-trigger="input" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
                       name="sixscharttype" id="sixscharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="general">General</option>
                     </select>
@@ -86,7 +86,7 @@
                   <label for="sixsFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     From Date
                   </label>
-                  <input hx-post="/dashboard/sixs/getchart" hx-trigger="input, change" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
+                  <input hx-post="/dashboard/sixs/getchart" hx-trigger="input" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
                     type="date" id="sixsFromDate" name="sixsFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
 
@@ -94,7 +94,7 @@
                   <label for="sixsToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     To Date
                   </label>
-                  <input hx-post="/dashboard/sixs/getchart" hx-trigger="input, change" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
+                  <input hx-post="/dashboard/sixs/getchart" hx-trigger="input" hx-target="#sixs-container" hx-swap="innerHTML settle:200ms"
                     type="date" id="sixsToDate" name="sixsToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
 
@@ -125,17 +125,15 @@
 
 <script>
   document.getElementById("sixsToDate").valueAsDate = new Date();
-  document.getElementById("sixsFromDate").valueAsDate = new Date(Date.now() - 100*86400000);
+  document.getElementById("sixsFromDate").valueAsDate = new Date(Date.now() - 365*86400000);
 
   if ({{.s6data}} != undefined) {
     chart6s.append(drawSixSChart({{.s6data}}, {{.s6dates}}, {{.s6areas}})) 
 
-    legend6s.append(Legend(d3.scaleThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9], d3.schemeRdYlGn[10]), {
-      title: "Score Range",
+    legend6s.append(Legend(d3.scaleDiverging([0, 5, 10], d3.interpolatePiYG), {
+      title: "6S Score",
+      tickFormat: ".0f",
       tickSize: 0
     }))
   }
-  
-
-  // con phan tool tip chua lam
 </script>

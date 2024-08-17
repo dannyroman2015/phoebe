@@ -75,5 +75,15 @@
   </div>
 
   <!-- chart -->
-
+  <div id="safety-container">
+    <div id="safetychart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+  </div>
 </div>
+
+<script>
+  // document.getElementById("panelcncToDate").valueAsDate = new Date();
+  // document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+  if ({{.safetyData}}) {
+    safetychart.append(drawSafetyChart({{.safetyData}}))
+  }
+</script>
