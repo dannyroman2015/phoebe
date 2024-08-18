@@ -1085,8 +1085,6 @@ func (s *Server) d_loadsixs(w http.ResponseWriter, r *http.Request, ps httproute
 // /dashboard/loadsafety
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadsafety(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// fromdate := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
-	// todate := time.Now().Format("2006-01-02")
 	cur, err := s.mgdb.Collection("safety").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.D{{"date", -1}, {"area", -1}}}},
 	})
@@ -1096,16 +1094,21 @@ func (s *Server) d_loadsafety(w http.ResponseWriter, r *http.Request, ps httprou
 	defer cur.Close(context.Background())
 
 	var safetyData []struct {
-		Date     time.Time `bson:"date" json:"date"`
-		Area     string    `bson:"area" json:"area"`
-		Severity int       `bson:"severity" json:"severity"`
+		Date      time.Time `bson:"date" json:"date"`
+		Area      string    `bson:"area" json:"area"`
+		Severity  int       `bson:"severity" json:"severity"`
+		CreatedAt time.Time `bson:"createdat" json:"createdat"`
 	}
 	if err := cur.All(context.Background(), &safetyData); err != nil {
 		log.Println(err)
 	}
-
+	var safetyUpTime string
+	if len(safetyData) != 0 {
+		safetyUpTime = safetyData[0].Date.Format("02-01-2006")
+	}
 	template.Must(template.ParseFiles("templates/pages/dashboard/safety.html")).Execute(w, map[string]interface{}{
-		"safetyData": safetyData,
+		"safetyData":   safetyData,
+		"safetyUpTime": safetyUpTime,
 	})
 }
 
@@ -2352,6 +2355,39 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/woodrecovery/getchart
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dwr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("woodrecoverycharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("woodrecoveryFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("woodrecoveryToDate"))
+	log.Println(fromdate, todate, pickedChart)
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("woodrecovery").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.D{{"date", 1}, {"prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var woodrecoveryData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Prodtype string  `bson:"prodtype" json:"prodtype"`
+			Rate     float64 `bson:"rate" json:"rate"`
+		}
+		if err := cur.All(context.Background(), &woodrecoveryData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/woodrecovery_generalchart.html")).Execute(w, map[string]interface{}{
+			"woodrecoveryData": woodrecoveryData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/pack/getchart - change chart of pack area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) ds_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -2431,6 +2467,79 @@ func (s *Server) dq_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/quality_generalchart.html")).Execute(w, map[string]interface{}{
 			"qualityChartData": qualityChartData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /dashboard/downtime/getchart
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dd_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("downtimecharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("downtimeFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("downtimeToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("downtime").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": fromdate.Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": todate.Format("2006-01-02")}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "downtime": bson.M{"$sum": "$downtime"}}}},
+			{{"$sort", bson.D{{"_id.date", -1}, {"_id.section", 1}}}},
+			{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var downtimeChartData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Section  string  `bson:"section" json:"section"`
+			Downtime float64 `bson:"downtime" json:"downtime"`
+		}
+		if err := cur.All(context.Background(), &downtimeChartData); err != nil {
+			log.Println(err)
+		}
+		for i := 0; i < len(downtimeChartData); i++ {
+			tmp, _ := time.Parse("2006-01-02", downtimeChartData[i].Date)
+			downtimeChartData[i].Date = tmp.Format("02 Jan")
+		}
+		template.Must(template.ParseFiles("templates/pages/dashboard/downtime_generalchart.html")).Execute(w, map[string]interface{}{
+			"downtimeChartData": downtimeChartData,
+		})
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// "/dashboard/safety/getchart"
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dst_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("safetycharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("safetyFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("safetyToDate"))
+
+	switch pickedChart {
+	case "general":
+		cur, err := s.mgdb.Collection("safety").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.D{{"date", -1}, {"area", -1}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+
+		var safetyData []struct {
+			Date     time.Time `bson:"date" json:"date"`
+			Area     string    `bson:"area" json:"area"`
+			Severity int       `bson:"severity" json:"severity"`
+		}
+		if err := cur.All(context.Background(), &safetyData); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/safety_generalchart.html")).Execute(w, map[string]interface{}{
+			"safetyData": safetyData,
 		})
 	}
 }
@@ -7610,6 +7719,50 @@ func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 	template.Must(template.ParseFiles("templates/pages/quality/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /safety/entry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/safety/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /safety/sendentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) s_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	area := r.FormValue("area")
+	severity, _ := strconv.Atoi(r.FormValue("severity"))
+	casualty := r.FormValue("casualty")
+
+	if area == "" {
+		template.Must(template.ParseFiles("templates/pages/safety/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"showErrorDialog":   false,
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("safety").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "area": area, "severity": severity, "casualty": casualty,
+		"reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/safety/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/safety/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
 	})
 }
 

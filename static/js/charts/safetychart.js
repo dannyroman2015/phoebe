@@ -1,7 +1,7 @@
 const drawSafetyChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 50, left: 60};
+  const margin = {top: 20, right: 120, bottom: 50, left: 60};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -49,32 +49,67 @@ const drawSafetyChart = (data) => {
       .attr("opacity", 0.5)
 
   innerChart.append("line")
-      .attr("x1", x(data[0].date) + 20)
+      .attr("x1", x(data[0].date))
       .attr("y1", y(data[0].area) + y.bandwidth()/2)
-      .attr("x2", innerWidth - 35)
+      .attr("x2", innerWidth + 80)
       .attr("y2", y(data[0].area) + y.bandwidth()/2)
       .attr("stroke", "#75485E")
 
-  innerChart.append("text")
+  svg.append("text")
       .text("> now")
-      .attr("x", innerWidth)
+      .attr("x", width)
+      .attr("y", y(data[0].area) + y.bandwidth()/2 + margin.top)
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "#75485E")
+  
+  // innerChart.append("text")
+  //     .text("<")
+  //     .attr("x", x(data[0].date) + 25)
+  //     .attr("y", y(data[0].area) + y.bandwidth()/2)
+  //     .attr("text-anchor", "end")
+  //     .attr("alignment-baseline", "middle")
+  //     .attr("fill", "#75485E")
+
+  innerChart.append("text")
+      .text(`${days} days`)
+      // .attr("x",  x(data[0].date) + (innerWidth - x(data[0].date))/2)
+      .attr("x",  x(data[0].date) + 50)
       .attr("y", y(data[0].area) + y.bandwidth()/2)
+      .attr("dy", "-0.5em")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("fill", "#75485E")
+
+  innerChart.append("line")
+      .attr("x1", x(data[0].date))
+      .attr("y1", innerHeight + y.bandwidth()/2)
+      .attr("x2", 4)
+      .attr("y2", innerHeight + y.bandwidth()/2)
+      .attr("stroke", "#75485E")
+
+  innerChart.append("text")
+      .text(">")
+      .attr("x", x(data[0].date) + 5)
+      .attr("y", innerHeight + y.bandwidth()/2)
+      .attr("dy", "0.03em")
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
       .attr("fill", "#75485E")
   
   innerChart.append("text")
       .text("<")
-      .attr("x", x(data[0].date) + 25)
-      .attr("y", y(data[0].area) + y.bandwidth()/2)
-      .attr("text-anchor", "end")
+      .attr("x", 0)
+      .attr("y", innerHeight + y.bandwidth()/2)
+      .attr("dy", "0.03em")
+      .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("fill", "#75485E")
 
   innerChart.append("text")
-      .text(`${days} days`)
-      .attr("x",  x(data[0].date) + (innerWidth - x(data[0].date))/2)
-      .attr("y", y(data[0].area) + y.bandwidth()/2)
+      .text(`${data.length} accidents`)
+      .attr("x",  x(data[0].date)/2)
+      .attr("y", innerHeight + y.bandwidth()/2)
       .attr("dy", "-0.5em")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")

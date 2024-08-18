@@ -1,8 +1,22 @@
 <div class="col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="flex justify-between">
-    <a href="#" class="mb-1 font-bold hover:underline">
+    <a id="title" @mouseover="
+      safetycharttype = document.getElementById('safetycharttype')
+      safetycharttype.selectedIndex = (safetycharttype.selectedIndex + 1) % safetycharttype.length;
+      safetycharttype.dispatchEvent(new Event('input', {bubble: true}))
+    "
+      href="/safety/overview" class="mb-1 font-bold hover:underline">
       Safety
     </a>
+
+    <div class="flex">
+      <span class="inline-block">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      </span>
+      <p>&nbsp{{.safetyUpTime}}</p>
+    </div>
 
     <div x-data="{
       popoverOpen: false,
@@ -36,7 +50,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('width').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('safetycharttype').focus();  }
         });
       "
       class="relative">
@@ -58,15 +72,42 @@
           <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
           <div class="grid gap-4">
             <div class="space-y-2">
-              <h4 class="font-medium leading-none">Title</h4>
-              <p class="text-sm text-muted-foreground">Placeholder for future change.</p>
+              <h4 class="font-medium leading-none">Options</h4>
             </div>
-            <div class="grid gap-2">
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="width">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="width" value="100%"></div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="height">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="height" value="25px"></div>
-              <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxHeight">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxHeight" value="none"></div>
-            </div>
+            <form>
+              <div class="grid gap-2">
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="safetycharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Chart
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen"
+                      hx-post="/dashboard/safety/getchart" hx-trigger="input" hx-target="#safety-container" hx-swap="innerHTML settle:200ms"
+                      name="safetycharttype" id="safetycharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="general">General</option>
+                    </select>
+                  </div>
+                </div>
+  
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="safetyFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    From Date
+                  </label>
+                  <input hx-post="/dashboard/safety/getchart" hx-trigger="input" hx-target="#safety-container" hx-swap="innerHTML settle:200ms"
+                    type="date" id="safetyFromDate" name="safetyFromDate" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+  
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="safetyToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    To Date
+                  </label>
+                  <input hx-post="/dashboard/safety/getchart" hx-trigger="input" hx-target="#safety-container" hx-swap="innerHTML settle:200ms"
+                    type="date" id="safetyToDate" name="safetyToDate" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+              </div>
+            </form>
+            
           </div>
         </div>
       </div>
@@ -81,8 +122,8 @@
 </div>
 
 <script>
-  // document.getElementById("panelcncToDate").valueAsDate = new Date();
-  // document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+  document.getElementById("safetyToDate").valueAsDate = new Date();
+  document.getElementById("safetyFromDate").valueAsDate = new Date("2024-01-01");
   if ({{.safetyData}}) {
     safetychart.append(drawSafetyChart({{.safetyData}}))
   }

@@ -51,8 +51,11 @@ func (s *Server) routes() http.Handler {
 	router.POST("/dashboard/veneer/getchart", s.dv_getchart)
 	router.POST("/dashboard/finemill/getchart", s.df_getchart)
 	router.POST("/dashboard/pack/getchart", s.dp_getchart)
+	router.POST("/dashboard/woodrecovery/getchart", s.dwr_getchart)
 	router.POST("/dashboard/sixs/getchart", s.ds_getchart)
 	router.POST("/dashboard/quality/getchart", s.dq_getchart)
+	router.POST("/dashboard/downtime/getchart", s.dd_getchart)
+	router.POST("/dashboard/safety/getchart", s.dst_getchart)
 
 	router.GET("/incentive/admin", withAuth(s.iadmin))
 	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
@@ -338,7 +341,14 @@ func (s *Server) routes() http.Handler {
 	router.GET("/quality/fastentry", withAuth(s.q_fastentry))
 	router.GET("/quality/entry/loadform", s.q_loadform)
 	router.POST("/quality/entry/sendentry", s.q_sendentry)
-	// end packing
+	// end Quality
+
+	////////////////////////////////////////////////////////////////////
+	// Safety ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/safety/entry", s.s_entry)
+	router.POST("/safety/sendentry", s.s_sendentry)
+	// end Safety
 
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////

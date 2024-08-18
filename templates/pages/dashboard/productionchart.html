@@ -86,7 +86,7 @@
                     <label for="productionFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       From Date
                     </label>
-                    <input hx-post="/dashboard/production/getchart" hx-trigger="input, change" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
+                    <input hx-post="/dashboard/production/getchart" hx-trigger="input" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
                       type="date" id="productionFromDate" name="productionFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
   
@@ -94,7 +94,7 @@
                     <label for="productionToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       To Date
                     </label>
-                    <input hx-post="/dashboard/production/getchart" hx-trigger="input, change" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
+                    <input hx-post="/dashboard/production/getchart" hx-trigger="input" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
                       type="date" id="productionToDate" name="productionToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
 
@@ -102,11 +102,10 @@
                     <label for="numberOfMTDs" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       MTDs
                     </label>
-                    <input hx-post="/dashboard/production/getchart" hx-trigger="input, change" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
+                    <input hx-post="/dashboard/production/getchart" hx-trigger="input" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
                       type="number" min="0" step="1" id="numberOfMTDs" name="numberOfMTDs" value="2" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
 
-                  <!-- <div class="grid items-center grid-cols-3 gap-4"><label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="maxWidth">label</label><input class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" id="maxWidth" value="300px"></div> -->
                 </div>
 
               </form>
