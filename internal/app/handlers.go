@@ -6056,7 +6056,7 @@ func (s *Server) spco_loadreport(w http.ResponseWriter, r *http.Request, ps http
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
 			"startat":   bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$startat"}},
 			"endat":     bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$endat"}},
-			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat"}}}}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
