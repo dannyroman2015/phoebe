@@ -538,9 +538,10 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "reeded"}}},
-		{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+		{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}, "lastdate": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$lastdate"}}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -548,10 +549,11 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	defer cur.Close(context.Background())
 	var reededoutputData []struct {
-		Section string  `bson:"section" json:"section"`
-		Type    string  `bson:"type" json:"type"`
-		Qty     float64 `bson:"qty" json:"qty"`
-		Avg     float64 `bson:"avg" json:"avg"`
+		Section  string  `bson:"section" json:"section"`
+		Type     string  `bson:"type" json:"type"`
+		Qty      float64 `bson:"qty" json:"qty"`
+		Avg      float64 `bson:"avg" json:"avg"`
+		LastDate string  `bson:"lastdate" json:"lastdate"`
 	}
 	if err := cur.All(context.Background(), &reededoutputData); err != nil {
 		log.Println(err)
@@ -6995,6 +6997,7 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 			estdays++
 		}
 	}
+
 	p := message.NewPrinter(language.English)
 	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
 		"month":         time.Now().Month().String(),
@@ -7006,13 +7009,13 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 		"rhmtdp":        p.Sprintf("%d", rhmtdp),
 		"outsourcemtdv": p.Sprintf("%.0f", outsourcemtdv),
 		"pastdays":      pastdays,
-		"avgv":          p.Sprintf("%.0f", mtdv/float64(pastdays)),
+		"avgv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)),
 		"avgp":          p.Sprintf("%d", mtdp/pastdays),
-		"brandavgv":     p.Sprintf("%.0f", brandmtdv/float64(pastdays)),
+		"brandavgv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)),
 		"brandavgp":     p.Sprintf("%d", brandmtdp/pastdays),
-		"rhavgv":        p.Sprintf("%.0f", rhmtdv/float64(pastdays)),
+		"rhavgv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)),
 		"rhavgp":        p.Sprintf("%d", rhmtdp/pastdays),
-		"outsourceavgv": p.Sprintf("%.0f", outsourcemtdv/float64(pastdays)),
+		"outsourceavgv": p.Sprintf("%.0f", (outsourcemtdv-todayoutsourcev)/float64(pastdays)),
 		"estv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)*float64(estdays)+(mtdv-todayv)),
 		"estbrandv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)*float64(estdays)+(brandmtdv-todaybrandv)),
 		"estrhv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)*float64(estdays)+(rhmtdv-todayrhv)),
