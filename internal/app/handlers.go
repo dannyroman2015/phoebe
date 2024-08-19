@@ -1016,7 +1016,7 @@ func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httpr
 	cur, err := s.mgdb.Collection("downtime").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -20).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "downtime": bson.M{"$sum": "$downtime"}}}},
-		{{"$sort", bson.D{{"_id.date", -1}, {"_id.section", 1}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
 		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
 		{{"$unset", "_id"}},
 	})
