@@ -6195,45 +6195,45 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	now := time.Now()
 	switch r.FormValue("timerange") {
 	case "6h - 8h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Now().Location())
 		hours = 2
 	case "8h - 10h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 8, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Now().Location())
 	case "10h - 11h30":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 11, 30, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 11, 30, 0, 0, time.Now().Location())
 	case "12h15 - 14h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 12, 15, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 12, 15, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Now().Location())
 	case "14h - 16h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 16, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 16, 0, 0, 0, time.Now().Location())
 	case "16h30 - 18h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 16, 30, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 16, 30, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Now().Location())
 	case "18h - 20h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 18, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Now().Location())
 	case "20h - 22h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 22, 0, 0, 0, time.Now().Location())
 	case "22h30 - 0h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.Now().Location())
 	case "0h - 2h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 2, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 2, 0, 0, 0, time.Now().Location())
 	case "2h45 - 4h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 2, 45, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 2, 45, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Now().Location())
 	case "4h - 6h":
-		start = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Local)
-		end = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Local)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Now().Location())
+		end = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Now().Location())
 	case "other":
-		start, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("start"), time.Local)
-		end, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end"), time.Local)
+		start, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("start"), time.Now().Location())
+		end, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end"), time.Now().Location())
 	}
 	hours = math.Round(end.Sub(start).Hours()*10) / 10
 	date, _ := time.Parse("2006-01-02", start.Format("2006-01-02"))
