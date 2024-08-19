@@ -68,6 +68,21 @@ const drawSixSChart = (data, dates, areas) => {
         .attr("font-weight", 500)
         .style("text-transform", "uppercase")
         .attr("transform", d => `rotate(-90, ${xScale(d.Area)+xScale.bandwidth()/2}, ${innerHeight})`)
+  
+  innerChart
+    .selectAll()
+    .data(s6data)
+    .join("text")
+        .text(d => d.Score)
+        .attr("x", d => xScale(d.Area) + xScale.bandwidth()/2)
+        .attr("y", d => yScale(d.Score))
+        .attr("dx", "0.5em")
+        .attr("dy", "0.5em")
+        .attr("text-anchor", "end")
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "#75485E")
+        .attr("font-weight", 500)
+        .attr("transform", d => `rotate(-90, ${xScale(d.Area)+xScale.bandwidth()/2}, ${yScale(d.Score)})`)
 
   return svg.node();
 }
