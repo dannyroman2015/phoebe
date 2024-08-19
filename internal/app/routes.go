@@ -306,6 +306,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/target/entry/loadsectionentry", s.tge_loadsectionentry)
 	router.GET("/target/entry/loadreport", s.tge_loadreport)
 	router.POST("/target/entry/settarget", s.tge_settarget)
+	router.GET("/target/entry/loadplanworkdays", s.tge_loadplanworkdays)
+	router.POST("/target/entry/setworkdays", s.tge_setworkdays)
 	router.POST("/target/entry/search", s.tge_search)
 	router.POST("/target/entry/filterbydate", s.tge_filterbydate)
 	router.DELETE("/target/entry/deletereport/:id", s.tge_deletereport)

@@ -7311,6 +7311,47 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/loadplanworkdays
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_loadplanworkdays(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/target/entry/planworkdays.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /target/entry/setworkdays
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) tge_setworkdays(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	month, _ := strconv.Atoi(r.FormValue("month"))
+	workdays, _ := strconv.Atoi(r.FormValue("workdays"))
+
+	if r.FormValue("month") == "" || r.FormValue("workdays") == "" {
+		template.Must(template.ParseFiles("templates/pages/target/entry/planworkdays.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin, vui lòng nhập lại.",
+		})
+		return
+	}
+	date := time.Date(time.Now().Year(), time.Month(month), 15, 0, 0, 0, 0, time.Local)
+
+	_, err := s.mgdb.Collection("target").InsertOne(context.Background(), bson.M{
+		"name": "plan work days", "date": primitive.NewDateTimeFromTime(date), "value": workdays,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/target/entry/planworkdays.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Cập nhật thất bại, vui lòng nhập lại.",
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/target/entry/planworkdays.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Đã đặt số ngày dự kiến thành công",
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /target/entry/search
 // //////////////////////////////////////////////////////////////////////////////////////////////////

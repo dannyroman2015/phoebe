@@ -4971,6 +4971,10 @@ select {
     height: 2.5rem;
   }
 
+  .sm\:w-64 {
+    width: 16rem;
+  }
+
   .sm\:w-auto {
     width: auto;
   }
