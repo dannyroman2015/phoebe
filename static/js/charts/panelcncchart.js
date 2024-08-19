@@ -224,7 +224,6 @@ const drawPanelcncChart = (data) => {
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-weight", 600)
-      .attr("hidden", x.bandwidth() < 50 ? true : null)
 
   innerChart.append("g")
     .attr("class", "x-axis")

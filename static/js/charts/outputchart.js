@@ -82,12 +82,6 @@ const drawRdOpTotalChart = (data) => {
     .attr("dy", "-0.1em")
     .attr("fill", "#75485E")
 
-  svg.append("text")
-    .text(`${data[0].type}(m²)`)
-    .attr("font-size", "14px")
-    .attr("dominant-baseline", "hanging")
-    .attr("fill", "#75485E")
-
   innerChart.append("text")
     .text("AVG: ")
     .attr("font-size", "14px")
@@ -98,7 +92,7 @@ const drawRdOpTotalChart = (data) => {
     .attr("y", y1(data[0].avg))
     .attr("dy", "-0.1em")
     .attr("font-weight", 600)
-console.log(data)
+
   svg.append("text")
     .text(`Tổng sản lượng (m²) của  `)
     .attr("text-anchor", "start")

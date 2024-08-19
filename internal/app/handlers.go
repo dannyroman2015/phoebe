@@ -541,7 +541,7 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}, "lastdate": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$lastdate"}}}}},
+		{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}, "lastdate": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$lastdate"}}}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -1888,9 +1888,10 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 	case "reeded":
 		cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"type": "reeded", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 			{{"$sort", bson.M{"_id": 1}}},
-			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}, "lastdate": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$lastdate"}}}}},
 			{{"$unset", "_id"}},
 		})
 		if err != nil {
@@ -1898,10 +1899,11 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var reededoutputData []struct {
-			Section string  `bson:"section" json:"section"`
-			Type    string  `bson:"type" json:"type"`
-			Qty     float64 `bson:"qty" json:"qty"`
-			Avg     float64 `bson:"avg" json:"avg"`
+			Section  string  `bson:"section" json:"section"`
+			Type     string  `bson:"type" json:"type"`
+			Qty      float64 `bson:"qty" json:"qty"`
+			Avg      float64 `bson:"avg" json:"avg"`
+			LastDate string  `bson:"lastdate" json:"lastdate"`
 		}
 		if err := cur.All(context.Background(), &reededoutputData); err != nil {
 			log.Println(err)
@@ -1914,9 +1916,10 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 	case "fir":
 		cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"type": "fir", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 			{{"$sort", bson.M{"_id": 1}}},
-			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}}}},
+			{{"$set", bson.M{"section": bson.M{"$substr": bson.A{"$_id", 2, -1}}, "lastdate": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$lastdate"}}}}},
 			{{"$unset", "_id"}},
 		})
 		if err != nil {
@@ -1924,10 +1927,11 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var firoutputData []struct {
-			Section string  `bson:"section" json:"section"`
-			Type    string  `bson:"type" json:"type"`
-			Qty     float64 `bson:"qty" json:"qty"`
-			Avg     float64 `bson:"avg" json:"avg"`
+			Section  string  `bson:"section" json:"section"`
+			Type     string  `bson:"type" json:"type"`
+			Qty      float64 `bson:"qty" json:"qty"`
+			Avg      float64 `bson:"avg" json:"avg"`
+			LastDate string  `bson:"lastdate" json:"lastdate"`
 		}
 		if err := cur.All(context.Background(), &firoutputData); err != nil {
 			log.Println(err)
