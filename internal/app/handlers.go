@@ -6232,11 +6232,8 @@ func (s *Server) spc_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		start = time.Date(now.Year(), now.Month(), now.Day(), 4, 0, 0, 0, time.Local)
 		end = time.Date(now.Year(), now.Month(), now.Day(), 6, 0, 0, 0, time.Local)
 	case "other":
-		// start, _ = time.Parse("2006-01-02T15:04", r.FormValue("start"))
 		start, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("start"), time.Local)
-		// start = start.add(-7 * time.Hour)
 		end, _ = time.ParseInLocation("2006-01-02T15:04", r.FormValue("end"), time.Local)
-		// end = end.add(-7 * time.Hour)
 	}
 	hours = math.Round(end.Sub(start).Hours()*10) / 10
 	date, _ := time.Parse("2006-01-02", start.Format("2006-01-02"))
