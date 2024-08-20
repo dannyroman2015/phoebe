@@ -242,7 +242,10 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/pack/admin", withAuth(s.spk_admin))
 	router.GET("/sections/pack/admin/loadreport", s.spka_loadreport)
 	router.POST("/sections/pack/admin/searchreport", s.spka_searchreport)
+	router.POST("/sections/pack/admin/reportdatefilter", s.spka_reportdatefilter)
 	router.DELETE("/sections/pack/admin/deletereport/:reportid", s.spka_deletereport)
+	router.GET("/sections/pack/admin/updateform/:reportid", s.spka_updateform)
+	router.PUT("/sections/pack/admin/updatereport/:reportid", s.spka_updatereport)
 	// end Pack/////////////////////////////////////////////////////////////
 
 	// Panelcnc ////////////////////////////////////////////////////////

@@ -5963,6 +5963,46 @@ func (s *Server) spka_searchreport(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spka_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("packingFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("packingToDate"))
+
+	filter := bson.M{"$and": bson.A{
+		bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}},
+		bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}},
+	},
+	}
+
+	cur, err := s.mgdb.Collection("pack").Find(context.Background(), filter, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var packReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Part        string    `bson:"part"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err = cur.All(context.Background(), &packReports); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/pack/admin/deletereport/:reportid - delete a report on page admin of pack section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) spka_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -5985,6 +6025,75 @@ func (s *Server) spka_deletereport(w http.ResponseWriter, r *http.Request, ps ht
 	if result.Err() != nil {
 		log.Println(result.Err())
 	}
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/updateform/:reportid
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spka_updateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+	result := s.mgdb.Collection("pack").FindOne(context.Background(), bson.M{"_id": reportid})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var packReports struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Part        string    `bson:"part"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := result.Decode(&packReports); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/update_form.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/pack/admin/updatereport/:reportid
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) spka_updatereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
+
+	result := s.mgdb.Collection("pack").FindOneAndUpdate(context.Background(), bson.M{"_id": reportid}, bson.M{"$set": bson.M{"qty": qty, "value": value}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var packReports struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Value       float64   `bson:"value"`
+		ProdType    string    `bson:"prodtype"`
+		Itemcode    string    `bson:"itemcode"`
+		ItemType    string    `bson:"itemtype"`
+		Part        string    `bson:"part"`
+		Factory     string    `bson:"factory"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+	if err := result.Decode(&packReports); err != nil {
+		log.Println(err)
+	}
+	packReports.Qty = qty
+	packReports.Value = value
+
+	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/updated_tr.html")).Execute(w, map[string]interface{}{
+		"packReports": packReports,
+	})
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
