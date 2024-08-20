@@ -4669,7 +4669,7 @@ func (s *Server) soe_sendfastentry(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	var bdoc []interface{}
 	var firsection = []string{"1.Slice", "2.Selection", "3.Lamination", "9.Delivery"}
-	var reededsection = []string{"1.Slice", "2.Selection", "3.Lamination", "4.Drying", "5.Reeding", "6.Selection-2", "7.Tubi", "8.Veneer"}
+	var reededsection = []string{"1.Slice", "2.Selection", "3.Lamination", "4.Drying", "5.Reeding", "6.Selection-2", "7.Tubi", "8.Veneer", "a.Inventory"}
 	if outputtype == "fir" && len(outputlist) == 4 {
 		for i := 0; i < len(firsection); i++ {
 			b := bson.M{
@@ -4678,7 +4678,7 @@ func (s *Server) soe_sendfastentry(w http.ResponseWriter, r *http.Request, ps ht
 			bdoc = append(bdoc, b)
 		}
 	}
-	if outputtype == "reeded" && len(outputlist) == 8 {
+	if outputtype == "reeded" && len(outputlist) == 9 {
 		for i := 0; i < len(reededsection); i++ {
 			b := bson.M{
 				"date": primitive.NewDateTimeFromTime(date), "type": outputtype, "section": reededsection[i], "qty": outputlist[i], "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
