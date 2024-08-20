@@ -17,6 +17,7 @@ import (
 type CuttingReport struct {
 	ReportId     string    `bson:"_id"`
 	Date         time.Time `bson:"date"`
+	ProdType     string    `bson:"prodtype"`
 	Wrnote       string    `bson:"wrnote"`
 	Woodtype     string    `bson:"woodtype"`
 	Thickness    float64   `bson:"thickness"`
@@ -31,6 +32,7 @@ type CuttingWrnote struct {
 	WrnoteId    string    `bson:"_id"`
 	WrnoteCode  string    `bson:"wrnotecode"`
 	Woodtype    string    `bson:"woodtype"`
+	ProdType    string    `bson:"prodtype"`
 	Thickness   float64   `bson:"thickness"`
 	Qty         float64   `bson:"wrnoteqty"`
 	Remain      float64   `bson:"wrremain"`
