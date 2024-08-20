@@ -240,7 +240,10 @@ const drawProdMtdChart = (data) => {
   const pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
   const avg = curmonthData[curmonthData.length-2].value / pastDays
   const estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
-  for (let i = pastDays+2; i < 31; i++) {
+  // for (let i = pastDays+2; i < 31; i++) {
+  //   estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
+  // }
+  for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
     estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
   }
 
@@ -327,7 +330,7 @@ const drawProdMtdChart = (data) => {
 
   innerChart.append("text")
     // .text(`Estimate: $ ${estimateData[estimateData.length-1].value.toLocaleString("en-US")}`)
-    .text(`Estimate: $ ${d3.format(",.0f")(estimateData[estimateData.length-1].value)}`)
+    .text(`(testing) Estimate: $ ${d3.format(",.0f")(estimateData[estimateData.length-1].value)}`)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")
@@ -343,22 +346,22 @@ const drawProdMtdChart = (data) => {
     .attr("stroke", "#75485E")
     .attr("stroke-width", 1);
 
-    innerChart.append("text")
-    .text(`$ ${d3.format(",.0f")(estimateData[estimateData.length-5].value)}`)
-    .attr("text-anchor", "end")
-    .attr("alignment-baseline", "middle")
-    .attr("font-size", "14px")
-    .attr("x", x(estimateData[estimateData.length-5].days) - 20)
-    .attr("y", y(estimateData[estimateData.length-5].value) - 18)
-    .attr("fill", "#75485E")
+    // innerChart.append("text")
+    // .text(`$ ${d3.format(",.0f")(estimateData[estimateData.length-5].value)}`)
+    // .attr("text-anchor", "end")
+    // .attr("alignment-baseline", "middle")
+    // .attr("font-size", "14px")
+    // .attr("x", x(estimateData[estimateData.length-5].days) - 20)
+    // .attr("y", y(estimateData[estimateData.length-5].value) - 18)
+    // .attr("fill", "#75485E")
 
-  innerChart.append("line")
-    .attr("x1",  x(estimateData[estimateData.length-5].days))
-    .attr("y1", y(estimateData[estimateData.length-5].value) - 1)
-    .attr("x2",  x(estimateData[estimateData.length-5].days) - 20)
-    .attr("y2", y(estimateData[estimateData.length-5].value) - 11)
-    .attr("stroke", "#75485E")
-    .attr("stroke-width", 1);
+  // innerChart.append("line")
+  //   .attr("x1",  x(estimateData[estimateData.length-5].days))
+  //   .attr("y1", y(estimateData[estimateData.length-5].value) - 1)
+  //   .attr("x2",  x(estimateData[estimateData.length-5].days) - 20)
+  //   .attr("y2", y(estimateData[estimateData.length-5].value) - 11)
+  //   .attr("stroke", "#75485E")
+  //   .attr("stroke-width", 1);
 
   innerChart.append("text")
     .text(`AVG of This Month up to ${pastDays}th: $ ${d3.format(",.0f")(avg)}`)
