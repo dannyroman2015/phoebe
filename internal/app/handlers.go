@@ -4091,6 +4091,45 @@ func (s *Server) sca_searchwrnote(w http.ResponseWriter, r *http.Request, ps htt
 	})
 }
 
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /sections/cutting/admin/reportdatefilter
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sca_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("cuttingFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("cuttingToDate"))
+
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{
+		"type": "report",
+		"$and": bson.A{
+			bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}},
+			bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}},
+		},
+	}, options.Find().SetSort(bson.M{"date": -1}))
+	if err != nil {
+		log.Println("failed to find cutting report at sca_reportdatefilter")
+	}
+	defer cur.Close(context.Background())
+	var cuttingReports []struct {
+		ReportId     string    `bson:"_id"`
+		Date         time.Time `bson:"date"`
+		Wrnote       string    `bson:"wrnote"`
+		ProdType     string    `bson:"prodtype"`
+		Woodtype     string    `bson:"woodtype"`
+		Thickness    float64   `bson:"thickness"`
+		Qty          float64   `bson:"qtycbm"`
+		Type         string    `bson:"type"`
+		Reporter     string    `bson:"reporter"`
+		CreatedDate  time.Time `bson:"createddate"`
+		LastModified time.Time `bson:"lastmodified"`
+	}
+	if err := cur.All(context.Background(), &cuttingReports); err != nil {
+		log.Println("failed to decode cuttingReports at sca_reportdatefilter")
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"cuttingReports": cuttingReports,
+	})
+}
+
 // ///////////////////////////////////////////////////////////////////////////////
 // /sections/lamination/overview - get page overview of Lamination
 // ///////////////////////////////////////////////////////////////////////////////
