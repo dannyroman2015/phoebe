@@ -6130,6 +6130,12 @@ func (s *Server) spka_updatereport(w http.ResponseWriter, r *http.Request, ps ht
 	packReports.Qty = qty
 	packReports.Value = value
 
+	// update production value
+	_, err := s.mgdb.Collection("prodvalue").UpdateOne(context.Background(), bson.M{"refid": reportid}, bson.M{"$set": bson.M{"qty": qty, "value": value}})
+	if err != nil {
+		log.Println(err)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/sections/pack/admin/updated_tr.html")).Execute(w, map[string]interface{}{
 		"packReports": packReports,
 	})
