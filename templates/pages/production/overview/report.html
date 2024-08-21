@@ -1,8 +1,7 @@
-<div class=" fade-in col-span-full relative sm:px-2 overflow-hidden rounded-xl bg-white border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class="fade-in col-span-full relative sm:px-2 overflow-hidden rounded-xl bg-white border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <div class="flex items-center justify-between">
     <div>
       <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium text-gray-800 dark:text-white">Báo cáo production value</h2>
         <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">{{.numberOfReports}} báo cáo</span>
       </div>
     </div>
@@ -86,7 +85,7 @@
                     <label for="reportFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       Từ
                     </label>
-                    <input hx-post="/production/overview/reportfilter" hx-trigger="change" hx-target="#reporttable-container" hx-swap="outerHTML"
+                    <input hx-post="/production/overview/reportfilter" hx-trigger="input" hx-target="#report-tbody" hx-swap="outerHTML"
                       type="date" id="reportFromDate" name="reportFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
 
@@ -94,7 +93,7 @@
                     <label for="reportToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       Đến
                     </label>
-                    <input hx-post="/production/overview/reportfilter" hx-trigger="change" hx-target="#reporttable-container" hx-swap="outerHTML"
+                    <input hx-post="/production/overview/reportfilter" hx-trigger="input" hx-target="#report-tbody" hx-swap="outerHTML"
                       type="date" id="reportToDate" name="reportToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
   
@@ -114,7 +113,7 @@
     </div>
   </div>
 
-  <div x-data="{
+  <!-- <div x-data="{
     showReportDropdown:false,
     filter:'wrnote',
     filterLabel: 'Mã kiện',
@@ -138,7 +137,7 @@
                 <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="reportdropdown-button">
                 <li>
                   <button @click="showReportDropdown=!showReportDropdown; filter='wrnote'; filterLabel='Mã kiện'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                    Mã kiện</button>
+                    Loại hàng</button>
                 </li>
                 <li>
                   <button @click="showReportDropdown=!showReportDropdown; filter='woodtype'; filterLabel='Loại gỗ'" type="button" class="inline-flex w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
@@ -147,7 +146,7 @@
             </div>
 
             <div class="relative w-full">
-                <input hx-post="/sections/cutting/overview/reportsearch" hx-target="#reporttable-container" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML"
+                <input hx-post="/production/overview/reportsearch" hx-target="#report-tbody" hx-trigger="input changed delay:500ms, search" hx-swap="outerHTML"
                     type="search" name="reportsearch" id="reportsearch" class="block p-2.5 w-full z-20 text-sm text-gray-900 bg-white rounded-e-lg border-s-gray-50 border-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-s-gray-700  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" 
                         placeholder="Search" required />
  
@@ -155,9 +154,9 @@
         </div>
     </form>
           
-  </div>
+  </div> -->
   
-  <div id="reporttable-container" class="flex flex-col">
+  <div class="flex flex-col">
     <div class="my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div class="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">           
@@ -197,7 +196,8 @@
                   </tr>
                 </thead>
  
-                <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                <tbody id="report-tbody" 
+                  class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   {{range .prodvalueData}}
                   <tr>  
                     <td class="px-4 py-1 text-sm whitespace-nowrap">

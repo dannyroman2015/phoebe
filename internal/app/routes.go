@@ -298,9 +298,10 @@ func (s *Server) routes() http.Handler {
 	router.GET("/production/overview/loadprodtype", s.po_loadprodtype)
 	router.GET("/production/overview/loadsummary", s.po_loadsummary)
 	router.GET("/production/overview/loadreport", s.po_loadreport)
+	router.POST("/production/overview/reportfilter", s.po_reportfilter)
+	// router.POST("/production/overview/reportsearch", s.po_reportsearch)
 	router.POST("/production/overview/prodtypefilter", s.po_prodtypefilter)
 	router.POST("/production/overview/summarydatefilter", s.po_summarydatefilter)
-
 	// end Production Value
 
 	////////////////////////////////////////////////////////////////////

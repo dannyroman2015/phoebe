@@ -1,9 +1,17 @@
-const drawRdOpTotalChart = (data) => {
+const drawRdOpTotalChart = (data, inventory) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
-  const innerWidth = width - margin.left - margin.right;
+  const margin = {top: 20, right: 120, bottom: 20, left: 40};
+  let innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
+
+  // inventory = data.filter(d => d.section === "Inventory")
+  data = data.filter(d => d.section !== "Inventory")
+
+  if (inventory == undefined) {
+    margin.right = 20
+    innerWidth = width - margin.left - margin.right;
+  }
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height]);
@@ -25,6 +33,11 @@ const drawRdOpTotalChart = (data) => {
   const y1 = d3.scaleLinear()
     .domain(d3.extent(data, d => d.avg))
     .range([innerHeight/4, 0])
+    .nice();
+
+  const y2 = d3.scaleLinear()
+    .domain([0, inventory?.qty])
+    .range([innerHeight, 0])
     .nice();
 
   innerChart
@@ -94,7 +107,7 @@ const drawRdOpTotalChart = (data) => {
     .attr("font-weight", 600)
 
   svg.append("text")
-    .text(`Tổng sản lượng (m²) của  `)
+    .text(`Tổng sản lượng (m²) `)
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "start")
     .attr("x", 20)
@@ -119,6 +132,43 @@ const drawRdOpTotalChart = (data) => {
         .attr("fill", "#75485E")
         .attr("font-weight", 600)
         .attr("font-size", 16)
+
+  if (inventory != undefined) {
+    svg.append("line")
+      .attr("x1", innerWidth + 3*x.bandwidth()/4)
+      .attr("y1", height)
+      .attr("x2", innerWidth + 3*x.bandwidth()/4)
+      .attr("y2", 0)
+      .attr("stroke", "black")
+      .attr("stroke-opacity", 0.2)
+
+    svg.append("rect")
+      .attr("x", innerWidth + x.bandwidth())
+      .attr("y", y2(inventory.qty) + margin.bottom)
+      .attr("width", x.bandwidth())
+      .attr("height", y2(0) - y2(inventory.qty))
+      .attr("fill", "#DCA47C");
+
+    svg.append("text")
+      .text(inventory.section)
+      .attr("text-anchor", "middle")
+      .attr("x", innerWidth + 3* x.bandwidth() /2)
+      .attr("y", height)
+      .attr("dy", "-0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", 14)
+
+    svg.append("text")
+      .text(d3.format(",.0f")(inventory.qty))
+      .attr("text-anchor", "middle")
+      .attr("x", innerWidth + 3* x.bandwidth() /2)
+      .attr("y", y2(inventory.qty) + margin.bottom)
+      .attr("dy", "-0.15em")
+      .attr("fill", "#75485E")
+      .attr("font-size", 14)
+      .attr("font-weight", 600)
+
+  }
 
   return svg.node();
 }

@@ -549,17 +549,34 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	defer cur.Close(context.Background())
 	var reededoutputData []struct {
-		Section  string  `bson:"section" json:"section"`
-		Type     string  `bson:"type" json:"type"`
-		Qty      float64 `bson:"qty" json:"qty"`
-		Avg      float64 `bson:"avg" json:"avg"`
-		LastDate string  `bson:"lastdate" json:"lastdate"`
+		Section   string  `bson:"section" json:"section"`
+		Type      string  `bson:"type" json:"type"`
+		Qty       float64 `bson:"qty" json:"qty"`
+		Avg       float64 `bson:"avg" json:"avg"`
+		LastDate  string  `bson:"lastdate" json:"lastdate"`
+		Inventory float64 `bson:"inventory" json:"inventory"`
 	}
 	if err := cur.All(context.Background(), &reededoutputData); err != nil {
 		log.Println(err)
 	}
+	// get latest inventory
+	sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{"section": "a.Inventory"}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var latestInventory struct {
+		Date    time.Time `bson:"date"`
+		Section string    `json:"section"`
+		Qty     float64   `bson:"qty" json:"qty"`
+		DateStr string    `json:"date"`
+	}
+	if err := sr.Decode(&latestInventory); err != nil {
+		log.Println(err)
+	}
+	latestInventory.Section = "Inventory"
+	latestInventory.DateStr = latestInventory.Date.Format("02-01-2024")
 	// get last update time
-	sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	sr = s.mgdb.Collection("output").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
 	if sr.Err() != nil {
 		log.Println(sr.Err())
 	}
@@ -572,6 +589,7 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/output.html")).Execute(w, map[string]interface{}{
 		"reededoutputData": reededoutputData,
+		"latestInventory":  latestInventory,
 		"outputUpTime":     latestOne.Date.Add(7 * time.Hour).Format("15:00 ngày 02-01-2006"),
 	})
 }
@@ -1908,9 +1926,25 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &reededoutputData); err != nil {
 			log.Println(err)
 		}
-
+		// get latest inventory
+		sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{"date": primitive.NewDateTimeFromTime(todate), "section": "a.Inventory"})
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var latestInventory struct {
+			Date    time.Time `bson:"date"`
+			Section string    `json:"section"`
+			Qty     float64   `bson:"qty" json:"qty"`
+			DateStr string    `json:"date"`
+		}
+		if err := sr.Decode(&latestInventory); err != nil {
+			log.Println(err)
+		}
+		latestInventory.Section = "Inventory"
+		latestInventory.DateStr = latestInventory.Date.Format("02-01-2024")
 		template.Must(template.ParseFiles("templates/pages/dashboard/reededoutput_totalchart.html")).Execute(w, map[string]interface{}{
 			"reededoutputData": reededoutputData,
+			"latestInventory":  latestInventory,
 		})
 
 	case "fir":
@@ -7214,6 +7248,44 @@ func (s *Server) po_loadreport(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/production/overview/report.html")).Execute(w, map[string]interface{}{
 		"prodvalueData":   prodvalueData,
 		"numberOfReports": len(prodvalueData),
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /production/overview/reportfilter
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) po_reportfilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("reportFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("reportToDate"))
+
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$sort", bson.D{{"date", -1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "at": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y %H:%M", "date": "$createdat"}}}}},
+	})
+	if err != nil {
+		log.Println("failed to access prodvalue at po_reportfilter")
+	}
+	defer cur.Close(context.Background())
+	var prodvalueData []struct {
+		Id        string  `bson:"_id" json:"id"`
+		Date      string  `bson:"date" json:"date"`
+		Item      string  `bson:"item" json:"item"`
+		ProdType  string  `bson:"prodtype" json:"prodtype"`
+		ItemType  string  `bson:"itemtype" json:"itemtype"`
+		Qty       int     `bson:"qty" json:"qty"`
+		Value     float64 `bson:"value" json:"value"`
+		From      string  `bson:"from" json:"from"`
+		RefId     string  `bson:"refid" json:"refid"`
+		Factory   string  `bson:"factory" json:"factory"`
+		Reporter  string  `bson:"reporter" json:"reporter"`
+		CreatedAt string  `bson:"at" json:"at"`
+	}
+	if err = cur.All(context.Background(), &prodvalueData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/production/overview/report_tbody.html")).Execute(w, map[string]interface{}{
+		"prodvalueData": prodvalueData,
 	})
 }
 

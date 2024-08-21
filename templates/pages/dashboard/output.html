@@ -138,7 +138,7 @@
   document.getElementById("outputToDate").valueAsDate = new Date();
 
   if ({{.reededoutputData}}) {
-    outputchart.append(drawRdOpTotalChart({{.reededoutputData}}))
+    outputchart.append(drawRdOpTotalChart({{.reededoutputData}}, {{.latestInventory}}))
   }
   
   // document.getElementById("reededoutputFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
