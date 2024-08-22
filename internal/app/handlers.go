@@ -4809,6 +4809,79 @@ func (s *Server) soa_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
+// ///////////////////////////////////////////////////////////////////////
+// /sections/output/admin/loadreport
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) soa_searchreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("reportSearch") + ".*"
+	// searchNumber, _ := strconv.ParseFloat(r.FormValue("reportSearch"), 64)
+
+	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$or": bson.A{
+			bson.M{"section": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"type": bson.M{"$regex": searchRegex, "$options": "i"}},
+			// bson.M{"qty": searchNumber},
+		}}}},
+		{{"$sort", bson.M{"date": -1}}},
+	})
+	if err != nil {
+		log.Println("failed to access output at soa_searchreport")
+	}
+	defer cur.Close(context.Background())
+	var outputReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Section     string    `bson:"section"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+
+	if err := cur.All(context.Background(), &outputReports); err != nil {
+		log.Println("failed to decode at soa_searchreport")
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"outputReports": outputReports,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// /sections/output/admin/reportdatefilter
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) soa_reportdatefilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("fromdate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("todate"))
+
+	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{
+			bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}},
+			bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}},
+		}}}},
+		{{"$sort", bson.M{"date": -1}}},
+	})
+	if err != nil {
+		log.Println("failed to access output at soa_searchreport")
+	}
+	defer cur.Close(context.Background())
+	var outputReports []struct {
+		ReportId    string    `bson:"_id"`
+		Date        time.Time `bson:"date"`
+		Qty         float64   `bson:"qty"`
+		Type        string    `bson:"type"`
+		Section     string    `bson:"section"`
+		Reporter    string    `bson:"reporter"`
+		CreatedDate time.Time `bson:"createdat"`
+	}
+
+	if err := cur.All(context.Background(), &outputReports); err != nil {
+		log.Println("failed to decode at soa_searchreport")
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/output/admin/report_tbody.html")).Execute(w, map[string]interface{}{
+		"outputReports": outputReports,
+	})
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /sections/output/admin/deletereport/:reportid
 // //////////////////////////////////////////////////////////////////////////////////////////////////

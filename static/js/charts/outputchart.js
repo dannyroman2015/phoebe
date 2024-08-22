@@ -167,9 +167,9 @@ const drawRdOpTotalChart = (data, inventory) => {
       .attr("fill", "#75485E")
       .attr("font-size", 14)
       .attr("font-weight", 600)
-console.log(inventory)
+
     svg.append("text")
-      .text(inventory.date != "" ? inventory.date : "")
+      .text(inventory.qty != 0 ? inventory.date : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "end")
       .attr("x", innerWidth + 3*x.bandwidth()/4)

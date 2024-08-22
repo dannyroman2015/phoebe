@@ -169,6 +169,8 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/sections/output/admin", withAuth(s.so_admin))
 	router.GET("/sections/output/admin/loadreport", s.soa_loadreport)
+	router.POST("/sections/output/admin/searchreport", s.soa_searchreport)
+	router.POST("/sections/output/admin/reportdatefilter", s.soa_reportdatefilter)
 	router.DELETE("/sections/output/admin/deletereport/:reportid", s.soa_deletereport)
 	router.GET("/sections/output/admin/updateform/:reportid", s.soa_updateform)
 	router.PUT("/sections/output/admin/updatereport/:reportid", s.soa_updatereport)
