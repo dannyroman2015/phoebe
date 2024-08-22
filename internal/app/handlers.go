@@ -574,7 +574,7 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 		log.Println(err)
 	}
 	latestInventory.Section = "Inventory"
-	latestInventory.DateStr = latestInventory.Date.Format("02-01-2024")
+	latestInventory.DateStr = latestInventory.Date.Format("02-01-2006")
 	// get last update time
 	sr = s.mgdb.Collection("output").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
 	if sr.Err() != nil {
@@ -1941,7 +1941,7 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 		latestInventory.Section = "Inventory"
-		latestInventory.DateStr = latestInventory.Date.Format("02-01-2024")
+		latestInventory.DateStr = latestInventory.Date.Format("02-01-2006")
 		template.Must(template.ParseFiles("templates/pages/dashboard/reededoutput_totalchart.html")).Execute(w, map[string]interface{}{
 			"reededoutputData": reededoutputData,
 			"latestInventory":  latestInventory,

@@ -167,8 +167,18 @@ const drawRdOpTotalChart = (data, inventory) => {
       .attr("fill", "#75485E")
       .attr("font-size", 14)
       .attr("font-weight", 600)
-
-  }
+console.log(inventory)
+    svg.append("text")
+      .text(inventory.date != "" ? inventory.date : "")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "end")
+      .attr("x", innerWidth + 3*x.bandwidth()/4)
+      .attr("y", height/2)
+      .attr("dy", "1em")
+      .attr("fill", "#75485E")
+      .attr("font-size", 14)
+      .attr("transform", `rotate(-90, ${innerWidth + 3*x.bandwidth()/4}, ${height/2})`)
+  } 
 
   return svg.node();
 }
