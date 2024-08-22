@@ -517,6 +517,8 @@ const drawAssemblyVTChart = (data, target) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   
+  let flag = true;
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
@@ -557,6 +559,10 @@ const drawAssemblyVTChart = (data, target) => {
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - 5 : y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth())
+        .on("mouseover", e => {
+          flag = !flag;
+          change(flag);
+        })
       .append("title")
         .text(d => d[1] - d[0])
 
@@ -618,10 +624,10 @@ const drawAssemblyVTChart = (data, target) => {
         .attr("fill", "#921A40")
         .attr("font-size", 14)
         .attr("opacity", 0)
-    let flag = true;
-    innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
-    innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
-    setInterval(() => {
+    // let flag = true;
+    // innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
+    // innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
+    // setInterval(() => {
       if (flag) {
         innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))
         innerChart.call(g => g.selectAll(".x1total").attr("opacity", 0))
@@ -629,8 +635,8 @@ const drawAssemblyVTChart = (data, target) => {
         innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
         innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
       }
-      flag = !flag
-    }, 10000);
+    //   flag = !flag
+    // }, 10000);
   }
 
   svg.append("text")
@@ -687,6 +693,19 @@ const drawAssemblyVTChart = (data, target) => {
       .attr("fill", "#75485E")
       .attr("font-size", 12)
 
+  svg.append("text")
+      .text("* Rà chuột vào cột để hiện value cho loại hàng")
+      .attr("class", "disappear")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 40)
+      .attr("y", 5)
+      .attr("dy", "0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", 12)
+      .style("transition", "opacity 2s ease-out")
+  setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 5000)
+
   //draw target lines
   if (target != undefined) { 
     const dates = data.map(d => d.date)
@@ -730,6 +749,16 @@ const drawAssemblyVTChart = (data, target) => {
   // end target line
 
   return svg.node();
+
+  function change(flag) {
+    if (flag) {
+      innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
+      innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
+    } else {
+      innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))
+      innerChart.call(g => g.selectAll(".x1total").attr("opacity", 0))
+    }
+  }
 }
 
 // efficiency

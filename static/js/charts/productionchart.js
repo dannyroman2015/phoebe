@@ -330,7 +330,7 @@ const drawProdMtdChart = (data) => {
 
   innerChart.append("text")
     // .text(`Estimate: $ ${estimateData[estimateData.length-1].value.toLocaleString("en-US")}`)
-    .text(`(testing) Estimate: $ ${d3.format(",.0f")(estimateData[estimateData.length-1].value)}`)
+    .text(`Estimate: $ ${d3.format(",.0f")(estimateData[estimateData.length-1].value)}`)
     .attr("text-anchor", "end")
     .attr("alignment-baseline", "middle")
     .attr("font-size", "14px")
