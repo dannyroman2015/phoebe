@@ -538,6 +538,8 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "reeded"}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "qty": bson.M{"$sum": "$qty"}, "type": bson.M{"$first": "$type"}}}},
+		{{"$set", bson.M{"section": "$_id.section", "date": "$_id.date"}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
@@ -560,7 +562,7 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 		log.Println(err)
 	}
 	// get latest inventory
-	sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{"section": "a.Inventory"}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	sr := s.mgdb.Collection("output").FindOne(context.Background(), bson.M{"section": "a.Inventory"}, options.FindOne().SetSort(bson.M{"date": -1}))
 	if sr.Err() != nil {
 		log.Println(sr.Err())
 	}
@@ -1906,6 +1908,8 @@ func (s *Server) do_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 	case "reeded":
 		cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"type": "reeded", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "qty": bson.M{"$sum": "$qty"}, "type": bson.M{"$first": "$type"}}}},
+			{{"$set", bson.M{"section": "$_id.section", "date": "$_id.date"}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$group", bson.M{"_id": "$section", "type": bson.M{"$first": "$type"}, "qty": bson.M{"$sum": "$qty"}, "avg": bson.M{"$avg": "$qty"}, "lastdate": bson.M{"$last": "$date"}}}},
 			{{"$sort", bson.M{"_id": 1}}},
