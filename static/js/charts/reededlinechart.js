@@ -1,7 +1,7 @@
 const drawReededlineChart = (data) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 20, right: 20, bottom: 20, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -102,15 +102,15 @@ const drawReededlineChart = (data) => {
         .text("Dark")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
-        .attr("x", x(maxOne.data[0])-25)
-        .attr("y", y(maxOne[1]) - 20)
+        .attr("x", x(maxOne.data[0])-30)
+        .attr("y", y(maxOne[1]) - 15)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
     
       innerChart.append("line")
         .attr("x1", x(maxOne.data[0])-10)
-        .attr("y1", y(maxOne[1]) - 10)
+        .attr("y1", y(maxOne[1]) - 5)
         .attr("x2", x(maxOne.data[0]))
         .attr("y2", y(maxOne[1]))
         .attr("stroke", "#75485E")
@@ -120,15 +120,15 @@ const drawReededlineChart = (data) => {
         .text("Bright")
         .attr("text-anchor", "start")
         .attr("alignment-baseline", "middle")
-        .attr("x", x(maxOne.data[0]) + x.bandwidth())
-        .attr("y", y(maxOne[1])-20)
+        .attr("x", x(maxOne.data[0]) + x.bandwidth() + 5)
+        .attr("y", y(maxOne[1])-15)
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
 
       innerChart.append("line")
         .attr("x1", x(maxOne.data[0]) + x.bandwidth() + 15)
-        .attr("y1", y(maxOne[1]) - 8)
+        .attr("y1", y(maxOne[1]) - 5)
         .attr("x2", x(maxOne.data[0]) + x.bandwidth() - 5)
         .attr("y2", y(maxOne[0])+15)
         .attr("stroke", "#75485E")

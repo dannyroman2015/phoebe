@@ -3782,7 +3782,7 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/entry - get entry page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}, options.Find().SetSort(bson.M{"createat": -1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}, options.Find().SetSort(bson.M{"wrnotecode": 1}))
 	if err != nil {
 		log.Println(err)
 	}
@@ -7783,7 +7783,7 @@ func (s *Server) ma_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	date, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
 	hc, _ := strconv.Atoi(r.FormValue("hc"))
 	workhr, _ := strconv.ParseFloat(r.FormValue("workhr"), 64)
-	if hc == 0 || workhr == 0 {
+	if section == "" || hc == 0 || workhr == 0 {
 		template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thiếu thông tin nhập liệu",
