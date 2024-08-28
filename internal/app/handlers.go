@@ -592,7 +592,7 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 	template.Must(template.ParseFiles("templates/pages/dashboard/output.html")).Execute(w, map[string]interface{}{
 		"reededoutputData": reededoutputData,
 		"latestInventory":  latestInventory,
-		"outputUpTime":     latestOne.Date.Add(7 * time.Hour).Format("15:00 ngày 02-01-2006"),
+		"outputUpTime":     latestOne.Date.Add(7 * time.Hour).Format("15:04 ngày 02-01-2006"),
 	})
 }
 
