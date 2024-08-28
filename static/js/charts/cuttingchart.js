@@ -5,11 +5,6 @@ const drawCuttingChart = (data) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  const targets = [
-    {"date": "04 Jul", "target": 28},
-    {"date": "06 Jul", "target": 20},
-  ]
-
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height]);
   
@@ -339,11 +334,11 @@ svg.append("text")
   .attr("transform", `rotate(-90, 10, ${height-margin.bottom})`)
     .append("tspan")
       .text("Gỗ 25mm")
-      .attr("fill", "#A5A0DE")
+      .attr("fill", color(true))
       .attr("font-weight", 600)
     .append("tspan")
       .text(", Gỗ Còn Lại")
-      .attr("fill", "#DFC6A2")
+      .attr("fill", color(false))
       .attr("font-weight", 600)
     .append("tspan")
       .text(" cùng ")

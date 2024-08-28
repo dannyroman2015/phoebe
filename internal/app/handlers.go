@@ -1611,7 +1611,6 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 			return
 		}
-
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
