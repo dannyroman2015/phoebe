@@ -4218,7 +4218,7 @@ func (s *Server) slo_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
 		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat"}}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -4250,7 +4250,7 @@ func (s *Server) slo_reportdatefilter(w http.ResponseWriter, r *http.Request, ps
 	cur, err := s.mgdb.Collection("lamination").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat"}}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}, "createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M ngày %d/%m/%Y", "date": "$createdat", "timezone": "Asia/Bangkok"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
