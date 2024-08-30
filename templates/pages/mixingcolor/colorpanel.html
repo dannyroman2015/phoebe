@@ -7,8 +7,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
       </span>
-      <input hx-post="/mixingcolor/mixingsearch" hx-trigger="input changed delay:100ms, search" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-        name="mixingSearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
+      <input hx-post="/mixingcolor/colorsearch" hx-trigger="input changed delay:100ms, search" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+        name="colorSearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
 
     <div x-data="{
@@ -43,7 +43,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('operator').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('colorcode').focus();  }
         });
       "
       class="relative">
@@ -72,15 +72,79 @@
               <div class="grid gap-2">
                 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="operator">
-                    Operator
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="colorcode">
+                    Code
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="operator" id="operator" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="colorcode" id="colorcode" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .operators}}
+                      {{range .codes}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="category">
+                    Category
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="category" id="category" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .categories}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="user">
+                    User
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="user" id="user" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .users}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="onproduct">
+                    Product
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="onproduct" id="onproduct" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .onproducts}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="colorsupplier">
+                    Supplier
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="colorsupplier" id="colorsupplier" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .suppliers}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -93,26 +157,10 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
                       name="color" id="color" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .colors}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="code">
-                    Code
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="code" id="code" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .codes}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -125,7 +173,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
                       name="brand" id="brand" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .brands}}
@@ -136,15 +184,15 @@
                 </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="supplier">
-                    Supplier
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="substrate">
+                    Substrate
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="supplier" id="supplier" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="substrate" id="substrate" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .suppliers}}
+                      {{range .substrates}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -152,15 +200,15 @@
                 </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="classification">
-                    Classification
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="surface">
+                    Surface
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="classification" id="classification" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="surface" id="surface" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .classifications}}
+                      {{range .surfaces}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -168,31 +216,15 @@
                 </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="sopno">
-                    SOPNo.
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="sopno" id="sopno" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .sopnos}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="status">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="inspectionstatus">
                     Status
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="status" id="status" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="inspectionstatus" id="inspectionstatus" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .statuses}}
+                      {{range .inspectionstatuses}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -200,11 +232,11 @@
                 </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label for="mixingdate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <label for="issueddate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Mixing Date
                   </label>
-                  <input hx-post="/mixingcolor/mixingfilter" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                    type="date" id="mixingdate" name="mixingdate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                  <input hx-post="/mixingcolor/colorfilter" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                    type="date" id="issueddate" name="issueddate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                 </div>
 
                 <!-- <div class="grid items-center grid-cols-3 gap-4">
@@ -247,31 +279,25 @@
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Batch No.</span>                              
+                    <span>Color</span>                              
                   </button>
                 </th>
           
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Volume (L)</span>                              
+                    <span>Category</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Operator</span>                              
+                    <span>User</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Color</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Code</span>                              
+                    <span>Apply On</span>                              
                   </button>
                 </th>
 
@@ -289,55 +315,25 @@
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Classification</span>                              
+                    <span>Remake On</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>SOPNo.</span>                              
+                    <span>Inspection</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Indicator 1</span>                              
+                    <span>Remark</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Indicator 2</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Indicator 3</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Status</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Use</span>                              
-                  </button>
-                </th>
-
-                <!-- <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>End Use</span>                              
-                  </button>
-                </th> -->
-                
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Item & Mo</span>                              
+                    <span>Alert</span>                              
                   </button>
                 </th>
 
@@ -347,43 +343,39 @@
               </tr>
             </thead>
             
-            <tbody class="fade-in" id="mixing_tbody" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-              {{range .mixingbatchData}}
+            <tbody class="fade-in" id="color_tbody" class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+              {{range .colorpanelData}}
               <tr>
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Mix&nbsp&nbsp: {{.MixingDate}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Issue: {{.IssuedDate}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Issue: {{.Issued}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Expire:&nbsp: {{.Expired}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color}}</p>
                   </div>
                 </td>
   
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Volume}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Category}}</p>
                   </div>
                 </td>        
                 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Operator}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.User}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color}}</p>
-                  </div>
-                </td> 
-
-                <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Substrate}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.OnProduct}} ({{.Surface}})</p>
                   </div>
                 </td> 
 
@@ -401,65 +393,28 @@
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Classification}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Remaked}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.SOPNo}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.InspectionStatus}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Inspected}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Indicator1}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Remark}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Indicator2}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Alert}}</p>
                   </div>
                 </td> 
-
-                <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Indicator3}}</p>
-                  </div>
-                </td> 
-
-                <td class="px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
-                  {{ if eq .Status "Approved"}}
-                  <div class="inline-flex items-center px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
-                    <h2 class="text-sm font-normal text-emerald-500">{{.Status}}</h2>
-                  </div>
-                  {{else}}
-                  <div class="inline-flex items-center px-3 py-1 rounded-full gap-x-2 dark:bg-gray-800">
-                    <h2 class="text-sm font-normal text-gray-600">{{.Status}}</h2>
-                  </div>
-                  {{end}}
-                </td>
-
-                <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End:&nbsp&nbsp{{.EndUse}}</p>
-                  </div>
-                </td> 
-
-                <!-- <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.EndUse}}</p>
-                  </div>
-                </td>  -->
-
-                <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Item}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Mo}}</p>
-                  </div>
-                </td>
 
                 <td class="px-4 py-4 text-sm whitespace-nowrap">
                   <div class="flex items-center gap-x-6">
@@ -476,7 +431,14 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
-                    </button>                    
+                    </button> 
+                    
+                    <button hx-get="/mixingcolor/addcolorform" hx-target="closest tr" hx-swap="beforebegin"
+                        class="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                    </button> 
 
                   </div>
                 </td>
