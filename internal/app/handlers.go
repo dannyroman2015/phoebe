@@ -8009,6 +8009,279 @@ func (s *Server) dte_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mixingcolor(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/admin.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/loadmixingentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/sendmixingentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	batchno := r.FormValue("batchno")
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	volume, _ := strconv.Atoi(r.FormValue("volume"))
+	operator := r.FormValue("operator")
+	color := r.FormValue("color")
+	code := r.FormValue("code")
+	brand := r.FormValue("brand")
+	supplier := r.FormValue("supplier")
+	classification := r.FormValue("classification")
+	sopno := r.FormValue("sopno")
+	indicator1 := r.FormValue("indicator1")
+	indicator2 := r.FormValue("indicator2")
+	indicator3, _ := strconv.Atoi(r.FormValue("indicator3"))
+	status := r.FormValue("status")
+	issueddate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
+	startuse, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("startuse"), loc)
+	enduse, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("enduse"), loc)
+	mo := r.FormValue("mo")
+	item := r.FormValue("item")
+	if batchno == "" || r.FormValue("mixingdate") == "" || r.FormValue("volume") == "" || code == "" {
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin",
+		})
+	}
+
+	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
+		"operator": operator, "color": color, "code": code, "brand": brand, "supplier": supplier, "classification": classification, "sopno": sopno,
+		"indicator1": indicator1, "indicator2": indicator2, "indicator3": indicator3, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
+		"startuse": primitive.NewDateTimeFromTime(startuse), "enduse": primitive.NewDateTimeFromTime(enduse), "mo": mo, "item": item,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Failed to insert to database",
+		})
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Thêm vào thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/loadmixingbatch
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$sort", bson.D{{"date", -1}, {"batchno", 1}}}},
+		{{"$set", bson.M{
+			"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+			"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+			"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+			"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+		}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var mixingbatchData []struct {
+		BatchNo        string  `bson:"batchno"`
+		MixingDate     string  `bson:"mixingdate"`
+		Volume         float64 `bson:"volume"`
+		Operator       string  `bson:"operator"`
+		Color          string  `bson:"color"`
+		Code           string  `bson:"code"`
+		Brand          string  `bson:"brand"`
+		Supplier       string  `bson:"supplier"`
+		Classification string  `bson:"classification"`
+		SOPNo          string  `bson:"sopno"`
+		Indicator1     string  `bson:"indicator1"`
+		Indicator2     string  `bson:"indicator2"`
+		Indicator3     float64 `bson:"indicator3"`
+		Status         string  `bson:"status"`
+		IssuedDate     string  `bson:"issueddate"`
+		StartUse       string  `bson:"startuse"`
+		EndUse         string  `bson:"enduse"`
+		Mo             string  `bson:"mo"`
+		Item           string  `bson:"item"`
+	}
+	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
+		log.Println(err)
+	}
+
+	var operatorMap = make(map[string]bool, len(mixingbatchData))
+	var colorMap = make(map[string]bool, len(mixingbatchData))
+	var codeMap = make(map[string]bool, len(mixingbatchData))
+	var brandMap = make(map[string]bool, len(mixingbatchData))
+	var supplierMap = make(map[string]bool, len(mixingbatchData))
+	var classificationMap = make(map[string]bool, len(mixingbatchData))
+	var sopnoMap = make(map[string]bool, len(mixingbatchData))
+	var statusMap = make(map[string]bool, len(mixingbatchData))
+
+	for _, v := range mixingbatchData {
+		operatorMap[v.Operator] = true
+		colorMap[v.Color] = true
+		codeMap[v.Code] = true
+		brandMap[v.Brand] = true
+		supplierMap[v.Supplier] = true
+		classificationMap[v.Classification] = true
+		sopnoMap[v.SOPNo] = true
+		statusMap[v.Status] = true
+	}
+	var operators = make([]string, 0, len(operatorMap))
+	for k, _ := range operatorMap {
+		operators = append(operators, k)
+	}
+	var colors = make([]string, 0, len(colorMap))
+	for k, _ := range colorMap {
+		colors = append(colors, k)
+	}
+	var codes = make([]string, 0, len(codeMap))
+	for k, _ := range codeMap {
+		codes = append(codes, k)
+	}
+	var brands = make([]string, 0, len(brandMap))
+	for k, _ := range brandMap {
+		brands = append(brands, k)
+	}
+	var suppliers = make([]string, 0, len(supplierMap))
+	for k, _ := range supplierMap {
+		suppliers = append(suppliers, k)
+	}
+	var classifications = make([]string, 0, len(classificationMap))
+	for k, _ := range classificationMap {
+		classifications = append(classifications, k)
+	}
+	var sopnos = make([]string, 0, len(sopnoMap))
+	for k, _ := range sopnoMap {
+		sopnos = append(sopnos, k)
+	}
+	var statuses = make([]string, 0, len(statusMap))
+	for k, _ := range statusMap {
+		statuses = append(statuses, k)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingbatch.html")).Execute(w, map[string]interface{}{
+		"mixingbatchData": mixingbatchData,
+		"operators":       operators,
+		"colors":          colors,
+		"codes":           codes,
+		"brands":          brands,
+		"suppliers":       suppliers,
+		"classifications": classifications,
+		"sopnos":          sopnos,
+		"statuses":        statuses,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/mixingfilter
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	operator := r.FormValue("operator")
+	color := r.FormValue("color")
+	code := r.FormValue("code")
+	brand := r.FormValue("brand")
+	supplier := r.FormValue("supplier")
+	classification := r.FormValue("classification")
+	sopno := r.FormValue("sopno")
+	status := r.FormValue("status")
+
+	var filters = bson.A{}
+	if operator != "" {
+		filters = append(filters, bson.M{"operator": operator})
+	}
+	if color != "" {
+		filters = append(filters, bson.M{"color": color})
+	}
+	if code != "" {
+		filters = append(filters, bson.M{"code": code})
+	}
+	if brand != "" {
+		filters = append(filters, bson.M{"brand": brand})
+	}
+	if supplier != "" {
+		filters = append(filters, bson.M{"supplier": supplier})
+	}
+	if classification != "" {
+		filters = append(filters, bson.M{"classification": classification})
+	}
+	if sopno != "" {
+		filters = append(filters, bson.M{"sopno": sopno})
+	}
+	if status != "" {
+		filters = append(filters, bson.M{"status": status})
+	}
+
+	var cur *mongo.Cursor
+	var err interface{}
+	if len(filters) != 0 {
+		cur, err = s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": filters}}},
+			{{"$sort", bson.D{{"date", -1}, {"batchno", 1}}}},
+			{{"$set", bson.M{
+				"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+				"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+				"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+				"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+			}}},
+		})
+	} else {
+		cur, err = s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$sort", bson.D{{"date", -1}, {"batchno", 1}}}},
+			{{"$set", bson.M{
+				"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+				"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+				"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+				"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+			}}},
+		})
+	}
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var mixingbatchData []struct {
+		BatchNo        string  `bson:"batchno"`
+		MixingDate     string  `bson:"mixingdate"`
+		Volume         float64 `bson:"volume"`
+		Operator       string  `bson:"operator"`
+		Color          string  `bson:"color"`
+		Code           string  `bson:"code"`
+		Brand          string  `bson:"brand"`
+		Supplier       string  `bson:"supplier"`
+		Classification string  `bson:"classification"`
+		SOPNo          string  `bson:"sopno"`
+		Indicator1     string  `bson:"indicator1"`
+		Indicator2     string  `bson:"indicator2"`
+		Indicator3     float64 `bson:"indicator3"`
+		Status         string  `bson:"status"`
+		IssuedDate     string  `bson:"issueddate"`
+		StartUse       string  `bson:"startuse"`
+		EndUse         string  `bson:"enduse"`
+		Mo             string  `bson:"mo"`
+		Item           string  `bson:"item"`
+	}
+	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixing_tbody.html")).Execute(w, map[string]interface{}{
+		"mixingbatchData": mixingbatchData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /quality/entry - copy paste report for quality
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) q_fastentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

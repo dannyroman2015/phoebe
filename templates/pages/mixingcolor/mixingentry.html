@@ -1,0 +1,219 @@
+<section id="entry-container" class="fade-in">
+  <div class="mx-auto max-w-screen-full px-4 py-2 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-x-16 gap-y-8">
+      <form class="space-y-4" hx-post="/mixingcolor/sendmixingentry" hx-target="#entry-container" hx-swap="outerHTML">
+        <div class="mt-4 text-center">
+          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+            Send</button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 text-center sm:grid-cols-6">
+
+          <div class="mt-4 text-center">
+            <label for="mixingdate" class="relative block rounded-md border">
+              <input type="datetime-local" id="mixingdate" name="mixingdate" placeholder="Mixing Time"
+                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Mixing Date<span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="batchno" class="relative block rounded-md border">
+              <input type="text" id="batchno" name="batchno" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Batch No.</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="volume" class="relative block rounded-md border">
+              <input type="number" id="volume" name="volume" min="0" step="0.01" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Volume</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="operator" class="relative block rounded-md border">
+              <input type="text" id="operator" name="operator" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Operator</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="color" class="relative block rounded-md border">
+              <input type="text" id="color" name="color" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Color</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="code" class="relative block rounded-md border">
+              <input type="text" id="code" name="code" placeholder="" tabindex="-1"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Code</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="brand" class="relative block rounded-md border">
+              <input type="text" id="brand" name="brand" placeholder="" tabindex="-1"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Brand</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="supplier" class="relative block rounded-md border">
+              <input type="text" id="supplier" name="supplier" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Supplier</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="classification" class="relative block rounded-md border">
+              <input type="text" id="classification" name="classification" placeholder="" tabindex="1"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Classification</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="sopno" class="relative block rounded-md border">
+              <input type="text" id="sopno" name="sopno" placeholder="" tabindex="1"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                SOPNo.</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="indicator1" class="relative block rounded-md border">
+              <input type="text" id="indicator1" name="indicator1" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Indicator 1</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="indicator2" class="relative block rounded-md border">
+              <input type="text" id="indicator2" name="indicator2" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Indicator 2</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="indicator3" class="relative block rounded-md border">
+              <input type="number" id="indicator3" name="indicator3" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Indicator 3</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="status" class="relative block rounded-md border">
+              <input type="text" id="status" name="status" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Status</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="issueddate" class="relative block rounded-md border">
+              <input type="datetime-local" id="issueddate" name="issueddate" placeholder=""
+                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Issued Date<span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="startuse" class="relative block rounded-md border">
+              <input type="datetime-local" id="startuse" name="startuse" placeholder=""
+                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Start Use<span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="enduse" class="relative block rounded-md border">
+              <input type="datetime-local" id="enduse" name="enduse" placeholder=""
+                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                End Use<span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="mo" class="relative block rounded-md border">
+              <input type="text" id="mo" name="mo" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Mo</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="item" class="relative block rounded-md border">
+              <input type="text" id="item" name="item" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Item</span>
+            </label>
+          </div>
+
+          <!-- <div class="flex justify-center mt-4 text-center">
+            <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                name="section" id="section" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <option value="" disabled selected>Chọn bộ phận</option>
+              <option value="cutting">Cutting</option>
+            </select>
+          </div> -->
+
+          <!-- <div class="mt-4 text-center">
+            <label for="occurdate" class="relative block rounded-md border">
+              <input type="date" id="occurdate" name="occurdate" placeholder="Ngày"
+                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                ngày<span>
+            </label>
+          </div> -->
+
+        </div>
+
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.getElementById("occurdate").valueAsDate = new Date();
+
+  if ({{.showSuccessDialog}}) {
+    swal("Thành công", {{.msgDialog}}, "success")
+  }
+  if ({{.showMissingDialog}}) {
+    swal("Thất bại", {{.msgDialog}}, "error")
+  }
+  if ({{.showErrDialog}}) {
+    swal("Thất bại", {{.msgDialog}}, "error")
+  }
+</script>

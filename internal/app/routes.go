@@ -345,6 +345,18 @@ func (s *Server) routes() http.Handler {
 	// end Downtime
 
 	////////////////////////////////////////////////////////////////////
+	// Mixing Color ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/mixingcolor", s.mixingcolor)
+	router.GET("/mixingcolor/loadmixingentry", s.loadmixingentry)
+	router.POST("/mixingcolor/sendmixingentry", s.sendmixingentry)
+	router.GET("/mixingcolor/loadmixingbatch", s.loadmixingbatch)
+	router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
+	// router.GET("/downtime/entry/loadform", s.dte_loadform)
+	// router.POST("/downtime/entry/sendentry", s.dte_sendentry)
+	// end Mixing Color
+
+	////////////////////////////////////////////////////////////////////
 	// Quality ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	router.GET("/quality/fastentry", withAuth(s.q_fastentry))
