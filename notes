@@ -1,17 +1,3 @@
-pineline := mongo.Pipeline{bson.D{{"$match", bson.M{"$and": bson.A{
-		bson.M{"orderdate": bson.M{"$gt": start}},
-		bson.M{"orderdate": bson.M{"$lt": end}}},
-	}}},
-		bson.D{{"$sort", bson.M{"orderdate": 1}}},
-		bson.D{{"$group", bson.D{
-			{"_id", "$customer_id"},
-			{"first_puchase_order", bson.D{{"$first", "$orderdate"}}},
-			{"total_value", bson.M{"$sum": "$value"}},
-			{"total_orders", bson.M{"$sum": 1}},
-			{"orders", bson.M{"$push": bson.M{"value": "$value", "orderdate": "$orderdate"}}},
-		},
-		}},
-	}
 
 // question icon svg
 <svg class="h-3" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -26,31 +12,6 @@ pineline := mongo.Pipeline{bson.D{{"$match", bson.M{"$and": bson.A{
 </svg>
 
   
-const raw = [{
-  "name" : "cat",
-  "value" : 17,
-  "group" : "animal",
-},
-{
-  "name" : "dog",
-  "value" : 6,
-  "group" : "animal",
-},
-{
-  "name" : "snak",
-  "value" : 2,
-  "group" : "animal",
-},
-{
-  "name" : "tesla",
-  "value" : 11,
-  "group" : "car",
-},
-{
-  "name" : "bmw",
-  "value" : 23,
-  "group" : "car",
-}]
 
 let result = raw.reduce((r, {group: name, ...object}) => {
   let temp = r.find(o => o.name === name);
@@ -101,7 +62,5 @@ dataaa.forEach(function(d){
         if ( depth === levels.length - 1 ) depthCursor.push({ name : d.model, value : d.size });
     });
 });
-
-db.mo.aggregate([{ "$match": { "status": "raw" } }, { "$lookup": { "from": "item", "localField": "item.id", "foreignField": "id", "as": "item.parts" } }, { "$merge": { "into": "mo", "whenMatched": "replace", "whenNotMatched": "discard" } }])
 
 "#75485E"
