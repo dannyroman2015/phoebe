@@ -8023,7 +8023,23 @@ func (s *Server) mixingcolor(w http.ResponseWriter, r *http.Request, ps httprout
 // /mixingcolor/loadmixingentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, nil)
+	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var colorpanelData []struct {
+		Code     string `bson:"code"`
+		Color    string `bson:"color"`
+		Brand    string `bson:"brand"`
+		Supplier string `bson:"supplier"`
+	}
+	if err := cur.All(context.Background(), &colorpanelData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
