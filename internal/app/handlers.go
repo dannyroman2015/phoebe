@@ -465,6 +465,7 @@ func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			}
 			productiondata = append(productiondata, a)
 		}
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/prod_mtd.html")).Execute(w, map[string]interface{}{
 			"productiondata": productiondata,
 		})

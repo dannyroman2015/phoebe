@@ -236,16 +236,24 @@ const drawProdMtdChart = (data) => {
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  const curmonthData = data[data.length-1].dat
-  const pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
-  const avg = curmonthData[curmonthData.length-2].value / pastDays
-  const estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
+  let curmonthData = data[data.length-1].dat
+  let pastDays = 0;
+  let avg = 0;
+  let estimateData = [];
+  console.log(curmonthData)
+  if (curmonthData.length > 1) {
+    pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
+    avg = curmonthData[curmonthData.length-2].value / pastDays
+    estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
+    for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
+      estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
+    }
+  }
+  
   // for (let i = pastDays+2; i < 31; i++) {
   //   estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
   // }
-  for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
-    estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
-  }
+  
 
   const x = d3.scaleLinear()
     .domain([1, 31])
@@ -323,7 +331,8 @@ const drawProdMtdChart = (data) => {
       .attr("font-family", "Roboto, sans-serif"))
 
   // draw estimate line
-  innerChart.append("path")
+  if (estimateData.length > 1) {
+    innerChart.append("path")
     .attr("d", area(estimateData))
     .attr("fill", color(data[data.length-1].month))
     .attr("fill-opacity", 0.05)
@@ -362,6 +371,8 @@ const drawProdMtdChart = (data) => {
   //   .attr("y2", y(estimateData[estimateData.length-5].value) - 11)
   //   .attr("stroke", "#75485E")
   //   .attr("stroke-width", 1);
+  }
+  
 
   innerChart.append("text")
     .text(`AVG of This Month up to ${pastDays}th: $ ${d3.format(",.0f")(avg)}`)
