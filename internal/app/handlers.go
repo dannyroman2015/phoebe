@@ -7238,12 +7238,13 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	pastdays := len(dates)
+
 	var todayv, todaybrandv, todayrhv, todayoutsourcev float64
 	var todayp int
-	if time.Now().Add(7*time.Hour).Format("2006-01-02") == dates[len(dates)-1] {
-		if pastdays > 1 {
-			pastdays--
-		}
+	todayv, todaybrandv, todayrhv, todayoutsourcev = 0, 0, 0, 0
+	todayp = 0
+	if pastdays >= 1 && time.Now().Add(7*time.Hour).Format("2006-01-02") == dates[len(dates)-1] {
+		pastdays--
 
 		for i := len(data) - 1; i > 0; i-- {
 			if data[i].Date != dates[len(dates)-1] {
@@ -7260,7 +7261,9 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 				todayoutsourcev += data[i].Value
 			}
 		}
-
+	}
+	if pastdays == 0 {
+		pastdays = 1
 	}
 	var estdays int
 	// cái náy dùng được, để sau này dùng
