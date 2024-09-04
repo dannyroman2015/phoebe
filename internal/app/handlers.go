@@ -7265,7 +7265,6 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	if pastdays == 0 {
 		pastdays = 1
 	}
-	var estdays int
 	// cái náy dùng được, để sau này dùng
 	// start := time.Now()
 	// end := time.Date(2024, time.Now().Month()+1, 1, 0, 0, 0, 0, time.Local)
@@ -7276,7 +7275,7 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	// }
 
 	// dùng tạm estdays tính tay này
-	estdays = 27 - pastdays
+	estdays := 27 - pastdays
 
 	p := message.NewPrinter(language.English)
 	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
