@@ -130,7 +130,7 @@
 
 <script>
   document.getElementById("panelcncToDate").valueAsDate = new Date();
-  document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+  document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
 
   if ({{.panelcncTarget}} == undefined) {
     panelcncchart.append(drawPanelcncChart({{.panelChartData}}))

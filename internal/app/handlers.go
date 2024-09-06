@@ -603,9 +603,9 @@ func (s *Server) d_loadoutput(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	pipeline := mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id.date": 1}}},
-		{{"$set", bson.M{"date": "$_id.date"}}},
+		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.D{{"_id", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%b", "date": "$_id"}}}}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
@@ -1173,10 +1173,10 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 
 	case "general":
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}, "qty": bson.M{"$sum": "$qty"}}}},
-			{{"$sort", bson.M{"_id.date": 1}}},
-			{{"$set", bson.M{"date": "$_id.date"}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+			{{"$sort", bson.D{{"_id", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%b", "date": "$_id"}}}}},
 			{{"$unset", "_id"}},
 		}
 		cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
