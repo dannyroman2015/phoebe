@@ -1,6 +1,5 @@
 <section class="fade-in px-2 mx-auto">
   <div class="flex items-center justify-between">
-
     <div class="relative flex items-center md:mt-0 p-0">
       <span class="absolute">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mx-3 text-gray-400 dark:text-gray-600">
@@ -315,8 +314,8 @@
             
             <tbody id="mixing_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
               {{range .mixingbatchData}}
-              <tr>
-
+              <tr 
+                hx-post="/mixingcolor/mixingreports/{{.BatchNo}}" hx-trigger="click" hx-target="this" hx-swap="afterend">
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>
@@ -426,6 +425,7 @@
                   </div>
                 </td>
               </tr>
+
              {{end}}
             </tbody>
           </table>

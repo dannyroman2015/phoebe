@@ -8026,6 +8026,68 @@ func (s *Server) mixingcolor(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/loaddeliveryentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) loaddeliveryentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"status": "Approved"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var batchlData []struct {
+		BatchNo string `bson:"batchno"`
+	}
+	if err := cur.All(context.Background(), &batchlData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/deliveryentry.html")).Execute(w, map[string]interface{}{
+		"batchlData": batchlData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/senddeliveryentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) senddeliveryentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	batchno := r.FormValue("batchno")
+	deliverydate, _ := time.Parse("2006-01-02", r.FormValue("deliverydate"))
+	item := r.FormValue("item")
+	mo := r.FormValue("mo")
+	reciever := r.FormValue("reciever")
+	area := r.FormValue("area")
+
+	_, err := s.mgdb.Collection("batchdelivery").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(deliverydate), "batchno": batchno, "item": item, "mo": mo, "reciever": reciever, "area": area,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"status": "Approved"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var batchlData []struct {
+		BatchNo string `bson:"batchno"`
+	}
+	if err := cur.All(context.Background(), &batchlData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/deliveryentry.html")).Execute(w, map[string]interface{}{
+		"batchlData":        batchlData,
+		"showSuccessDialog": true,
+		"msgDialog":         "Thêm báo cáo thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /mixingcolor/loadmixingentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -8486,6 +8548,42 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixing_tbody.html")).Execute(w, map[string]interface{}{
 		"mixingbatchData": mixingbatchData,
 	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/mixingreports/:batchno
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mixingreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("batchdelivery").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"batchno": ps.ByName("batchno")}}},
+		{{"$sort", bson.M{"date": -1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var deliveryData []struct {
+		Date     string `bson:"date"`
+		Area     string `bson:"area"`
+		Reciever string `bson:"reciever"`
+		Item     string `bson:"item"`
+		Mo       string `bson:'mo"`
+	}
+	if err := cur.All(context.Background(), &deliveryData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/report_tbl.html")).Execute(w, map[string]interface{}{
+		"deliveryData": deliveryData,
+	})
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// mixingcolor/deletereports
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
