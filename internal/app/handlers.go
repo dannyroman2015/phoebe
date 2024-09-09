@@ -7275,7 +7275,7 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	// }
 
 	// dùng tạm estdays tính tay này
-	estdays := 27 - pastdays
+	estdays := 23 - pastdays
 
 	p := message.NewPrinter(language.English)
 	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{

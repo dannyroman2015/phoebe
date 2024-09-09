@@ -245,7 +245,7 @@ const drawProdMtdChart = (data) => {
     pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
     avg = curmonthData[curmonthData.length-2].value / pastDays
     estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
-    for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
+    for (let i = pastDays+2; i < 24; i++) { // làm tạm theo số ngày đã được plan trước
       estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
     }
   }
