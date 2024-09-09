@@ -8302,6 +8302,7 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 		InspectionStatus string `bson:"inspectionstatus"`
 		Remark           string `bson:"remark"`
 		Alert            string `bson:"alert"`
+		Document         string `bson:"document"`
 	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)

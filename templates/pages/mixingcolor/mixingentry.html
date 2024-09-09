@@ -7,11 +7,13 @@
             Send</button>
         </div>
 
-        <div class="grid grid-cols-1 gap-2 text-center sm:grid-cols-4">
+        <div x-data="{
+            batchno: '',
+          }" class="grid grid-cols-1 gap-2 text-center sm:grid-cols-4">
 
           <div class="mt-4 text-center">
             <label for="mixingdate" class="relative block rounded-md border">
-              <input type="datetime-local" id="mixingdate" name="mixingdate" placeholder="Mixing Time"
+              <input @change="batchno=$el.value.slice(0, 16).replaceAll(/[-:T]/g, '');" type="datetime-local" id="mixingdate" name="mixingdate" placeholder="Mixing Time"
                 class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 Mixing Date<span>
@@ -20,7 +22,7 @@
 
           <div class="mt-4 text-center">
             <label for="batchno" class="relative block rounded-md border">
-              <input type="text" id="batchno" name="batchno" placeholder=""
+              <input :value="batchno" type="text" id="batchno" name="batchno" placeholder=""
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 Batch No.</span>
@@ -32,7 +34,7 @@
               <input type="number" id="volume" name="volume" min="0" step="0.01" placeholder=""
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Volume</span>
+                Weight</span>
             </label>
           </div>
 
@@ -41,27 +43,9 @@
               <input type="text" id="operator" name="operator" placeholder=""
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Operator</span>
+                Mixer</span>
             </label>
           </div>
-
-          <div class="mt-4 text-center">
-            <label for="color" class="relative block rounded-md border">
-              <input type="text" id="color" name="color" placeholder=""
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Color</span>
-            </label>
-          </div>
-
-          <!-- <div class="mt-4 text-center">
-            <label for="code" class="relative block rounded-md border">
-              <input type="text" id="code" name="code" placeholder="" tabindex="-1"
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Code</span>
-            </label>
-          </div> -->
 
           <div class="flex justify-center mt-4 text-center">
             <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
@@ -73,9 +57,18 @@
             </select>
           </div>
 
+          <!-- <div class="mt-4 text-center">
+            <label for="color" class="relative block rounded-md border">
+              <input type="text" id="color" name="color" placeholder="" readonly
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Color</span>
+            </label>
+          </div>
+
           <div class="mt-4 text-center">
             <label for="brand" class="relative block rounded-md border">
-              <input type="text" id="brand" name="brand" placeholder="" tabindex="-1"
+              <input type="text" id="brand" name="brand" placeholder="" readonly
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 Brand</span>
@@ -89,7 +82,7 @@
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 Supplier</span>
             </label>
-          </div>
+          </div> -->
 
           <div class="mt-4 text-center">
             <label for="classification" class="relative block rounded-md border">
@@ -110,39 +103,49 @@
           </div>
 
           <div class="mt-4 text-center">
-            <label for="indicator1" class="relative block rounded-md border">
-              <input type="text" id="indicator1" name="indicator1" placeholder=""
+            <label for="viscosity" class="relative block rounded-md border">
+              <input type="number" id="viscosity" name="viscosity" placeholder="" min="0" step="0.1"
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Indicator 1</span>
+                Viscosity</span>
             </label>
           </div>
 
           <div class="mt-4 text-center">
-            <label for="indicator2" class="relative block rounded-md border">
-              <input type="text" id="indicator2" name="indicator2" placeholder=""
+            <label for="lightdark" class="relative block rounded-md border">
+              <input type="number" id="lightdark" name="lightdark" placeholder="" min="0" step="0.1"
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Indicator 2</span>
+                L</span>
             </label>
           </div>
 
           <div class="mt-4 text-center">
-            <label for="indicator3" class="relative block rounded-md border">
-              <input type="number" id="indicator3" name="indicator3" placeholder=""
+            <label for="redgreen" class="relative block rounded-md border">
+              <input type="number" id="redgreen" name="redgreen" placeholder="" min="0" step="0.1"
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Indicator 3</span>
+                a</span>
             </label>
           </div>
 
           <div class="mt-4 text-center">
-            <label for="status" class="relative block rounded-md border">
-              <input type="text" id="status" name="status" placeholder=""
+            <label for="yellowblue" class="relative block rounded-md border">
+              <input type="number" id="yellowblue" name="yellowblue" placeholder="" min="0" step="0.1"
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Status</span>
+                b</span>
             </label>
+          </div>
+
+          <div class="flex justify-center mt-4 text-center">
+            <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                name="status" id="status" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <option value="" disabled selected>Select status</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Pending">Pending</option>
+            </select>
           </div>
 
           <div class="mt-4 text-center">
@@ -154,59 +157,6 @@
             </label>
           </div>
 
-          <div class="mt-4 text-center">
-            <label for="startuse" class="relative block rounded-md border">
-              <input type="datetime-local" id="startuse" name="startuse" placeholder=""
-                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Start Use<span>
-            </label>
-          </div>
-
-          <div class="mt-4 text-center">
-            <label for="enduse" class="relative block rounded-md border">
-              <input type="datetime-local" id="enduse" name="enduse" placeholder=""
-                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                End Use<span>
-            </label>
-          </div>
-
-          <div class="mt-4 text-center">
-            <label for="mo" class="relative block rounded-md border">
-              <input type="text" id="mo" name="mo" placeholder=""
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Mo</span>
-            </label>
-          </div>
-
-          <div class="mt-4 text-center">
-            <label for="item" class="relative block rounded-md border">
-              <input type="text" id="item" name="item" placeholder=""
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Item</span>
-            </label>
-          </div>
-
-          <!-- <div class="flex justify-center mt-4 text-center">
-            <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-                name="section" id="section" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
-              <option value="" disabled selected>Chọn bộ phận</option>
-              <option value="cutting">Cutting</option>
-            </select>
-          </div> -->
-
-          <!-- <div class="mt-4 text-center">
-            <label for="occurdate" class="relative block rounded-md border">
-              <input type="date" id="occurdate" name="occurdate" placeholder="Ngày"
-                class="flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                ngày<span>
-            </label>
-          </div> -->
-
         </div>
 
       </form>
@@ -215,6 +165,9 @@
 </section>
 
 <script>
+  document.getElementById('mixingdate').value = new Date().toISOString().slice(0, 16);
+  document.getElementById('issueddate').value = new Date().toISOString().slice(0, 16);
+  // document.getElementById('batchno').value = new Date().toISOString().slice(0, 16).replaceAll(/[-:T]/g, "");
   if ({{.showSuccessDialog}}) {
     swal("Thành công", {{.msgDialog}}, "success")
   }

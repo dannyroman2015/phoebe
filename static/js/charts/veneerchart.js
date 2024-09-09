@@ -85,11 +85,11 @@ const drawVeneerChart = (data) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 100 && d.key == "rework") { return `🔧${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "straight") { return `⏌${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "curve") { return `⌒${d3.format(".3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "reeded") { return `≊${d3.format(".3s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 100 && d.key == "reeded") {return d3.format(".3s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 50 && d.key == "rework") { return `🔧${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "straight") { return `⏌${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "curve") { return `⌒${d3.format(".3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "reeded") { return `≊${d3.format(".3s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 50 && d.key == "reeded") {return d3.format(".3s")(d[1]-d[0])} }
         })
   })
 
@@ -236,11 +236,11 @@ const drawVeneerChart1 = (data, target) => {
         .attr("fill", "#75485E")
         .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 100 && d.key == "rework") { return `🔧${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
-          else if (d[1] - d[0] >= 100 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
-          else { if (d[1] - d[0] >= 100 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
+          if (d[1] - d[0] >= 50 && d.key == "rework") { return `🔧${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
+          else { if (d[1] - d[0] >= 50 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
         })
   })
 
