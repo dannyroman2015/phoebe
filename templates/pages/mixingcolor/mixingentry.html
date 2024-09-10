@@ -1,9 +1,9 @@
 <section id="entry-container" class="fade-in">
   <div class="mx-auto max-w-screen-full px-4 py-2 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
-      <form class="space-y-4">
+      <form class="space-y-4" hx-post="/mixingcolor/aa" hx-target="#entry-container" hx-swap="outerHTML">
         <div class="mt-4 text-center">
-          <button hx-post="/mixingcolor/sendmixingentry" hx-target="#entry-container" hx-swap="outerHTML"
+          <button 
               type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
             Send</button>
         </div>
