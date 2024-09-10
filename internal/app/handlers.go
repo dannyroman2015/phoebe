@@ -8138,6 +8138,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 			"showMissingDialog": true,
 			"msgDialog":         "Thiếu thông tin",
 		})
+		return
 	}
 
 	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"code": code})
