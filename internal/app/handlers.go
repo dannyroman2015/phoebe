@@ -8199,7 +8199,7 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 		})
 		return
 	}
-
+	log.Println("here")
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Thêm vào thành công",
