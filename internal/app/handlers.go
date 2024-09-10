@@ -8693,28 +8693,26 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 // /mixingcolor/mixingreports/:batchno
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) mixingreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("batchdelivery").Aggregate(context.Background(), mongo.Pipeline{
+	cur, err := s.mgdb.Collection("batch_item").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"batchno": ps.ByName("batchno")}}},
-		{{"$sort", bson.M{"date": -1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
+		{{"$sort", bson.M{"created": -1}}},
+		{{"$set", bson.M{"created": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$created"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var deliveryData []struct {
-		Date     string `bson:"date"`
-		Area     string `bson:"area"`
-		Reciever string `bson:"reciever"`
-		Item     string `bson:"item"`
-		Mo       string `bson:'mo"`
+	var batchitemData []struct {
+		Created string `bson:"created"`
+		Item    string `bson:"item"`
+		Mo      string `bson:'mo"`
 	}
-	if err := cur.All(context.Background(), &deliveryData); err != nil {
+	if err := cur.All(context.Background(), &batchitemData); err != nil {
 		log.Println(err)
 	}
 
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/report_tbl.html")).Execute(w, map[string]interface{}{
-		"deliveryData": deliveryData,
+		"batchitemData": batchitemData,
 	})
 }
 
@@ -8987,6 +8985,122 @@ func (s *Server) mc_loadusingform(w http.ResponseWriter, r *http.Request, ps htt
 
 	template.Must(template.ParseFiles(
 		"templates/pages/mixingcolor/entry/usingform.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/mixingcolor/entry/getupdateform", s.mc_getupdateform)
+func (s *Server) mc_getupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	switch r.URL.Query().Get("formtype") {
+	case "usingtime":
+		cur, err := s.mgdb.Collection("mixingbatch").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"issueddate": -1}))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var batchData []struct {
+			BatchNo string `bson:"batchno"`
+		}
+		if err := cur.All(context.Background(), &batchData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingtimeform.html")).Execute(w, map[string]interface{}{
+			"batchData": batchData,
+		})
+	case "usingitem":
+		cur, err := s.mgdb.Collection("mixingbatch").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"issueddate": -1}))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var batchData []struct {
+			BatchNo string `bson:"batchno"`
+		}
+		if err := cur.All(context.Background(), &batchData); err != nil {
+			log.Println(err)
+		}
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingitemform.html")).Execute(w, map[string]interface{}{
+			"batchData": batchData,
+		})
+
+	case "createcolor":
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/createcolorform.html")).Execute(w, nil)
+	}
+}
+
+// router.GET("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
+func (s *Server) mc_updateusingtime(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	startuse, _ := time.Parse("2006-01-02T15:04", r.FormValue("startusing"))
+	enduse, _ := time.Parse("2006-01-02T15:04", r.FormValue("endusing"))
+	switch {
+	case (r.FormValue("startusing") == "" && r.FormValue("endusing") == "") || r.FormValue("batchno") == "":
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingform.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin",
+		})
+		return
+	case r.FormValue("startusing") != "" && r.FormValue("endusing") == "":
+		s.mgdb.Collection("mixingbatch").UpdateOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")}, bson.M{
+			"$set": bson.M{"startuse": primitive.NewDateTimeFromTime(startuse)},
+		})
+	case r.FormValue("startusing") == "" && r.FormValue("endusing") != "":
+		_, err := s.mgdb.Collection("mixingbatch").UpdateOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")}, bson.M{
+			"$set": bson.M{"enduse": primitive.NewDateTimeFromTime(enduse)},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	case r.FormValue("startusing") != "" && r.FormValue("endusing") != "":
+		_, err := s.mgdb.Collection("mixingbatch").UpdateOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")}, bson.M{
+			"$set": bson.M{"startuse": primitive.NewDateTimeFromTime(startuse), "enduse": primitive.NewDateTimeFromTime(enduse)},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Cập nhật thành công",
+	})
+
+}
+
+// router.POST("/mixingcolor/entry/updateusingitem", s.updateusingitem)
+func (s *Server) mc_updateusingitem(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.FormValue("item") == "" || r.FormValue("mo") == "" || r.FormValue("batchno") == "" {
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingform.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin",
+		})
+		return
+	}
+
+	_, err := s.mgdb.Collection("batch_item").InsertOne(context.Background(), bson.M{
+		"batchno": r.FormValue("batchno"), "item": r.FormValue("item"), "mo": r.FormValue("mo"), "created": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Cập nhật thành công",
+	})
+
+}
+
+// router.GET("/mixingcolor/colorentry", s.mc_colorentry)
+func (s *Server) mc_colorentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/colorentry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/mixingcolor/entry/loadcolorform", s.mc_loadcolorform)
+func (s *Server) mc_loadcolorform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/colorform.html",
 	)).Execute(w, nil)
 }
 

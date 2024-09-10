@@ -370,6 +370,12 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/mixingcolor/usingentry", s.mc_usingreports)
 	router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
+	router.GET("/mixingcolor/entry/getupdateform", s.mc_getupdateform)
+	router.POST("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
+	router.POST("/mixingcolor/entry/updateusingitem", s.mc_updateusingitem)
+
+	router.GET("/mixingcolor/colorentry", s.mc_colorentry)
+	router.GET("/mixingcolor/entry/loadcolorform", s.mc_loadcolorform)
 	// end Mixing Color
 
 	////////////////////////////////////////////////////////////////////
