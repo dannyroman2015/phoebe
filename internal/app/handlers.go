@@ -8143,9 +8143,12 @@ func (s *Server) mce_loadbatchform(w http.ResponseWriter, r *http.Request, ps ht
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
-	// loc, _ := time.LoadLocation("Asia/Bangkok")
-	// log.Println(r.FormValue("mixingdate"))
-	// mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	log.Println(r.FormValue("mixingdate"))
+	mixingdate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	if err != nil {
+		log.Println(err)
+	}
 	volume, _ := strconv.Atoi(r.FormValue("volume"))
 	operator := r.FormValue("operator")
 	// color := r.FormValue("color")
@@ -8159,8 +8162,10 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
 	status := r.FormValue("status")
-	// issueddate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
-
+	issueddate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
+	if err != nil {
+		log.Println(err)
+	}
 	if batchno == "" || r.FormValue("volume") == "" || code == "" || status == "" {
 		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
@@ -8183,9 +8188,9 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 	}
 
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
-		"batchno": batchno, "volume": volume,
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
 		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
-		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status,
+		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
 	if err != nil {
 		log.Println(err)
