@@ -367,6 +367,9 @@ func (s *Server) routes() http.Handler {
 	router.POST("/mixingcolor/colorsearch", s.colorsearch)
 	router.POST("/mixingcolor/colorfilter", s.colorfilter)
 	router.DELETE("/mixingcolor/deletecolor/:colorcode", s.deletecolor)
+
+	router.GET("/mixingcolor/usingentry", s.mc_usingreports)
+	router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
 	// end Mixing Color
 
 	////////////////////////////////////////////////////////////////////

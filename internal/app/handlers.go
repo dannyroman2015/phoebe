@@ -8242,10 +8242,9 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	mixingdate, _ := time.Parse("2006-01-02T15:04", r.FormValue("mixingdate"))
 	volume, _ := strconv.Atoi(r.FormValue("volume"))
 	operator := r.FormValue("operator")
-	// color := r.FormValue("color")
+	reciever := r.FormValue("receiver")
+	area := r.FormValue("area")
 	code := r.FormValue("code")
-	// brand := r.FormValue("brand")
-	// supplier := r.FormValue("supplier")
 	classification := r.FormValue("classification")
 	sopno := r.FormValue("sopno")
 	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
@@ -8277,7 +8276,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
-		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area,
 		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
@@ -8333,6 +8332,8 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
+		Receiver       string  `bson:"receiver"`
+		Area           string  `bson:"area"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
@@ -8971,6 +8972,22 @@ func (s *Server) deletecolor(w http.ResponseWriter, r *http.Request, ps httprout
 		log.Println(err)
 		return
 	}
+}
+
+// router.GET("/mixingcolor/usingentry", s.mc_usingreports)
+func (s *Server) mc_usingreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/usingentry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
+func (s *Server) mc_loadusingform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/usingform.html",
+	)).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
