@@ -1,11 +1,11 @@
 <tbody id="mixing_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
   {{range .mixingbatchData}}
-  <tr>
-
+  <tr 
+    hx-post="/mixingcolor/mixingreports/{{.BatchNo}}" hx-trigger="click" hx-target="this" hx-swap="afterend">
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>
-        <p>Volume: <span class="text-base text-right font-semibold text-gray-600 dark:text-gray-400">{{.Volume}} </span>(L)</p>
+        <p>Weight: <span class="text-base text-right font-semibold text-gray-600 dark:text-gray-400">{{.Volume}} </span>(kg)</p>
       </div>
     </td>
 
@@ -19,7 +19,7 @@
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End:&nbsp&nbsp{{.EndUse}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: {{.EndUse}}</p>
       </div>
     </td>
     
@@ -41,35 +41,44 @@
 
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Code}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Name}}</p>
       </div>
     </td> 
 
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Item}}</p>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Mo}}</p>
-      </div>
-    </td>
-
-    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-      <div>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
-      </div>
-    </td> 
-
-    <td class="px-4 py-2 text-sm min-w-64 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-      <div class="grid grid-cols-2">
-        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator1: {{.Indicator1}}</p>
-        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator2: {{.Indicator2}}</p>
-        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator3: {{.Indicator3}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Brand}}</p>
       </div>
     </td> 
 
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Supplier}}</p>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.Viscosity}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.LightDark}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.RedGreen}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.YellowBlue}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Supplier}}</p>
       </div>
     </td> 
 
@@ -111,5 +120,6 @@
       </div>
     </td>
   </tr>
+
  {{end}}
 </tbody>

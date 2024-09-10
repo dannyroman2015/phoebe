@@ -268,18 +268,24 @@
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Item & Mo</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
                     <span>Brand</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
-                  Indicators                             
+                  Viscosity                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
+                  L                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
+                  a                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
+                  b                             
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -333,7 +339,7 @@
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End:&nbsp&nbsp{{.EndUse}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: {{.EndUse}}</p>
                   </div>
                 </td>
                 
@@ -355,35 +361,44 @@
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Code}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Name}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Item}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Mo}}</p>
-                  </div>
-                </td>
-
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
-                  </div>
-                </td> 
-  
-                <td class="px-4 py-2 text-sm min-w-64 text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div class="grid grid-cols-2">
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator1: {{.Indicator1}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator2: {{.Indicator2}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Indicator3: {{.Indicator3}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Brand}}</p>
                   </div>
                 </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Supplier}}</p>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.Viscosity}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.LightDark}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.RedGreen}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.YellowBlue}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Supplier}}</p>
                   </div>
                 </td> 
 

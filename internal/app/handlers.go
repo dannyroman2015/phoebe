@@ -8116,36 +8116,47 @@ func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps http
 func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
 	loc, _ := time.LoadLocation("Asia/Bangkok")
+	log.Println(r.FormValue("mixingdate"))
 	mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
 	volume, _ := strconv.Atoi(r.FormValue("volume"))
 	operator := r.FormValue("operator")
-	color := r.FormValue("color")
+	// color := r.FormValue("color")
 	code := r.FormValue("code")
-	brand := r.FormValue("brand")
-	supplier := r.FormValue("supplier")
+	// brand := r.FormValue("brand")
+	// supplier := r.FormValue("supplier")
 	classification := r.FormValue("classification")
 	sopno := r.FormValue("sopno")
-	indicator1 := r.FormValue("indicator1")
-	indicator2 := r.FormValue("indicator2")
-	indicator3, _ := strconv.Atoi(r.FormValue("indicator3"))
+	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
+	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
+	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
 	status := r.FormValue("status")
 	issueddate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
-	startuse, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("startuse"), loc)
-	enduse, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("enduse"), loc)
-	mo := r.FormValue("mo")
-	item := r.FormValue("item")
-	if batchno == "" || r.FormValue("mixingdate") == "" || r.FormValue("volume") == "" || code == "" {
+
+	if batchno == "" || r.FormValue("volume") == "" || code == "" || status == "" {
 		template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thiếu thông tin",
 		})
 	}
 
+	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"code": code})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var colorData struct {
+		Brand    string `bson:"brand"`
+		Supplier string `bson:"supplier"`
+		Name     string `bson:"name"`
+	}
+	if err := sr.Decode(&colorData); err != nil {
+		log.Println(err)
+	}
+
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
 		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
-		"operator": operator, "color": color, "code": code, "brand": brand, "supplier": supplier, "classification": classification, "sopno": sopno,
-		"indicator1": indicator1, "indicator2": indicator2, "indicator3": indicator3, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
-		"startuse": primitive.NewDateTimeFromTime(startuse), "enduse": primitive.NewDateTimeFromTime(enduse), "mo": mo, "item": item,
+		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
+		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
 	if err != nil {
 		log.Println(err)
@@ -8179,25 +8190,26 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 	}
 	defer cur.Close(context.Background())
 	var mixingbatchData []struct {
-		BatchNo        string  `bson:"batchno"`
-		MixingDate     string  `bson:"mixingdate"`
-		Volume         float64 `bson:"volume"`
-		Operator       string  `bson:"operator"`
-		Color          string  `bson:"color"`
-		Code           string  `bson:"code"`
-		Brand          string  `bson:"brand"`
-		Supplier       string  `bson:"supplier"`
+		BatchNo    string  `bson:"batchno"`
+		MixingDate string  `bson:"mixingdate"`
+		Volume     float64 `bson:"volume"`
+		Operator   string  `bson:"operator"`
+		Color      struct {
+			Code     string `bson:"code"`
+			Name     string `bson:"name"`
+			Brand    string `bson:"brand"`
+			Supplier string `bson:"supplier"`
+		} `bson:"color"`
 		Classification string  `bson:"classification"`
 		SOPNo          string  `bson:"sopno"`
-		Indicator1     string  `bson:"indicator1"`
-		Indicator2     string  `bson:"indicator2"`
-		Indicator3     float64 `bson:"indicator3"`
+		Viscosity      float64 `bson:"viscosity"`
+		LightDark      float64 `bson:"lightdark"`
+		RedGreen       float64 `bson:"redgreen"`
+		YellowBlue     float64 `bson:"yellowblue"`
 		Status         string  `bson:"status"`
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
-		Mo             string  `bson:"mo"`
-		Item           string  `bson:"item"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
@@ -8214,10 +8226,10 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 
 	for _, v := range mixingbatchData {
 		operatorMap[v.Operator] = true
-		colorMap[v.Color] = true
-		codeMap[v.Code] = true
-		brandMap[v.Brand] = true
-		supplierMap[v.Supplier] = true
+		codeMap[v.Color.Code] = true
+		colorMap[v.Color.Name] = true
+		brandMap[v.Color.Brand] = true
+		supplierMap[v.Color.Supplier] = true
 		classificationMap[v.Classification] = true
 		sopnoMap[v.SOPNo] = true
 		statusMap[v.Status] = true
@@ -8291,7 +8303,7 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 		Category         string `bson:"category"`
 		User             string `bson:"user"`
 		OnProduct        string `bson:"onproduct"`
-		Color            string `bson:"color"`
+		Name             string `bson:"name"`
 		Brand            string `bson:"brand"`
 		Supplier         string `bson:"supplier"`
 		Substrate        string `bson:"substrate"`
@@ -8302,7 +8314,7 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 		InspectionStatus string `bson:"inspectionstatus"`
 		Remark           string `bson:"remark"`
 		Alert            string `bson:"alert"`
-		Document         string `bson:"document"`
+		Factory          string `bson:"factory"`
 	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
@@ -8313,7 +8325,7 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 	var userMap = make(map[string]bool, len(colorpanelData))
 	var onproductMap = make(map[string]bool, len(colorpanelData))
 	var supplierMap = make(map[string]bool, len(colorpanelData))
-	var colorMap = make(map[string]bool, len(colorpanelData))
+	var nameMap = make(map[string]bool, len(colorpanelData))
 	var brandMap = make(map[string]bool, len(colorpanelData))
 	var substrateMap = make(map[string]bool, len(colorpanelData))
 	var surfaceMap = make(map[string]bool, len(colorpanelData))
@@ -8325,7 +8337,7 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 		userMap[v.User] = true
 		onproductMap[v.OnProduct] = true
 		supplierMap[v.Supplier] = true
-		colorMap[v.Color] = true
+		nameMap[v.Name] = true
 		brandMap[v.Brand] = true
 		substrateMap[v.Substrate] = true
 		surfaceMap[v.Surface] = true
@@ -8351,8 +8363,8 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 	for k, _ := range supplierMap {
 		suppliers = append(suppliers, k)
 	}
-	var colors = make([]string, 0, len(colorMap))
-	for k, _ := range colorMap {
+	var colors = make([]string, 0, len(nameMap))
+	for k, _ := range nameMap {
 		colors = append(colors, k)
 	}
 	var brands = make([]string, 0, len(brandMap))
@@ -8399,10 +8411,10 @@ func (s *Server) mixingsearch(w http.ResponseWriter, r *http.Request, ps httprou
 			bson.M{"item": bson.M{"$regex": searchRegex, "$options": "i"}},
 			bson.M{"mo": bson.M{"$regex": searchRegex, "$options": "i"}},
 			bson.M{"status": bson.M{"$regex": searchRegex, "$options": "i"}},
-			bson.M{"code": bson.M{"$regex": searchRegex, "$options": "i"}},
-			bson.M{"color": bson.M{"$regex": searchRegex, "$options": "i"}},
-			bson.M{"brand": bson.M{"$regex": searchRegex, "$options": "i"}},
-			bson.M{"supplier": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.code": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.name": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.brand": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.supplier": bson.M{"$regex": searchRegex, "$options": "i"}},
 			bson.M{"classification": bson.M{"$regex": searchRegex, "$options": "i"}},
 			bson.M{"operator": bson.M{"$regex": searchRegex, "$options": "i"}},
 		}}}},
@@ -8420,25 +8432,26 @@ func (s *Server) mixingsearch(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	defer cur.Close(context.Background())
 	var mixingbatchData []struct {
-		BatchNo        string  `bson:"batchno"`
-		MixingDate     string  `bson:"mixingdate"`
-		Volume         float64 `bson:"volume"`
-		Operator       string  `bson:"operator"`
-		Color          string  `bson:"color"`
-		Code           string  `bson:"code"`
-		Brand          string  `bson:"brand"`
-		Supplier       string  `bson:"supplier"`
+		BatchNo    string  `bson:"batchno"`
+		MixingDate string  `bson:"mixingdate"`
+		Volume     float64 `bson:"volume"`
+		Operator   string  `bson:"operator"`
+		Color      struct {
+			Code     string `bson:"code"`
+			Name     string `bson:"name"`
+			Brand    string `bson:"brand"`
+			Supplier string `bson:"supplier"`
+		} `bson:"color"`
 		Classification string  `bson:"classification"`
 		SOPNo          string  `bson:"sopno"`
-		Indicator1     string  `bson:"indicator1"`
-		Indicator2     string  `bson:"indicator2"`
-		Indicator3     float64 `bson:"indicator3"`
+		Viscosity      float64 `bson:"viscosity"`
+		LightDark      float64 `bson:"lightdark"`
+		RedGreen       float64 `bson:"redgreen"`
+		YellowBlue     float64 `bson:"yellowblue"`
 		Status         string  `bson:"status"`
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
-		Mo             string  `bson:"mo"`
-		Item           string  `bson:"item"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
@@ -8468,16 +8481,16 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 		filters = append(filters, bson.M{"operator": operator})
 	}
 	if color != "" {
-		filters = append(filters, bson.M{"color": color})
+		filters = append(filters, bson.M{"color.name": color})
 	}
 	if code != "" {
-		filters = append(filters, bson.M{"code": code})
+		filters = append(filters, bson.M{"color.code": code})
 	}
 	if brand != "" {
-		filters = append(filters, bson.M{"brand": brand})
+		filters = append(filters, bson.M{"color.brand": brand})
 	}
 	if supplier != "" {
-		filters = append(filters, bson.M{"supplier": supplier})
+		filters = append(filters, bson.M{"color.supplier": supplier})
 	}
 	if classification != "" {
 		filters = append(filters, bson.M{"classification": classification})
@@ -8522,25 +8535,26 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	defer cur.Close(context.Background())
 	var mixingbatchData []struct {
-		BatchNo        string  `bson:"batchno"`
-		MixingDate     string  `bson:"mixingdate"`
-		Volume         float64 `bson:"volume"`
-		Operator       string  `bson:"operator"`
-		Color          string  `bson:"color"`
-		Code           string  `bson:"code"`
-		Brand          string  `bson:"brand"`
-		Supplier       string  `bson:"supplier"`
+		BatchNo    string  `bson:"batchno"`
+		MixingDate string  `bson:"mixingdate"`
+		Volume     float64 `bson:"volume"`
+		Operator   string  `bson:"operator"`
+		Color      struct {
+			Code     string `bson:"code"`
+			Name     string `bson:"name"`
+			Brand    string `bson:"brand"`
+			Supplier string `bson:"supplier"`
+		} `bson:"color"`
 		Classification string  `bson:"classification"`
 		SOPNo          string  `bson:"sopno"`
-		Indicator1     string  `bson:"indicator1"`
-		Indicator2     string  `bson:"indicator2"`
-		Indicator3     float64 `bson:"indicator3"`
+		Viscosity      float64 `bson:"viscosity"`
+		LightDark      float64 `bson:"lightdark"`
+		RedGreen       float64 `bson:"redgreen"`
+		YellowBlue     float64 `bson:"yewllowblue"`
 		Status         string  `bson:"status"`
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
-		Mo             string  `bson:"mo"`
-		Item           string  `bson:"item"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
@@ -8617,11 +8631,12 @@ func (s *Server) addcolor(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	_, err := s.mgdb.Collection("colorpanel").InsertOne(context.Background(), bson.M{
 		"issued": primitive.NewDateTimeFromTime(issued), "expired": primitive.NewDateTimeFromTime(expired),
-		"code": r.FormValue("code"), "color": r.FormValue("color"), "category": r.FormValue("category"),
+		"code": r.FormValue("code"), "name": r.FormValue("name"), "category": r.FormValue("category"),
 		"user": r.FormValue("user"), "substrate": r.FormValue("substrate"), "onproduct": r.FormValue("onproduct"),
 		"surface": r.FormValue("surface"), "brand": r.FormValue("brand"), "supplier": r.FormValue("supplier"),
 		"remaked": primitive.NewDateTimeFromTime(remaked), "inspected": primitive.NewDateTimeFromTime(inspected),
 		"inspectionstatus": r.FormValue("inspectionstatus"), "remark": r.FormValue("remark"), "alert": r.FormValue("alert"),
+		"factory": r.FormValue("factory"),
 	})
 	if err != nil {
 		log.Println(err)
@@ -8633,7 +8648,7 @@ func (s *Server) addcolor(w http.ResponseWriter, r *http.Request, ps httprouter.
 		Category         string `bson:"category"`
 		User             string `bson:"user"`
 		OnProduct        string `bson:"onproduct"`
-		Color            string `bson:"color"`
+		Name             string `bson:"name"`
 		Brand            string `bson:"brand"`
 		Supplier         string `bson:"supplier"`
 		Substrate        string `bson:"substrate"`
@@ -8644,10 +8659,12 @@ func (s *Server) addcolor(w http.ResponseWriter, r *http.Request, ps httprouter.
 		InspectionStatus string `bson:"inspectionstatus"`
 		Remark           string `bson:"remark"`
 		Alert            string `bson:"alert"`
+		Factory          string `bson:"factory"`
 	}{
-		Code: r.FormValue("code"), Color: r.FormValue("color"), Category: r.FormValue("category"), User: r.FormValue("user"), Substrate: r.FormValue("substrate"),
+		Code: r.FormValue("code"), Name: r.FormValue("name"), Category: r.FormValue("category"), User: r.FormValue("user"), Substrate: r.FormValue("substrate"),
 		Brand: r.FormValue("brand"), Supplier: r.FormValue("supplier"), Remaked: remaked.Format("02-01-2006"), Inspected: inspected.Format("01-02-2006"),
-		InspectionStatus: r.FormValue("inspectionstatus"), Remark: r.FormValue("remark"), Alert: r.FormValue("alert"),
+		InspectionStatus: r.FormValue("inspectionstatus"), Remark: r.FormValue("remark"), Alert: r.FormValue("alert"), Factory: r.FormValue("factory"),
+		Issued: issued.Format("02-01-2006"), Expired: expired.Format("02-01-2006"),
 	}
 
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/color_tr.html")).Execute(w, map[string]interface{}{
