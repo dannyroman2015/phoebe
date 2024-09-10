@@ -8088,6 +8088,121 @@ func (s *Server) senddeliveryentry(w http.ResponseWriter, r *http.Request, ps ht
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/batchentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mc_batchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// defer cur.Close(context.Background())
+	// var colorpanelData []struct {
+	// 	Code     string `bson:"code"`
+	// 	Color    string `bson:"color"`
+	// 	Brand    string `bson:"brand"`
+	// 	Supplier string `bson:"supplier"`
+	// }
+	// if err := cur.All(context.Background(), &colorpanelData); err != nil {
+	// 	log.Println(err)
+	// }
+
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/batchentry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/entry/loadbatchform
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mce_loadbatchform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var colorpanelData []struct {
+		Code     string `bson:"code"`
+		Color    string `bson:"color"`
+		Brand    string `bson:"brand"`
+		Supplier string `bson:"supplier"`
+	}
+	if err := cur.All(context.Background(), &colorpanelData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles(
+		"templates/pages/mixingcolor/entry/batchform.html",
+	)).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /mixingcolor/entry/sendbatchentry
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	batchno := r.FormValue("batchno")
+	loc, _ := time.LoadLocation("Asia/Bangkok")
+	log.Println(r.FormValue("mixingdate"))
+	mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	volume, _ := strconv.Atoi(r.FormValue("volume"))
+	operator := r.FormValue("operator")
+	// color := r.FormValue("color")
+	code := r.FormValue("code")
+	// brand := r.FormValue("brand")
+	// supplier := r.FormValue("supplier")
+	classification := r.FormValue("classification")
+	sopno := r.FormValue("sopno")
+	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
+	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
+	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
+	status := r.FormValue("status")
+	issueddate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
+
+	if batchno == "" || r.FormValue("volume") == "" || code == "" || status == "" {
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thiếu thông tin",
+		})
+		return
+	}
+
+	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"code": code})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var colorData struct {
+		Brand    string `bson:"brand"`
+		Supplier string `bson:"supplier"`
+		Name     string `bson:"name"`
+	}
+	if err := sr.Decode(&colorData); err != nil {
+		log.Println(err)
+	}
+
+	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
+		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
+		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Failed to insert to database",
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Thêm vào thành công",
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /mixingcolor/loadmixingentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -8171,13 +8286,6 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 		"showSuccessDialog": true,
 		"msgDialog":         "Thêm vào thành công",
 	})
-}
-
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/aa
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) aa(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	log.Println("aaaaaaa")
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
@@ -8856,6 +8964,16 @@ func (s *Server) deletecolor(w http.ResponseWriter, r *http.Request, ps httprout
 		log.Println(err)
 		return
 	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// /batchcontrol
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) batchcontrol(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/batchcontrol/admin.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

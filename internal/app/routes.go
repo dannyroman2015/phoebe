@@ -350,9 +350,11 @@ func (s *Server) routes() http.Handler {
 	router.GET("/mixingcolor", s.mixingcolor)
 	router.GET("/mixingcolor/loaddeliveryentry", s.loaddeliveryentry)
 	router.POST("/mixingcolor/senddeliveryentry", s.senddeliveryentry)
+	router.GET("/mixingcolor/batchentry", s.mc_batchentry)
+	router.GET("/mixingcolor/entry/loadbatchform", s.mce_loadbatchform)
+	router.POST("/mixingcolor/entry/sendbatchentry", s.mce_sendbatchentry)
 	router.GET("/mixingcolor/loadmixingentry", s.loadmixingentry)
 	router.POST("/mixingcolor/sendmixingentry", s.sendmixingentry)
-	router.POST("/mixingcolor/aa", s.aa)
 	router.GET("/mixingcolor/loadmixingbatch", s.loadmixingbatch)
 	router.GET("/mixingcolor/loadcolorpanel", s.loadcolorpanel)
 	router.POST("/mixingcolor/mixingsearch", s.mixingsearch)
@@ -365,6 +367,12 @@ func (s *Server) routes() http.Handler {
 	router.POST("/mixingcolor/colorsearch", s.colorsearch)
 	router.POST("/mixingcolor/colorfilter", s.colorfilter)
 	router.DELETE("/mixingcolor/deletecolor/:colorcode", s.deletecolor)
+	// end Mixing Color
+
+	////////////////////////////////////////////////////////////////////
+	// Mixing Color ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.GET("/batchcontrol", s.batchcontrol)
 	// end Mixing Color
 
 	////////////////////////////////////////////////////////////////////
