@@ -8186,7 +8186,7 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 		log.Println(err)
 	}
 
-	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
+	_, err = s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
 		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume,
 		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
@@ -8199,7 +8199,6 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 		})
 		return
 	}
-	log.Println("here")
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/batchform.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Thêm vào thành công",
