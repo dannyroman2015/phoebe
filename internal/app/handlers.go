@@ -8143,8 +8143,9 @@ func (s *Server) mce_loadbatchform(w http.ResponseWriter, r *http.Request, ps ht
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
-	loc, _ := time.LoadLocation("Asia/Bangkok")
-	mixingdate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	// loc, _ := time.LoadLocation("Asia/Bangkok")
+	// mixingdate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
+	mixingdate, err := time.Parse("2006-01-02", r.FormValue("mixingdate"))
 	if err != nil {
 		log.Println(err)
 	}
@@ -8161,7 +8162,8 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
 	status := r.FormValue("status")
-	issueddate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
+	// issueddate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
+	issueddate, err := time.Parse("2006-01-02", r.FormValue("issueddate"))
 	if err != nil {
 		log.Println(err)
 	}
