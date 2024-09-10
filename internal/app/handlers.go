@@ -8144,7 +8144,6 @@ func (s *Server) mce_loadbatchform(w http.ResponseWriter, r *http.Request, ps ht
 func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
 	loc, _ := time.LoadLocation("Asia/Bangkok")
-	log.Println(r.FormValue("mixingdate"))
 	mixingdate, err := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
 	if err != nil {
 		log.Println(err)
