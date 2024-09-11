@@ -8733,6 +8733,7 @@ func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps http
 // router.PUT("/mixingcolor/updatebatch/:batchno", s.updatebatch)
 func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := ps.ByName("batchno")
+	batchinput := r.FormValue("batchno")
 	weight, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
 	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
@@ -8749,7 +8750,7 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 	area := r.FormValue("area")
 
 	result := s.mgdb.Collection("mixingbatch").FindOneAndUpdate(context.Background(), bson.M{"batchno": batchno}, bson.M{
-		"$set": bson.M{"volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
+		"$set": bson.M{"batchno": batchinput, "volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
 			"color.name": name, "color.supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
 			"receiver": receiver, "area": area,
 		}})
@@ -8788,6 +8789,7 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 	if err := result.Decode(&mixingbatchRecord); err != nil {
 		log.Println(err)
 	}
+	mixingbatchRecord.BatchNo = batchinput
 	mixingbatchRecord.Volume = weight
 	mixingbatchRecord.Viscosity = viscosity
 	mixingbatchRecord.LightDark = lightdark
