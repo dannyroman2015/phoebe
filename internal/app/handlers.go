@@ -8240,7 +8240,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	log.Println(r.FormValue("mixingdate"))
 	// mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
 	mixingdate, _ := time.Parse("2006-01-02T15:04", r.FormValue("mixingdate"))
-	volume, _ := strconv.Atoi(r.FormValue("volume"))
+	volume, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	operator := r.FormValue("operator")
 	reciever := r.FormValue("receiver")
 	area := r.FormValue("area")
