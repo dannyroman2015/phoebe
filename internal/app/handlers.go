@@ -8237,9 +8237,11 @@ func (s *Server) loadmixingentry(w http.ResponseWriter, r *http.Request, ps http
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
-	// loc, _ := time.LoadLocation("Asia/Bangkok")
-	// mixingdate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("mixingdate"), loc)
-	mixingdate, _ := time.Parse("2006-01-02T15:04", r.FormValue("mixingdate"))
+	// mixingdate, _ := time.Parse("2006-01-02T15:04", r.FormValue("mixingdate"))
+	// issueddate, _ := time.Parse("2006-01-02T15:04", r.FormValue("issueddate"))
+	mixingdate, _ := time.Parse("020120061504", batchno[0:4]+"20"+batchno[4:10])
+	issueddate := mixingdate.Add(time.Duration(rand.Intn(15)) * time.Minute)
+
 	volume, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	operator := r.FormValue("operator")
 	reciever := r.FormValue("receiver")
@@ -8252,8 +8254,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
 	status := r.FormValue("status")
-	// issueddate, _ := time.ParseInLocation("2006-01-02T15:04", r.FormValue("issueddate"), loc)
-	issueddate, _ := time.Parse("2006-01-02T15:04", r.FormValue("issueddate"))
+
 	if batchno == "" || r.FormValue("volume") == "" || code == "" || status == "" {
 		template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
