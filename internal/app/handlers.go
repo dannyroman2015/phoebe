@@ -8673,18 +8673,143 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 		Viscosity      float64 `bson:"viscosity"`
 		LightDark      float64 `bson:"lightdark"`
 		RedGreen       float64 `bson:"redgreen"`
-		YellowBlue     float64 `bson:"yewllowblue"`
+		YellowBlue     float64 `bson:"yellowblue"`
 		Status         string  `bson:"status"`
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
+		Area           string  `bson:"area"`
+		Receiver       string  `bson:"receiver"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
 	}
-
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixing_tbody.html")).Execute(w, map[string]interface{}{
 		"mixingbatchData": mixingbatchData,
+	})
+}
+
+// router.GET("/mixingcolor/batchupdateform/:batchno", s.batchupdateform)
+func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	batchno := ps.ByName("batchno")
+	result := s.mgdb.Collection("mixingbatch").FindOne(context.Background(), bson.M{"batchno": batchno})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var mixingbatchRecord struct {
+		BatchNo    string    `bson:"batchno"`
+		MixingDate time.Time `bson:"mixingdate"`
+		Volume     float64   `bson:"volume"`
+		Operator   string    `bson:"operator"`
+		Color      struct {
+			Code     string `bson:"code"`
+			Name     string `bson:"name"`
+			Brand    string `bson:"brand"`
+			Supplier string `bson:"supplier"`
+		} `bson:"color"`
+		Classification string    `bson:"classification"`
+		SOPNo          string    `bson:"sopno"`
+		Viscosity      float64   `bson:"viscosity"`
+		LightDark      float64   `bson:"lightdark"`
+		RedGreen       float64   `bson:"redgreen"`
+		YellowBlue     float64   `bson:"yellowblue"`
+		Status         string    `bson:"status"`
+		IssuedDate     time.Time `bson:"issueddate"`
+		StartUse       time.Time `bson:"startuse"`
+		EndUse         time.Time `bson:"enduse"`
+		Area           string    `bson:"area"`
+		Receiver       string    `bson:"receiver"`
+	}
+	if err := result.Decode(&mixingbatchRecord); err != nil {
+		log.Println(err)
+	}
+	log.Println(mixingbatchRecord)
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/batchupdateform.html")).Execute(w, map[string]interface{}{
+		"mixingbatchRecord": mixingbatchRecord,
+	})
+}
+
+// router.PUT("/mixingcolor/updatebatch/:batchno", s.updatebatch)
+func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	batchno := ps.ByName("batchno")
+	weight, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
+	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
+	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
+	code := r.FormValue("code")
+	name := r.FormValue("name")
+	supplier := r.FormValue("supplier")
+	brand := r.FormValue("brand")
+	classification := r.FormValue("classification")
+	sopno := r.FormValue("sopno")
+	operator := r.FormValue("operator")
+	receiver := r.FormValue("receiver")
+	area := r.FormValue("area")
+
+	result := s.mgdb.Collection("mixingbatch").FindOneAndUpdate(context.Background(), bson.M{"batchno": batchno}, bson.M{
+		"$set": bson.M{"volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
+			"color.name": name, "color.supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
+			"receiver": receiver, "area": area,
+		}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var mixingbatchRecord struct {
+		BatchNo       string    `bson:"batchno"`
+		MixingDate    time.Time `bson:"mixingdate"`
+		MixingDateStr string
+		Volume        float64 `bson:"volume"`
+		Operator      string  `bson:"operator"`
+		Color         struct {
+			Code     string `bson:"code"`
+			Name     string `bson:"name"`
+			Brand    string `bson:"brand"`
+			Supplier string `bson:"supplier"`
+		} `bson:"color"`
+		Classification string    `bson:"classification"`
+		SOPNo          string    `bson:"sopno"`
+		Viscosity      float64   `bson:"viscosity"`
+		LightDark      float64   `bson:"lightdark"`
+		RedGreen       float64   `bson:"redgreen"`
+		YellowBlue     float64   `bson:"yellowblue"`
+		Status         string    `bson:"status"`
+		IssuedDate     time.Time `bson:"issueddate"`
+		IssuedDateStr  string
+		StartUse       time.Time `bson:"startuse"`
+		StartUseStr    string
+		EndUseStr      string
+		EndUse         time.Time `bson:"enduse"`
+		Area           string    `bson:"area"`
+		Receiver       string    `bson:"receiver"`
+	}
+	if err := result.Decode(&mixingbatchRecord); err != nil {
+		log.Println(err)
+	}
+	mixingbatchRecord.Volume = weight
+	mixingbatchRecord.Viscosity = viscosity
+	mixingbatchRecord.LightDark = lightdark
+	mixingbatchRecord.RedGreen = redgreen
+	mixingbatchRecord.YellowBlue = yellowblue
+	mixingbatchRecord.Color.Code = code
+	mixingbatchRecord.Color.Name = name
+	mixingbatchRecord.Color.Brand = brand
+	mixingbatchRecord.Color.Supplier = supplier
+	mixingbatchRecord.Classification = classification
+	mixingbatchRecord.Operator = operator
+	mixingbatchRecord.Classification = classification
+	mixingbatchRecord.Receiver = receiver
+	mixingbatchRecord.SOPNo = sopno
+	mixingbatchRecord.Area = area
+	mixingbatchRecord.MixingDateStr = mixingbatchRecord.MixingDate.Format("15:04 02-01-2006")
+	mixingbatchRecord.IssuedDateStr = mixingbatchRecord.IssuedDate.Format("15:04 02-01-2006")
+	mixingbatchRecord.StartUseStr = mixingbatchRecord.StartUse.Format("15:04 02-01-2006")
+	mixingbatchRecord.EndUseStr = mixingbatchRecord.EndUse.Format("15:04 02-01-2006")
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/batchupdated_tr.html")).Execute(w, map[string]interface{}{
+		"mixingbatchRecord": mixingbatchRecord,
 	})
 }
 

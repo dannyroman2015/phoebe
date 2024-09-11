@@ -359,6 +359,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/mixingcolor/loadcolorpanel", s.loadcolorpanel)
 	router.POST("/mixingcolor/mixingsearch", s.mixingsearch)
 	router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
+	router.GET("/mixingcolor/batchupdateform/:batchno", s.batchupdateform)
+	router.PUT("/mixingcolor/updatebatch/:batchno", s.updatebatch)
 	router.POST("/mixingcolor/mixingreports/:batchno", s.mixingreports)
 	router.GET("/mixingcolor/deletereports", s.deletereport)
 	router.DELETE("/mixingcolor/deletemixing/:batchno", s.deletemixing)
