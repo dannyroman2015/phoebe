@@ -8575,6 +8575,8 @@ func (s *Server) mixingsearch(w http.ResponseWriter, r *http.Request, ps httprou
 		IssuedDate     string  `bson:"issueddate"`
 		StartUse       string  `bson:"startuse"`
 		EndUse         string  `bson:"enduse"`
+		Receiver       string  `bson:"receiver"`
+		Area           string  `bson:"area"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
