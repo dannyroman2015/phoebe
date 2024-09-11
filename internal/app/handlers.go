@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"math"
+	"math/rand"
 	"net/http"
 	"slices"
 	"strconv"
@@ -9152,7 +9153,10 @@ func (s *Server) mc_getupdateform(w http.ResponseWriter, r *http.Request, ps htt
 
 	case "createcolor":
 		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/createcolorform.html")).Execute(w, nil)
+	case "fastbatch":
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/fastbatchform.html")).Execute(w, nil)
 	}
+
 }
 
 // router.GET("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
@@ -9213,7 +9217,112 @@ func (s *Server) mc_updateusingitem(w http.ResponseWriter, r *http.Request, ps h
 		"showSuccessDialog": true,
 		"msgDialog":         "Cập nhật thành công",
 	})
+}
 
+// router.POST("/mixingcolor/entry/searchcolorcode", s.mce_searchcolorcode)
+func (s *Server) mce_searchcolorcode(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{"code": bson.M{"$regex": ".*" + r.FormValue("codesearch") + ".*", "$options": "i"}})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var codes []struct {
+		Code string `bson:"code"`
+	}
+	if err := cur.All(context.Background(), &codes); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/colorcodelist.html")).Execute(w, map[string]interface{}{
+		"codes": codes,
+	})
+}
+
+// router.POST("/mixingcolor/entry/createfastbatch", s.mce_createfastbatch)
+func (s *Server) mce_createfastbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println(r.FormValue("rawstr"))
+	colorcode := r.FormValue("codesearch")
+	rawArray := strings.Split(r.FormValue("rawstr"), ";")
+	log.Println(colorcode)
+	log.Println(rawArray)
+
+	batchno := rawArray[0]
+	mixingdate, _ := time.Parse("020120061504", rawArray[0][0:4]+"20"+rawArray[0][4:10])
+	issueddate := mixingdate.Add(time.Duration(rand.Intn(15)) * time.Minute)
+	volume, _ := strconv.ParseFloat(rawArray[1], 64)
+	status := "Approved"
+	switch {
+	case rawArray[2] == "r":
+		status = "Rejected"
+	case rawArray[2] == "p":
+		status = "Pending"
+	case len(rawArray[2]) > 1:
+		status = rawArray[2]
+	}
+	viscosity, _ := strconv.ParseFloat(rawArray[3], 64)
+	lightdark, _ := strconv.ParseFloat(rawArray[4], 64)
+	redgreen, _ := strconv.ParseFloat(rawArray[5], 64)
+	yellowblue, _ := strconv.ParseFloat(rawArray[6], 64)
+	classification := rawArray[7]
+	if rawArray[7] == "m" || rawArray[7] == "M" {
+		classification = "Mass Production"
+	}
+	if rawArray[7] == "s" || rawArray[7] == "S" {
+		classification = "Sample"
+	}
+	sopno := colorcode[0:strings.Index(colorcode, rawArray[8])]
+	mixer := rawArray[9]
+	receiver := rawArray[10]
+	area := rawArray[11]
+
+	log.Println(batchno)
+	log.Println(mixingdate)
+	log.Println(issueddate)
+	log.Println(volume)
+	log.Println(status)
+	log.Println(viscosity)
+	log.Println(lightdark)
+	log.Println(redgreen)
+	log.Println(yellowblue)
+	log.Println(sopno)
+	log.Println(mixer)
+	log.Println(receiver)
+	log.Println(area)
+
+	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"code": colorcode})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var colorData struct {
+		Brand    string `bson:"brand"`
+		Supplier string `bson:"supplier"`
+		Name     string `bson:"name"`
+	}
+	if err := sr.Decode(&colorData); err != nil {
+		log.Println(err)
+	}
+
+	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": receiver, "area": area,
+		"operator": mixer, "color": bson.M{"code": colorcode, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
+		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
+	})
+	if err != nil {
+		log.Println(err)
+		// template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingentry.html")).Execute(w, map[string]interface{}{
+		// 	"showErrDialog": true,
+		// 	"msgDialog":     "Failed to insert to database",
+		// })
+	}
+	// defer cur.Close(context.Background())
+	// var codes []struct {
+	// 	Code string `bson:"code"`
+	// }
+	// if err := cur.All(context.Background(), &codes); err != nil {
+	// 	log.Println(err)
+	// }
+	// template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/colorcodelist.html")).Execute(w, map[string]interface{}{
+	// 	"codes": codes,
+	// })
 }
 
 // router.GET("/mixingcolor/colorentry", s.mc_colorentry)

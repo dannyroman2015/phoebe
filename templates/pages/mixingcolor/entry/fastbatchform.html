@@ -1,0 +1,64 @@
+<section id="entry-container" class="fade-in"></section>
+  <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-x-16 gap-y-8">
+      <form class="space-y-5" hx-post="/mixingcolor/entry/createfastbatch" hx-target="#entry-container" hx-swap="outerHTML">
+        <div class="mt-4 text-center">
+          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+            Nhập nhanh batch
+          </button>
+        </div>
+
+        <div class="flex justify-center mt-4 text-center">
+
+          <div class="relative" x-data="{
+              showList: false, 
+              selectedCode:'',
+            }">
+            <div class="relative">
+              <input :value="selectedCode" @change="showList=!showList" hx-post="/mixingcolor/entry/searchcolorcode" hx-target="#code-container" hx-trigger="input changed delay:500ms" hx-swap="outerHTML"
+                  name="codesearch" class="py-3 ps-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" type="text" role="combobox" aria-expanded="true">
+              <div class="absolute top-1/2 end-3 -translate-y-1/2">
+                <svg class="shrink-0 size-3.5 text-gray-500 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m7 15 5 5 5-5"></path>
+                  <path d="m7 9 5-5 5 5"></path>
+                </svg>
+              </div>
+            </div>
+            <div x-show="showList" id="code-container" class="absolute z-50 w-full max-h-72 p-1 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 dark:bg-neutral-900 dark:border-neutral-700">
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 text-center">  
+          <div class="mt-4 text-center">
+            <label for="rawstr" class="relative block rounded-md border">
+              <input type="text" id="rawstr" name="rawstr"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Chuỗi nhập: mã batch;trọng lượng;tình trạng(a/r/p);viscosity;L;a;b;sopno;người trộn;người nhận;khu vực</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-4 text-center">
+          <button type="submit" class="inline-block rounded-full bg-black px-5 py-3 font-medium text-white sm:w-auto">
+            Cập nhật
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  if ({{.showSuccessDialog}}) {
+    swal("Thành công", {{.msgDialog}}, "success")
+  }
+  if ({{.showMissingDialog}}) {
+    swal("Thất bại", {{.msgDialog}}, "error")
+  }
+  if ({{.showErrDialog}}) {
+    swal("Thất bại", {{.msgDialog}}, "error")
+  }
+</script>

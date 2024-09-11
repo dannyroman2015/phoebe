@@ -375,6 +375,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/mixingcolor/entry/getupdateform", s.mc_getupdateform)
 	router.POST("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
 	router.POST("/mixingcolor/entry/updateusingitem", s.mc_updateusingitem)
+	router.POST("/mixingcolor/entry/searchcolorcode", s.mce_searchcolorcode)
+	router.POST("/mixingcolor/entry/createfastbatch", s.mce_createfastbatch)
 
 	router.GET("/mixingcolor/colorentry", s.mc_colorentry)
 	router.GET("/mixingcolor/entry/loadcolorform", s.mc_loadcolorform)
