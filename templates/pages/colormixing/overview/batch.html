@@ -1,7 +1,7 @@
 <section class="fade-in pt-3 px-2 mx-auto">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-lg font-medium text-gray-800 dark:text-white">Mixing Batch</h2>
+      <h2 class="text-sm sm:text-lg font-medium text-gray-800 dark:text-white">Mixing Batch</h2>
     </div>
 
     <div class="relative flex items-center md:mt-0 p-0">
@@ -33,11 +33,7 @@
         });
       },
       popoverPositionCalculate(){
-        if(window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)){
-          this.popoverPosition = 'top';
-        } else {
-          this.popoverPosition = 'bottom';
-        }
+        this.popoverPosition = 'bottom';
       }
       }"
       x-init="
@@ -138,7 +134,7 @@
                   </div>
                 </div>
 
-                <!-- <div class="grid items-center grid-cols-3 gap-4">
+                <div class="grid items-center grid-cols-3 gap-4">
                   <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="supplier">
                     Supplier
                   </label>
@@ -200,7 +196,7 @@
                       {{end}}
                     </select>
                   </div>
-                </div> -->
+                </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
                   <label for="mixingdatefrom" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -495,4 +491,11 @@
 <script>
   document.getElementById("mixingdatefrom").valueAsDate = new Date(Date.now() - 3*86400000);
   document.getElementById("mixingdateto").valueAsDate = new Date();
+
+  // chỗ popoever (không cần thiết)
+  // if(window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)){
+  //   this.popoverPosition = 'top';
+  // } else {
+  //   this.popoverPosition = 'bottom';
+  // }
 </script>
