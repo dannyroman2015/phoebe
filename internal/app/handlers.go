@@ -8728,7 +8728,7 @@ func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps http
 	if err := result.Decode(&mixingbatchRecord); err != nil {
 		log.Println(err)
 	}
-	log.Println(mixingbatchRecord)
+
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/batchupdateform.html")).Execute(w, map[string]interface{}{
 		"mixingbatchRecord": mixingbatchRecord,
 	})
@@ -8738,7 +8738,7 @@ func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps http
 func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := ps.ByName("batchno")
 	batchinput := r.FormValue("batchno")
-	weight, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	weight, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
