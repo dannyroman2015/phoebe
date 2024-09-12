@@ -1,0 +1,147 @@
+<tbody x-data="{opens: [],}"  id="mixing_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+  {{range .mixingbatchData}}
+  <tr @click="opens.includes('{{.BatchNo}}') ? opens.splice(opens.indexOf('{{.BatchNo}}'), 1) : opens.push('{{.BatchNo}}');">
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>
+        <p>Weight: <span class="text-base text-right font-semibold text-gray-600 dark:text-gray-400">{{.Volume}} </span>(kg)</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Mix&nbsp&nbsp: {{.MixingDate}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Issue: {{.IssuedDate}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: {{.EndUse}}</p>
+      </div>
+    </td>
+    
+    <td class="px-4 py-2 text-sm text-center font-medium text-gray-700 whitespace-nowrap">
+      {{ if eq .Status "Approved"}}
+      <div class="inline-flex px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
+        <h2 class="text-sm text-center font-normal text-emerald-500">{{.Status}}</h2>
+      </div>
+      {{else if eq .Status "Reject"}}
+      <div class="inline-flex px-3 py-1 rounded-full gap-x-2 bg-red-100/60 dark:bg-gray-800">
+        <h2 class="text-sm text-center font-normal text-red-600">{{.Status}}</h2>
+      </div>
+      {{else}}
+      <div class="inline-flex px-3 py-1 rounded-full gap-x-2 dark:bg-gray-800">
+        <h2 class="text-sm text-center font-normal text-gray-600">{{.Status}}</h2>
+      </div>
+      {{end}} 
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Code}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Name}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Brand}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.Viscosity}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.LightDark}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.RedGreen}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.YellowBlue}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Supplier}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Classification}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.SOPNo}}</p>
+      </div>
+    </td>      
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Operator}}</p>
+      </div>
+    </td>
+    
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Receiver}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Area}}</p>
+      </div>
+    </td>
+
+  </tr>
+
+  <tr x-show="opens.includes('{{.BatchNo}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
+      class="p-6">
+    <td colspan="6">
+      <div class="overflow-x-auto p-6">
+        <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+          <thead class="text-left ltr:text-left rtl:text-right">
+            <tr>
+              <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Item</th>
+              <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Mo</th>
+            </tr>
+          </thead>
+      
+          <tbody class="divide-y divide-gray-200">
+            {{range .Items}}
+            <tr>
+              <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Code}}</td>
+              <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Mo}}</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </td>
+  </tr>
+
+ {{end}}
+</tbody>

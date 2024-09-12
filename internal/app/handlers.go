@@ -9214,6 +9214,13 @@ func (s *Server) mc_updateusingitem(w http.ResponseWriter, r *http.Request, ps h
 	if err != nil {
 		log.Println(err)
 	}
+
+	_, err = s.mgdb.Collection("mixingbatch").UpdateOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")}, bson.M{
+		"$addToSet": bson.M{"items": bson.M{"code": r.FormValue("item"), "mo": r.FormValue("mo")}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingform.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Cập nhật thành công",
@@ -9340,6 +9347,235 @@ func (s *Server) mc_loadcolorform(w http.ResponseWriter, r *http.Request, ps htt
 	template.Must(template.ParseFiles(
 		"templates/pages/mixingcolor/entry/colorform.html",
 	)).Execute(w, nil)
+}
+
+// router.GET("/colormixing/overview", s.c_overview)
+func (s *Server) c_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// router.GET("/colormixing/overview/loadbatch", s.co_loadbatch)
+func (s *Server) co_loadbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -3))}}, bson.M{"mixingdate": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
+		{{"$set", bson.M{
+			"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+			"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+			"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+			"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+		}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var mixingbatchData []models.BatchRecord_datestr
+	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
+		log.Println(err)
+	}
+
+	var operatorMap = make(map[string]bool, len(mixingbatchData))
+	var colorMap = make(map[string]bool, len(mixingbatchData))
+	var codeMap = make(map[string]bool, len(mixingbatchData))
+	var brandMap = make(map[string]bool, len(mixingbatchData))
+	var supplierMap = make(map[string]bool, len(mixingbatchData))
+	var classificationMap = make(map[string]bool, len(mixingbatchData))
+	var sopnoMap = make(map[string]bool, len(mixingbatchData))
+	var statusMap = make(map[string]bool, len(mixingbatchData))
+
+	for _, v := range mixingbatchData {
+		operatorMap[v.Operator] = true
+		codeMap[v.Color.Code] = true
+		colorMap[v.Color.Name] = true
+		brandMap[v.Color.Brand] = true
+		supplierMap[v.Color.Supplier] = true
+		classificationMap[v.Classification] = true
+		sopnoMap[v.SOPNo] = true
+		statusMap[v.Status] = true
+	}
+	var operators = make([]string, 0, len(operatorMap))
+	for k, _ := range operatorMap {
+		operators = append(operators, k)
+	}
+	var colors = make([]string, 0, len(colorMap))
+	for k, _ := range colorMap {
+		colors = append(colors, k)
+	}
+	var codes = make([]string, 0, len(codeMap))
+	for k, _ := range codeMap {
+		codes = append(codes, k)
+	}
+	var brands = make([]string, 0, len(brandMap))
+	for k, _ := range brandMap {
+		brands = append(brands, k)
+	}
+	var suppliers = make([]string, 0, len(supplierMap))
+	for k, _ := range supplierMap {
+		suppliers = append(suppliers, k)
+	}
+	var classifications = make([]string, 0, len(classificationMap))
+	for k, _ := range classificationMap {
+		classifications = append(classifications, k)
+	}
+	var sopnos = make([]string, 0, len(sopnoMap))
+	for k, _ := range sopnoMap {
+		sopnos = append(sopnos, k)
+	}
+	var statuses = make([]string, 0, len(statusMap))
+	for k, _ := range statusMap {
+		statuses = append(statuses, k)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/batch.html")).Execute(w, map[string]interface{}{
+		"mixingbatchData": mixingbatchData,
+		"operators":       operators,
+		"colors":          colors,
+		"codes":           codes,
+		"brands":          brands,
+		"suppliers":       suppliers,
+		"classifications": classifications,
+		"sopnos":          sopnos,
+		"statuses":        statuses,
+	})
+}
+
+// router.GET("/colormixing/overview/searchbatch", s.co_searchbatch)
+func (s *Server) co_searchbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("batchsearch") + ".*"
+
+	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$or": bson.A{
+			bson.M{"batchno": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"status": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"items": bson.M{"$elemMatch": bson.M{"code": bson.M{"$regex": searchRegex, "$options": "i"}}}},
+			bson.M{"items": bson.M{"$elemMatch": bson.M{"mo": bson.M{"$regex": searchRegex, "$options": "i"}}}},
+			bson.M{"color.code": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.name": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.brand": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"color.supplier": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"classification": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"operator": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}}},
+		{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
+		{{"$set", bson.M{
+			"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+			"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+			"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+			"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+		}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var mixingbatchData []models.BatchRecord_datestr
+	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/batch_tbody.html")).Execute(w, map[string]interface{}{
+		"mixingbatchData": mixingbatchData,
+	})
+}
+
+// router.POST("/colormixing/overview/filterbatch", s.co_filterbatch)
+func (s *Server) co_filterbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	mixingdatefrom, _ := time.Parse("2006-01-02", r.FormValue("mixingdatefrom"))
+	mixingdateto, _ := time.Parse("2006-01-02", r.FormValue("mixingdateto"))
+
+	var filters = bson.A{}
+	if r.FormValue("operator") != "" {
+		filters = append(filters, bson.M{"operator": r.FormValue("operator")})
+	}
+	if r.FormValue("color") != "" {
+		filters = append(filters, bson.M{"color.name": r.FormValue("color")})
+	}
+	if r.FormValue("code") != "" {
+		filters = append(filters, bson.M{"color.code": r.FormValue("code")})
+	}
+	if r.FormValue("brand") != "" {
+		filters = append(filters, bson.M{"color.brand": r.FormValue("brand")})
+	}
+	if r.FormValue("supplier") != "" {
+		filters = append(filters, bson.M{"color.supplier": r.FormValue("supplier")})
+	}
+	if r.FormValue("classification") != "" {
+		filters = append(filters, bson.M{"classification": r.FormValue("classification")})
+	}
+	if r.FormValue("sopno") != "" {
+		filters = append(filters, bson.M{"sopno": r.FormValue("sopno")})
+	}
+	if r.FormValue("status") != "" {
+		filters = append(filters, bson.M{"status": r.FormValue("status")})
+	}
+	if r.FormValue("mixingdatefrom") != "" || r.FormValue("mixingdateto") != "" {
+		filters = append(filters, bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(mixingdatefrom)}}, bson.M{"mixingdate": bson.M{"$lte": primitive.NewDateTimeFromTime(mixingdateto)}}}})
+	}
+
+	var cur *mongo.Cursor
+	var err interface{}
+	if len(filters) != 0 {
+		cur, err = s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": filters}}},
+			{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
+			{{"$set", bson.M{
+				"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+				"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+				"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+				"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+			}}},
+		})
+	} else {
+		cur, err = s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
+			{{"$set", bson.M{
+				"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
+				"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
+				"startuse":   bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$startuse"}},
+				"enduse":     bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$enduse"}},
+			}}},
+		})
+	}
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var mixingbatchData []models.BatchRecord_datestr
+	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/batch_tbody.html")).Execute(w, map[string]interface{}{
+		"mixingbatchData": mixingbatchData,
+	})
+}
+
+// router.POST("/colormixing/overview/:batchno/items", s.co_batchitems)
+func (s *Server) co_batchitems(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("batch_item").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"batchno": ps.ByName("batchno")}}},
+		{{"$sort", bson.M{"created": -1}}},
+		{{"$set", bson.M{"created": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$created"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var batchitemData []struct {
+		Created string `bson:"created"`
+		Item    string `bson:"item"`
+		Mo      string `bson:'mo"`
+	}
+	if err := cur.All(context.Background(), &batchitemData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/batchitem_tbl.html")).Execute(w, map[string]interface{}{
+		"batchitemData": batchitemData,
+	})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
