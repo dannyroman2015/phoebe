@@ -30,7 +30,7 @@
 
           <div class="mt-4 text-center">
             <label for="batchno" class="relative block rounded-md border">
-              <input type="text" id="batchno" name="batchno" placeholder=""
+              <input type="text" id="batchno" name="batchno" minlength="12" maxlength="12" placeholder="" 
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 Batch No.</span>
@@ -101,7 +101,7 @@
             </label>
           </div>
 
-          <div class="flex justify-center mt-4 text-center">
+          <!-- <div class="flex justify-center mt-4 text-center">
             <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 name="status" id="status" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
               <option value="" disabled selected>Select status</option>
@@ -109,23 +109,16 @@
               <option value="Rejected">Rejected</option>
               <option value="Pending">Pending</option>
             </select>
-          </div>
+          </div> -->
+
+          
 
           <div class="mt-4 text-center">
             <label for="receiver" class="relative block rounded-md border">
               <input type="text" id="receiver" name="receiver" placeholder=""
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Reciever</span>
-            </label>
-          </div>
-
-          <div class="mt-4 text-center">
-            <label for="area" class="relative block rounded-md border">
-              <input type="text" id="area" name="area" placeholder=""
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Area</span>
+                Receiver</span>
             </label>
           </div>
 
@@ -145,6 +138,65 @@
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                 SOPNo.</span>
             </label>
+          </div>
+
+          <!-- <div class="mt-4 text-center">
+            <label for="area" class="relative block rounded-md border">
+              <input type="text" id="area" name="area" placeholder=""
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Area</span>
+            </label>
+          </div> -->
+  
+          <div class="flex flex-row items-center justify-center space-x-4 p-5">
+            <label class="relative flex items-center cursor-pointer">
+              <input checked class="sr-only peer" value="Approved" name="status" type="radio" />
+              <div class="w-6 h-6 bg-transparent border-2 border-green-500 rounded-full peer-checked:bg-green-500 peer-checked:border-green-500 peer-hover:shadow-lg peer-hover:shadow-green-500/50 peer-checked:shadow-lg peer-checked:shadow-green-500/50 transition duration-300 ease-in-out"></div>
+              <span class="ml-2 text-black">Approved</span>
+            </label>
+
+            <label class="relative flex items-center cursor-pointer">
+              <input class="sr-only peer" value="Rejected" name="status" type="radio"/>
+              <div class="w-6 h-6 bg-transparent border-2 border-red-500 rounded-full peer-checked:bg-red-500 peer-checked:border-red-500 peer-hover:shadow-lg peer-hover:shadow-red-500/50 peer-checked:shadow-lg peer-checked:shadow-red-500/50 transition duration-300 ease-in-out"></div>
+              <span class="ml-2 text-black">Rejected</span>
+            </label>
+
+            <label class="relative flex items-center cursor-pointer">
+              <input class="sr-only peer" value="Pending" name="status" type="radio" />
+              <div class="w-6 h-6 bg-transparent border-2 border-yellow-500 rounded-full peer-checked:bg-yellow-500 peer-checked:border-yellow-500 peer-hover:shadow-lg peer-hover:shadow-yellow-500/50 peer-checked:shadow-lg peer-checked:shadow-yellow-500/50 transition duration-300 ease-in-out"></div>
+              <span class="ml-2 text-black">Pending</span>
+            </label>          
+          </div>
+
+          <div class="flex items-center justify-around mt-2 gap-2">
+            <div>
+                <label class="flex cursor-pointer items-center justify-center text-sm text-gray-500 peer-checked:text-blue-500">
+                  <input checked class="peer sr-only" value="Fac 7" name="area" type="radio"/>
+                  <span class="flex h-10 w-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-neutral-600 p-1 transition-transform duration-150 hover:border-blue-400 active:scale-95 peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-blue-400">
+                    Fac 7
+                  </span>     
+                </label>
+            </div>
+
+            <div>
+              <label class="flex cursor-pointer items-center justify-center text-sm text-gray-500 peer-checked:text-blue-500">
+                <input class="peer sr-only" value="Fac 2" name="area" type="radio"/>
+                <span class="flex h-10 w-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-neutral-600 p-1 transition-transform duration-150 hover:border-blue-400 active:scale-95 peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-blue-400">
+                  Fac 2
+                </span>     
+              </label>
+            </div>
+
+            <div>
+              <label class="flex cursor-pointer items-center justify-center text-sm text-gray-500 peer-checked:text-blue-500">
+                <input class="peer sr-only" value="Sample" name="area" type="radio"/>
+                <span class="flex h-10 w-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-neutral-600 p-1 transition-transform duration-150 hover:border-blue-400 active:scale-95 peer-checked:border-blue-500 peer-checked:shadow-md peer-checked:shadow-blue-400">
+                  Sample
+                </span>     
+              </label>
+            </div>
+
           </div>
 
         </div>
