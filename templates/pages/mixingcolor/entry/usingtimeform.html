@@ -9,7 +9,8 @@
         </div>
 
         <div class="flex justify-center mt-4 text-center">
-          <select class="flex text-center justify-center w-1/2 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+          <select hx-post="/mixingcolor/getusingstart" hx-target="#startusing" hx-swap="outerHTML"
+              class="flex text-center justify-center w-1/2 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
               name="batchno" id="batchno" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
             <option value="" disabled selected>Chọn mã batch</option>
             {{range .batchData}}

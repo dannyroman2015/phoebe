@@ -8026,6 +8026,42 @@ func (s *Server) mixingcolor(w http.ResponseWriter, r *http.Request, ps httprout
 	)).Execute(w, nil)
 }
 
+// router.GET("/mixingcolor/loadusingtimeform", s.loadusingtimeform)
+func (s *Server) loadusingtimeform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("mixingbatch").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"issueddate": -1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var batchData []struct {
+		BatchNo string `bson:"batchno"`
+	}
+	if err := cur.All(context.Background(), &batchData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingtimeform.html")).Execute(w, map[string]interface{}{
+		"batchData": batchData,
+	})
+}
+
+// router.POST("/mixingcolor/getusingstart", s.getusingstart)
+func (s *Server) getusingstart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	sr := s.mgdb.Collection("mixingbatch").FindOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var batchData struct {
+		IssuedDate time.Time `bson:"issueddate"`
+	}
+	if err := sr.Decode(&batchData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/mixingcolor/entry/usingstart_input.html")).Execute(w, map[string]interface{}{
+		"usingstart": batchData.IssuedDate.Format("2006-01-02T15:04"),
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /mixingcolor/loaddeliveryentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
