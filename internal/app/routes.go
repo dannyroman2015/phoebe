@@ -390,6 +390,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/colormixing/overview/searchbatch", s.co_searchbatch)
 	router.POST("/colormixing/overview/filterbatch", s.co_filterbatch)
 	router.POST("/colormixing/overview/batchitems/:batchno", s.co_batchitems)
+	router.GET("/colormixing/overview/changedisplay", s.co_changedisplay)
 	// end Color Mixing
 
 	////////////////////////////////////////////////////////////////////

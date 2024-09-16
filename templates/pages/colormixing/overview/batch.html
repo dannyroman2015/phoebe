@@ -1,4 +1,4 @@
-<section class="fade-in pt-3 px-2 mx-auto">
+<section id="container" class="fade-in pt-3 px-2 mx-auto">
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-sm sm:text-lg font-medium text-gray-800 dark:text-white">Mixing Batch</h2>
@@ -63,13 +63,30 @@
           <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
           <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
           <div class="grid gap-4">
-            <div class="space-y-2">
-              <h4 class="font-medium leading-none">Options</h4>
-              <p class="text-sm text-muted-foreground"></p>
+            <div class="space-y-3">
+              <h4 class="font-medium leading-none">Filter for mixing batch</h4>
             </div>
             <form>
               <div class="grid gap-2">
-                
+
+                <div class="flex space-x-1 select-none">
+                  <label class="radio flex flex-grow items-center justify-center rounded-lg cursor-pointer">
+                    <input hx-get="/colormixing/overview/changedisplay" hx-trigger="change" hx-target="#container" hx-swap="outerHTML"
+                        type="radio" name="display" value="mixingbatch" class="peer hidden" checked=""/>
+                    <span class="text-sm tracking-widest peer-checked:bg-black peer-checked:text-white text-gray-700 p-2 rounded-lg transition duration-150 ease-in-out">
+                      Mixing Batch
+                    </span>
+                  </label>
+
+                  <label class="radio flex flex-grow items-center justify-center rounded-lg  cursor-pointer">
+                    <input hx-get="/colormixing/overview/changedisplay" hx-target="#container" hx-swap="outerHTML"
+                        type="radio" name="display" value="colorpanel" class="peer hidden"/>
+                    <span class="text-sm tracking-widest peer-checked:bg-black peer-checked:text-white text-gray-700 p-2 rounded-lg transition duration-150 ease-in-out">
+                      Color Panel
+                    </span>
+                  </label>
+                </div>
+
                 <div class="grid items-center grid-cols-3 gap-4">
                   <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="operator">
                     Mixer
@@ -104,7 +121,7 @@
 
                 <div class="grid items-center grid-cols-3 gap-4">
                   <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="code">
-                    Code
+                    Color Code
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
@@ -232,7 +249,7 @@
           
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Mixing Batch</span>                              
+                    <span>Mixing Batch</span>
                   </button>
                 </th>
 

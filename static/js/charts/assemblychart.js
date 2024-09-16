@@ -356,7 +356,7 @@ const drawAssemblyChart2 = (data, target) => {
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
-
+  
   innerChart
     .selectAll()
     .data(series)
@@ -519,6 +519,8 @@ const drawAssemblyVTChart = (data, target) => {
   
   let flag = true;
 
+  data.sort((a, b) => a.type.localeCompare(b.type))
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
@@ -600,7 +602,6 @@ const drawAssemblyVTChart = (data, target) => {
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - (y(d[1]) - y(d[0]))/2 - 5 : y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
-        .attr("fill", "#75485E")
         .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
         .text(d => {
           if (d[1] - d[0] >= 3500) { return `${d3.format(",.0f")(d[1]-d[0])}` }

@@ -741,7 +741,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	if err := cur.All(context.Background(), &assemblyData); err != nil {
 		log.Println(err)
 	}
-
+	log.Println(assemblyData)
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -9357,7 +9357,7 @@ func (s *Server) c_overview(w http.ResponseWriter, r *http.Request, ps httproute
 // router.GET("/colormixing/overview/loadbatch", s.co_loadbatch)
 func (s *Server) co_loadbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -3))}}, bson.M{"mixingdate": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -3))}}, bson.M{"mixingdate": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
 		{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
 		{{"$set", bson.M{
 			"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
@@ -9576,6 +9576,128 @@ func (s *Server) co_batchitems(w http.ResponseWriter, r *http.Request, ps httpro
 	template.Must(template.ParseFiles("templates/pages/colormixing/overview/batchitem_tbl.html")).Execute(w, map[string]interface{}{
 		"batchitemData": batchitemData,
 	})
+}
+
+// router.GET("/colormixing/overview/changedisplay", s.co_changedisplay)
+func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	log.Println(r.FormValue("display"))
+	switch r.FormValue("display") {
+	case "colorpanel":
+		cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$sort", bson.D{{"issued", -1}, {"code", 1}}}},
+			{{"$set", bson.M{
+				"issued":    bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$issued"}},
+				"expired":   bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$expired"}},
+				"remaked":   bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$remaked"}},
+				"inspected": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$inspected"}},
+			}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var colorpanelData []struct {
+			Code             string `bson:"code"`
+			Issued           string `bson:"issued"`
+			Category         string `bson:"category"`
+			User             string `bson:"user"`
+			OnProduct        string `bson:"onproduct"`
+			Name             string `bson:"name"`
+			Brand            string `bson:"brand"`
+			Supplier         string `bson:"supplier"`
+			Substrate        string `bson:"substrate"`
+			Surface          string `bson:"surface"`
+			Expired          string `bson:"expired"`
+			Remaked          string `bson:"remaked"`
+			Inspected        string `bson:"inspected"`
+			InspectionStatus string `bson:"inspectionstatus"`
+			Remark           string `bson:"remark"`
+			Alert            string `bson:"alert"`
+			Factory          string `bson:"factory"`
+		}
+		if err := cur.All(context.Background(), &colorpanelData); err != nil {
+			log.Println(err)
+		}
+
+		var codeMap = make(map[string]bool, len(colorpanelData))
+		var categoryMap = make(map[string]bool, len(colorpanelData))
+		var userMap = make(map[string]bool, len(colorpanelData))
+		var onproductMap = make(map[string]bool, len(colorpanelData))
+		var supplierMap = make(map[string]bool, len(colorpanelData))
+		var nameMap = make(map[string]bool, len(colorpanelData))
+		var brandMap = make(map[string]bool, len(colorpanelData))
+		var substrateMap = make(map[string]bool, len(colorpanelData))
+		var surfaceMap = make(map[string]bool, len(colorpanelData))
+		var inspectionstatusMap = make(map[string]bool, len(colorpanelData))
+
+		for _, v := range colorpanelData {
+			codeMap[v.Code] = true
+			categoryMap[v.Category] = true
+			userMap[v.User] = true
+			onproductMap[v.OnProduct] = true
+			supplierMap[v.Supplier] = true
+			nameMap[v.Name] = true
+			brandMap[v.Brand] = true
+			substrateMap[v.Substrate] = true
+			surfaceMap[v.Surface] = true
+			inspectionstatusMap[v.InspectionStatus] = true
+		}
+		var codes = make([]string, 0, len(codeMap))
+		for k, _ := range codeMap {
+			codes = append(codes, k)
+		}
+		var categories = make([]string, 0, len(categoryMap))
+		for k, _ := range categoryMap {
+			categories = append(categories, k)
+		}
+		var users = make([]string, 0, len(userMap))
+		for k, _ := range userMap {
+			users = append(users, k)
+		}
+		var onproducts = make([]string, 0, len(onproductMap))
+		for k, _ := range onproductMap {
+			onproducts = append(onproducts, k)
+		}
+		var suppliers = make([]string, 0, len(supplierMap))
+		for k, _ := range supplierMap {
+			suppliers = append(suppliers, k)
+		}
+		var colors = make([]string, 0, len(nameMap))
+		for k, _ := range nameMap {
+			colors = append(colors, k)
+		}
+		var brands = make([]string, 0, len(brandMap))
+		for k, _ := range brandMap {
+			brands = append(brands, k)
+		}
+		var substrates = make([]string, 0, len(substrateMap))
+		for k, _ := range substrateMap {
+			substrates = append(substrates, k)
+		}
+		var surfaces = make([]string, 0, len(surfaceMap))
+		for k, _ := range surfaceMap {
+			surfaces = append(surfaces, k)
+		}
+		var inspectionstatuses = make([]string, 0, len(inspectionstatusMap))
+		for k, _ := range inspectionstatusMap {
+			inspectionstatuses = append(inspectionstatuses, k)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/mixingcolor/colorpanel.html")).Execute(w, map[string]interface{}{
+			"colorpanelData":     colorpanelData,
+			"codes":              codes,
+			"categories":         categories,
+			"users":              users,
+			"onproducts":         onproducts,
+			"suppliers":          suppliers,
+			"colors":             colors,
+			"brands":             brands,
+			"substrates":         substrates,
+			"surfaces":           surfaces,
+			"inspectionstatuses": inspectionstatuses,
+		})
+	}
+
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

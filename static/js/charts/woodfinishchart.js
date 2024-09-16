@@ -520,7 +520,8 @@ const drawWoodFinishVTChart = (data, target) => {
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
     (d3.index(data, d => d.date, d => d.type))
-
+    console.log("wood")
+    console.log(series)
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, innerWidth])
