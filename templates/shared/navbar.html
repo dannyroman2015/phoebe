@@ -305,14 +305,14 @@
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='Mixingcolor', 'hover:bg-neutral-100' : navigationMenu!='Mixingcolor' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Mixingcolor'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
-                        <span>Mixing Color</span> 
+                        <span>temp</span> 
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Mixingcolor' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li>
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='Color Mixing', 'hover:bg-neutral-100' : navigationMenu!='Color Mixing' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Color Mixing'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
-                        <span>Color Mixing(testing)</span> 
+                        <span>Color Mixing</span> 
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Color Mixing' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li>
@@ -650,13 +650,13 @@
             <div x-show="navigationMenu == 'Color Mixing'" class="flex items-stretch justify-center w-full p-6">
                 <div class="w-44">
                     <a href="/colormixing/overview" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                        <span class="block mb-1 font-medium text-black">Overview</span>
+                        <span class="block mb-1 font-medium text-black">Tổng quan</span>
                         <!-- <span class="block font-light leading-5 opacity-50">Trang tổng quan về điểm của nhân viên.</span> -->
                     </a>
-                    <!-- <a href="/quality/fastentry" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
-                        <span class="block mb-1 font-medium text-black">Nhập nhanh</span>
-                        <span class="block font-light leading-5 opacity-50">Copy paste báo cáo quality.</span>
-                    </a> -->
+                    <a href="/colormixing/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
+                        <span class="block mb-1 font-medium text-black">Quản lý</span>
+                        <!-- <span class="block font-light leading-5 opacity-50">Trang tổng quan về điểm của nhân viên.</span> -->
+                    </a>
                     <!-- <a href="/incentive/admin" @click="navigationMenuClose()" class="block px-3.5 py-3 text-sm rounded hover:bg-neutral-100">
                         <span class="block mb-1 font-medium text-black">Quản lý</span>
                         <span class="block font-light leading-5 opacity-50">Trang quản lý, đặt ra các tiêu chí, phân quyền người chấm điểm.</span>

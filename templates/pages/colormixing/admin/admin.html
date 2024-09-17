@@ -10,7 +10,7 @@
   <script src="/static/js/htmx.min.js"></script>
   <script src="/static/js/sweetalert.min.js"></script>
 
-  <title>Mixing Color Admin</title>
+  <title>Color Mixing Admin</title>
 </head>
 <body class="bg-gray-100">
   {{template "navbar"}}
@@ -51,7 +51,7 @@
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
           <div class="p-5 pt-0">
-            <div hx-get="/mixingcolor/loadmixingentry" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+            <div hx-get="/colormixing/admin/loadbatchentry" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
           </div>
       </div>
     </div>
@@ -68,7 +68,7 @@
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
           <div class="p-5 pt-0">
-            <div hx-get="/mixingcolor/loadusingtimeform" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+            <div hx-get="/colormixing/admin/loadusingtimeform" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
           </div>
       </div>
     </div>

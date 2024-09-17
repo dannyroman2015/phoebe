@@ -2,11 +2,11 @@ package models
 
 type ColorRecord_datestr struct {
 	Code             string `bson:"code"`
-	Name             string `bson:"name"`
 	Issued           string `bson:"issued"`
 	Category         string `bson:"category"`
 	User             string `bson:"user"`
 	OnProduct        string `bson:"onproduct"`
+	Name             string `bson:"name"`
 	Brand            string `bson:"brand"`
 	Supplier         string `bson:"supplier"`
 	Substrate        string `bson:"substrate"`

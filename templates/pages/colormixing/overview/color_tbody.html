@@ -1,0 +1,104 @@
+<tbody x-data="{opens: [],}"  id="color_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+  {{range .colorpanelData}}
+  <tr @click="opens.includes('{{.Code}}') ? opens.splice(opens.indexOf('{{.Code}}'), 1) : opens.push('{{.Code}}');">
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Name}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-0 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Issued&nbsp&nbsp&nbsp&nbsp&nbsp: {{.Issued}}</p>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Remaked: {{.Remaked}}</p>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Expired&nbsp&nbsp&nbsp: {{.Expired}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Category}}</p>
+      </div>
+    </td>        
+    
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.User}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Surface&nbsp&nbsp&nbsp: {{.Surface}}</p>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Substrate: {{.Substrate}}</p>
+        <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Product&nbsp&nbsp&nbsp: {{.OnProduct}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Supplier}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Status: {{.InspectionStatus}}</p>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Date&nbsp&nbsp: {{.Inspected}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Remark}}</p>
+      </div>
+    </td> 
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Alert}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Factory}}</p>
+      </div>
+    </td>
+
+  </tr>
+
+  <tr x-show="opens.includes('{{.Code}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
+      class="p-6">
+    <td colspan="6">
+      <div class="overflow-x-auto p-6">
+        <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+          <thead class="text-left ltr:text-left rtl:text-right">
+            <tr>
+              <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Item</th>
+              <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Mo</th>
+            </tr>
+          </thead>
+      
+          <tbody class="divide-y divide-gray-200">
+
+            <tr>
+              <td class="whitespace-nowrap px-4 py-2 text-gray-700">Code</td>
+              <td class="whitespace-nowrap px-4 py-2 text-gray-700">Mo</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </td>
+  </tr>
+
+ {{end}}
+</tbody>
