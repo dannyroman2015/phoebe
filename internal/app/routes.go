@@ -77,6 +77,9 @@ func (s *Server) routes() http.Handler {
 	router.POST("/incentive/overview/evalsearch", s.io_evalsearch)
 
 	// HR //////////////////////////////////////////////////////////////
+	router.GET("/hr/overview", s.hr_overview)
+	router.GET("/hr/overview/loadchart", s.hr_loadchart)
+
 	router.GET("/hr/admin", withAuth(s.hradmin))
 	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
 	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)

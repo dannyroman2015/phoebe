@@ -3490,6 +3490,52 @@ func (s *Server) io_evalsearch(w http.ResponseWriter, r *http.Request, ps httpro
 }
 
 // ///////////////////////////////////////////////////////////////////////
+// router.GET("/hr/overview", s.hr_overview)
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) hr_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/hr/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// router.GET("/hr/overview/loadchart", s.hr_loadchart)
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) hr_loadchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, _ := s.mgdb.Collection("employee").Find(context.Background(), bson.M{})
+	// var data = []struct {
+	// 	Name   string `json:"name"`
+	// 	Leader string `json:"parent"`
+	// }{
+	// 	{Name: "võ hoàng trung", Leader: "Nguyên văn Văn"},
+	// 	{Name: "Cao bá Hung", Leader: "Nguyên văn Văn"},
+	// 	{Name: "Nguyên văn Văn", Leader: "lâm thái Vũ"},
+	// 	{Name: "lâm thái Vũ", Leader: "Cao Văn Tuấn"},
+	// 	{Name: "Cao Văn Tuấn", Leader: ""},
+	// 	{Name: "Thanh", Leader: "Nguyên văn Văn"},
+	// 	{Name: "Ngọc", Leader: "Nguyên văn Văn"},
+	// 	{Name: "Nguyen Ngoc Trí", Leader: "lâm thái Vũ"},
+	// 	{Name: "Coa thanh luân", Leader: "võ hoàng trung"},
+	// 	{Name: "Nguyên thiên hương", Leader: "võ hoàng trung"},
+	// 	{Name: "lâm tuấn quát", Leader: "Nguyên thiên hương"},
+	// 	{Name: "lam thanh xuan", Leader: "lâm tuấn quát"},
+	// 	{Name: "luon tuan hai", Leader: "lam thanh xuan"},
+	// 	{Name: "thiên lam loan", Leader: "Cao bá Hung"},
+	// 	{Name: "công thai hoc", Leader: "Cao bá Hung"},
+	// 	{Name: "nguyễn văn hậu", Leader: "Nguyen Ngoc Trí"},
+	// }
+	var data []struct {
+		Name   string `bson:"name" json:"name"`
+		Parent string `bson:"parent" json:"parent"`
+	}
+	if err := cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/hr/overview/chart.html")).Execute(w, map[string]interface{}{
+		"data": data,
+	})
+}
+
+// ///////////////////////////////////////////////////////////////////////
 // /hr/admin - load page admin of HR
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) hradmin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -3754,16 +3800,20 @@ func (s *Server) hr_insertemplist(w http.ResponseWriter, r *http.Request, ps htt
 	var jsonStr = `[`
 	for rows.Next() {
 		row, _ := rows.Columns()
+		log.Println(row[0])
+		// jsonStr += `{
+		// "id":"` + row[0] + `",
+		// "name":"` + row[1] + `",
+		// "section":"` + row[2] + `",
+		// "subsection":"` + row[3] + `",
+		// "position":"` + row[4] + `",
+		// "facno":"` + row[5] + `",
+		// "status":"` + row[6] + `"
+		// },`
 		jsonStr += `{
-		"id":"` + row[0] + `", 
-		"name":"` + row[1] + `",
-		"section":"` + row[2] + `",
-		"subsection":"` + row[3] + `",
-		"position":"` + row[4] + `",
-		"facno":"` + row[5] + `",
-		"status":"` + row[6] + `"
+		"name":"` + row[0] + `", 
+		"parent":"` + row[1] + `"
 		},`
-
 	}
 	jsonStr = jsonStr[:len(jsonStr)-1] + `]`
 

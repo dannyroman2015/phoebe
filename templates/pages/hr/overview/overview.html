@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/alpinejs_focus.min.js"></script>
+  <script defer src="/static/js/alpine.3.13.10.min.js"></script>
+  <script src="/static/js/htmx.min.js"></script>
+  <script src="/static/js/d3.v7.js"></script>
+  <script src="/static/js/plot.js"></script>
+
+  <script src="/static/js/charts/hrchart.js"></script>
+
+
+  <title>Dashboard</title>
+</head>
+<body class="bg-gray-100">
+  {{ template "navbar" }}
+  
+<section>
+  <div class="py-4">
+    <div class="mx-2 max-w-full text-gray-500">
+      <div class="relative">
+        <div hx-get="/hr/overview/loadchart" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div> 
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
+
+<style>
+  .fade-in.htmx-added {
+    opacity: 0;
+  }
+  .fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-in;
+  }
+</style>
