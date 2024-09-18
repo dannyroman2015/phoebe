@@ -1,7 +1,7 @@
 const drawHrChart = (rawdata) => {
   
-  const width = 1920;
-  const margin = {top: 10, right: 10, bottom: 50, left: 100};
+  const width = 1080;
+  const margin = {top: 10, right: 10, bottom: 50, left: 140};
   
   const data = d3.stratify().id((d) => d.name).parentId((d) => d.parent)(rawdata);
   const root = d3.hierarchy(data);
@@ -12,8 +12,8 @@ const drawHrChart = (rawdata) => {
   const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
   const svg = d3.create("svg")
-    // .attr("width", width)
-    // .attr("height", dx)
+    .attr("width", width)
+    .attr("height", dx)
     .attr("viewBox", [-margin.left, -margin.top, width, dx])
 
   const gLink = svg.append("g")
@@ -75,6 +75,7 @@ const drawHrChart = (rawdata) => {
     .attr("stroke-width", 3)
     .attr("stroke", "white")
     .attr("paint-order", "stroke")
+    .attr("font-size", 10)
 
   const nodeUpdate = node.merge(nodeEnter).transition(transition)
     .attr("transform", d => `translate(${d.y}, ${d.x})`)
@@ -109,8 +110,6 @@ const drawHrChart = (rawdata) => {
     d.y0 = d.y;
   })
   }
-
-  
 
   root.x0 = dy / 2;
   root.y0 = 0;
