@@ -8089,6 +8089,45 @@ func (s *Server) ca_loadusingtimeform(w http.ResponseWriter, r *http.Request, ps
 	})
 }
 
+// router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
+func (s *Server) ca_loadinspectionform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"code": 1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var colorData []struct {
+		Code string `bson:"code"`
+	}
+	if err := cur.All(context.Background(), &colorData); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{
+		"colorData": colorData,
+	})
+}
+
+// router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
+func (s *Server) ca_addinspection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	inspecteddate, _ := time.Parse("2006-01-02", r.FormValue("inspecteddate"))
+	_, err := s.mgdb.Collection("colorpanel").UpdateOne(context.Background(), bson.M{"code": r.FormValue("code")}, bson.M{"$push": bson.M{"inspections": bson.M{
+		"date": inspecteddate, "result": r.FormValue("inspectionresult"),
+	}}})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Cập nhật thất bại",
+		})
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Cập nhật thành công",
+	})
+}
+
 // router.POST("/mixingcolor/getusingstart", s.getusingstart)
 func (s *Server) getusingstart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	sr := s.mgdb.Collection("mixingbatch").FindOne(context.Background(), bson.M{"batchno": r.FormValue("batchno")})

@@ -371,7 +371,11 @@
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
+                    {{ if .EndUse}}
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: {{.EndUse}}</p>
+                    {{else}}
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: being using</p>
+                    {{end}}
                   </div>
                 </td>
                 

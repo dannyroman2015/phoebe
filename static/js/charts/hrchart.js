@@ -7,7 +7,9 @@ const drawHrChart = (rawdata) => {
   const root = d3.hierarchy(data);
   const dx = 50;
   const dy = (width - margin.right - margin.left) / (1 + root.height);
-
+console.log(rawdata)
+console.log(data)
+console.log(root)
   const tree = d3.tree().nodeSize([dx, dy]);
   const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
@@ -25,7 +27,7 @@ const drawHrChart = (rawdata) => {
   const gNode = svg.append("g")
     .attr("cursor", "pointer")
     .attr("pointer-events", "all")
-  console.log(root)
+  
 
   function update(event, source) {
     const duration = event?.altKey ? 2500 : 250;

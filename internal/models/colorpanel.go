@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type ColorRecord_datestr struct {
 	Code             string `bson:"code"`
 	Issued           string `bson:"issued"`
@@ -18,4 +20,8 @@ type ColorRecord_datestr struct {
 	Remark           string `bson:"remark"`
 	Alert            string `bson:"alert"`
 	Factory          string `bson:"factory"`
+	Inspections      []struct {
+		Date   time.Time `bson:"date"`
+		Result string    `bson:"result"`
+	} `bson:"inspections"`
 }

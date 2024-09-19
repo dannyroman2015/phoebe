@@ -401,6 +401,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/colormixing/admin", s.c_admin)
 	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
 	router.GET("/colormixing/admin/loadusingtimeform", s.ca_loadusingtimeform)
+	router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
+	router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
 
 	// end Color Mixing
 
