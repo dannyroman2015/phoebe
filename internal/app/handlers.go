@@ -8359,7 +8359,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	// issueddate, _ := time.Parse("2006-01-02T15:04", r.FormValue("issueddate"))
 	mixingdate, _ := time.Parse("020120061504", batchno[0:4]+"20"+batchno[4:10])
 	issueddate := mixingdate.Add(time.Duration(rand.Intn(15)) * time.Minute)
-
+	step := r.FormValue("step")
 	volume, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	operator := r.FormValue("operator")
 	reciever := r.FormValue("receiver")
@@ -8395,7 +8395,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
-		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area,
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area, "step": step,
 		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
@@ -8453,6 +8453,7 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 		EndUse         string  `bson:"enduse"`
 		Receiver       string  `bson:"receiver"`
 		Area           string  `bson:"area"`
+		Step           string  `bson:"step"`
 	}
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)

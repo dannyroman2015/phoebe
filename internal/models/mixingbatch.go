@@ -27,4 +27,5 @@ type BatchRecord_datestr struct {
 		Code string `bson:"code"`
 		Mo   string `bson:"mo"`
 	} `bson:"items"`
+	Step string `bson:"step"`
 }
