@@ -8350,6 +8350,34 @@ func (s *Server) ca_loadbatchentry(w http.ResponseWriter, r *http.Request, ps ht
 	})
 }
 
+// router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
+func (s *Server) ca_loadpanelentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panelentry.html")).Execute(w, nil)
+}
+
+// router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
+func (s *Server) ca_sendpanelentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
+	hardness, _ := strconv.ParseFloat(r.FormValue("hardness"), 64)
+	approveddate, _ := time.Parse("2006-01-02", r.FormValue("approveddate"))
+	expireddate, _ := time.Parse("2006-01-02", r.FormValue("expireddate"))
+
+	_, err := s.mgdb.Collection("colorpanel").InsertOne(context.Background(), bson.M{
+		"panelno": r.FormValue("panelno"), "user": r.FormValue("user"), "finishcode": r.FormValue("finishcode"), "finishname": r.FormValue("finishname"),
+		"substrate": r.FormValue("substrate"), "collection": r.FormValue("collection"), "brand": r.FormValue("brand"),
+		"chunichsystem": r.FormValue("chunichsystem"), "texture": r.FormValue("texture"), "thickness": thickness, "sheen": r.FormValue("sheen"),
+		"hardness": hardness, "prepared": r.FormValue("prepared"), "review": r.FormValue("review"), "approved": r.FormValue("approved"),
+		"approveddate": primitive.NewDateTimeFromTime(approveddate), "expireddate": primitive.NewDateTimeFromTime(expireddate),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panelentry.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Cập nhật thành công",
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////////////////
 // /mixingcolor/sendmixingentry
 // ////////////////////////////////////////////////////////////////////////////////////////////
