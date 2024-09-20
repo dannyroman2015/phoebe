@@ -8557,12 +8557,10 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$sort", bson.D{{"issued", -1}, {"code", 1}}}},
+		{{"$sort", bson.D{{"panelno", 1}}}},
 		{{"$set", bson.M{
-			"issued":    bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$issued"}},
-			"expired":   bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$expired"}},
-			"remaked":   bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$remaked"}},
-			"inspected": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$inspected"}},
+			"expireddate":  bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$expireddate"}},
+			"approveddate": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$approveddate"}},
 		}}},
 	})
 	if err != nil {
@@ -8570,104 +8568,105 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var colorpanelData []struct {
-		Code             string `bson:"code"`
-		Issued           string `bson:"issued"`
-		Category         string `bson:"category"`
-		User             string `bson:"user"`
-		OnProduct        string `bson:"onproduct"`
-		Name             string `bson:"name"`
-		Brand            string `bson:"brand"`
-		Supplier         string `bson:"supplier"`
-		Substrate        string `bson:"substrate"`
-		Surface          string `bson:"surface"`
-		Expired          string `bson:"expired"`
-		Remaked          string `bson:"remaked"`
-		Inspected        string `bson:"inspected"`
-		InspectionStatus string `bson:"inspectionstatus"`
-		Remark           string `bson:"remark"`
-		Alert            string `bson:"alert"`
-		Factory          string `bson:"factory"`
+		Id           string  `bson:"_id"`
+		PanelNo      string  `bson:"panelno"`
+		User         string  `bson:"user"`
+		FinishCode   string  `bson:"finishcode"`
+		FinishName   string  `bson:"finishname"`
+		Substrate    string  `bson:"substrate"`
+		Collection   string  `bson:"collection"`
+		Brand        string  `bson:"brand"`
+		FinishSystem string  `bson:"finishsystem"`
+		Texture      string  `bson:"texture"`
+		Thickness    float64 `bson:"thickness"`
+		Sheen        string  `bson:"sheen"`
+		Hardness     float64 `bson:"hardness"`
+		Prepared     string  `bson:"prepared"`
+		Review       string  `bson:"review"`
+		Approved     string  `bson:"approved"`
+		ApprovedDate string  `bson:"approveddate"`
+		ExpiredDate  string  `bson:"expireddate"`
 	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
 	}
 
-	var codeMap = make(map[string]bool, len(colorpanelData))
-	var categoryMap = make(map[string]bool, len(colorpanelData))
-	var userMap = make(map[string]bool, len(colorpanelData))
-	var onproductMap = make(map[string]bool, len(colorpanelData))
-	var supplierMap = make(map[string]bool, len(colorpanelData))
-	var nameMap = make(map[string]bool, len(colorpanelData))
-	var brandMap = make(map[string]bool, len(colorpanelData))
-	var substrateMap = make(map[string]bool, len(colorpanelData))
-	var surfaceMap = make(map[string]bool, len(colorpanelData))
-	var inspectionstatusMap = make(map[string]bool, len(colorpanelData))
+	// var codeMap = make(map[string]bool, len(colorpanelData))
+	// var categoryMap = make(map[string]bool, len(colorpanelData))
+	// var userMap = make(map[string]bool, len(colorpanelData))
+	// var onproductMap = make(map[string]bool, len(colorpanelData))
+	// var supplierMap = make(map[string]bool, len(colorpanelData))
+	// var nameMap = make(map[string]bool, len(colorpanelData))
+	// var brandMap = make(map[string]bool, len(colorpanelData))
+	// var substrateMap = make(map[string]bool, len(colorpanelData))
+	// var surfaceMap = make(map[string]bool, len(colorpanelData))
+	// var inspectionstatusMap = make(map[string]bool, len(colorpanelData))
 
-	for _, v := range colorpanelData {
-		codeMap[v.Code] = true
-		categoryMap[v.Category] = true
-		userMap[v.User] = true
-		onproductMap[v.OnProduct] = true
-		supplierMap[v.Supplier] = true
-		nameMap[v.Name] = true
-		brandMap[v.Brand] = true
-		substrateMap[v.Substrate] = true
-		surfaceMap[v.Surface] = true
-		inspectionstatusMap[v.InspectionStatus] = true
-	}
-	var codes = make([]string, 0, len(codeMap))
-	for k, _ := range codeMap {
-		codes = append(codes, k)
-	}
-	var categories = make([]string, 0, len(categoryMap))
-	for k, _ := range categoryMap {
-		categories = append(categories, k)
-	}
-	var users = make([]string, 0, len(userMap))
-	for k, _ := range userMap {
-		users = append(users, k)
-	}
-	var onproducts = make([]string, 0, len(onproductMap))
-	for k, _ := range onproductMap {
-		onproducts = append(onproducts, k)
-	}
-	var suppliers = make([]string, 0, len(supplierMap))
-	for k, _ := range supplierMap {
-		suppliers = append(suppliers, k)
-	}
-	var colors = make([]string, 0, len(nameMap))
-	for k, _ := range nameMap {
-		colors = append(colors, k)
-	}
-	var brands = make([]string, 0, len(brandMap))
-	for k, _ := range brandMap {
-		brands = append(brands, k)
-	}
-	var substrates = make([]string, 0, len(substrateMap))
-	for k, _ := range substrateMap {
-		substrates = append(substrates, k)
-	}
-	var surfaces = make([]string, 0, len(surfaceMap))
-	for k, _ := range surfaceMap {
-		surfaces = append(surfaces, k)
-	}
-	var inspectionstatuses = make([]string, 0, len(inspectionstatusMap))
-	for k, _ := range inspectionstatusMap {
-		inspectionstatuses = append(inspectionstatuses, k)
-	}
+	// for _, v := range colorpanelData {
+	// 	codeMap[v.Code] = true
+	// 	categoryMap[v.Category] = true
+	// 	userMap[v.User] = true
+	// 	onproductMap[v.OnProduct] = true
+	// 	supplierMap[v.Supplier] = true
+	// 	nameMap[v.Name] = true
+	// 	brandMap[v.Brand] = true
+	// 	substrateMap[v.Substrate] = true
+	// 	surfaceMap[v.Surface] = true
+	// 	inspectionstatusMap[v.InspectionStatus] = true
+	// }
+	// var codes = make([]string, 0, len(codeMap))
+	// for k, _ := range codeMap {
+	// 	codes = append(codes, k)
+	// }
+	// var categories = make([]string, 0, len(categoryMap))
+	// for k, _ := range categoryMap {
+	// 	categories = append(categories, k)
+	// }
+	// var users = make([]string, 0, len(userMap))
+	// for k, _ := range userMap {
+	// 	users = append(users, k)
+	// }
+	// var onproducts = make([]string, 0, len(onproductMap))
+	// for k, _ := range onproductMap {
+	// 	onproducts = append(onproducts, k)
+	// }
+	// var suppliers = make([]string, 0, len(supplierMap))
+	// for k, _ := range supplierMap {
+	// 	suppliers = append(suppliers, k)
+	// }
+	// var colors = make([]string, 0, len(nameMap))
+	// for k, _ := range nameMap {
+	// 	colors = append(colors, k)
+	// }
+	// var brands = make([]string, 0, len(brandMap))
+	// for k, _ := range brandMap {
+	// 	brands = append(brands, k)
+	// }
+	// var substrates = make([]string, 0, len(substrateMap))
+	// for k, _ := range substrateMap {
+	// 	substrates = append(substrates, k)
+	// }
+	// var surfaces = make([]string, 0, len(surfaceMap))
+	// for k, _ := range surfaceMap {
+	// 	surfaces = append(surfaces, k)
+	// }
+	// var inspectionstatuses = make([]string, 0, len(inspectionstatusMap))
+	// for k, _ := range inspectionstatusMap {
+	// 	inspectionstatuses = append(inspectionstatuses, k)
+	// }
 
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/colorpanel.html")).Execute(w, map[string]interface{}{
-		"colorpanelData":     colorpanelData,
-		"codes":              codes,
-		"categories":         categories,
-		"users":              users,
-		"onproducts":         onproducts,
-		"suppliers":          suppliers,
-		"colors":             colors,
-		"brands":             brands,
-		"substrates":         substrates,
-		"surfaces":           surfaces,
-		"inspectionstatuses": inspectionstatuses,
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/colorpanel.html")).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+		// "codes":              codes,
+		// "categories":         categories,
+		// "users":              users,
+		// "onproducts":         onproducts,
+		// "suppliers":          suppliers,
+		// "colors":             colors,
+		// "brands":             brands,
+		// "substrates":         substrates,
+		// "surfaces":           surfaces,
+		// "inspectionstatuses": inspectionstatuses,
 	})
 }
 
@@ -9238,11 +9237,10 @@ func (s *Server) colorfilter(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/deletecolor/:colorcode
+// router.DELETE("/colormixing/admin/deletepanel/:panelno", s.ca_deletepanel)
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) deletecolor(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	colorcode := ps.ByName("colorcode")
-	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"code": colorcode})
+func (s *Server) ca_deletepanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"panelno": ps.ByName("panelno")})
 	if err != nil {
 		log.Println(err)
 		return

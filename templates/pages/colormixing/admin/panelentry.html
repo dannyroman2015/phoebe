@@ -92,21 +92,25 @@
           </div>
 
           <div class="mt-4 text-center">
-            <label for="chemicalsystem" class="relative block rounded-md border">
-              <input type="text" id="chemicalsystem" name="chemicalsystem" placeholder="" 
+            <label for="finishsystem" class="relative block rounded-md border">
+              <input type="text" id="finishsystem" name="finishsystem" placeholder="" 
                 class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
               <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Chemical System</span>
+                Finish System</span>
             </label>
           </div>
 
-          <div class="mt-4 text-center">
-            <label for="texture" class="relative block rounded-md border">
-              <input type="text" id="texture" name="texture" placeholder="" 
-                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-                Texture</span>
-            </label>
+          <div class="flex justify-center mt-4 text-center">
+            <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                name="texture" id="texture" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <option value="" disabled selected>Select texture</option>
+              <option value="None">None</option>
+              <option value="Wire brushed">Wire brushed</option>
+              <option value="Distressed">Distressed</option>
+              <option value="Sand Blasted">Sand Blasted</option>
+              <option value="Open Grain">Open Grain</option>
+              <option value="Grain Full Filled">Grain Full Filled</option>
+            </select>
           </div>
 
           <div class="mt-4 text-center">

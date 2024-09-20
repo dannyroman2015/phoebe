@@ -372,7 +372,6 @@ func (s *Server) routes() http.Handler {
 	router.PUT("/mixingcolor/addcolor", s.addcolor)
 	router.POST("/mixingcolor/colorsearch", s.colorsearch)
 	router.POST("/mixingcolor/colorfilter", s.colorfilter)
-	router.DELETE("/mixingcolor/deletecolor/:colorcode", s.deletecolor)
 
 	router.GET("/mixingcolor/usingentry", s.mc_usingreports)
 	router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
@@ -402,6 +401,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
 	router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
 	router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
+	router.DELETE("/colormixing/admin/deletepanel/:panelno", s.ca_deletepanel)
 	router.GET("/colormixing/admin/loadusingtimeform", s.ca_loadusingtimeform)
 	router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
 	router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
