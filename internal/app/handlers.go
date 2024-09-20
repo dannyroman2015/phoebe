@@ -8365,7 +8365,7 @@ func (s *Server) ca_sendpanelentry(w http.ResponseWriter, r *http.Request, ps ht
 	_, err := s.mgdb.Collection("colorpanel").InsertOne(context.Background(), bson.M{
 		"panelno": r.FormValue("panelno"), "user": r.FormValue("user"), "finishcode": r.FormValue("finishcode"), "finishname": r.FormValue("finishname"),
 		"substrate": r.FormValue("substrate"), "collection": r.FormValue("collection"), "brand": r.FormValue("brand"),
-		"chunichsystem": r.FormValue("chunichsystem"), "texture": r.FormValue("texture"), "thickness": thickness, "sheen": r.FormValue("sheen"),
+		"chemicalsystem": r.FormValue("chemicalsystem"), "texture": r.FormValue("texture"), "thickness": thickness, "sheen": r.FormValue("sheen"),
 		"hardness": hardness, "prepared": r.FormValue("prepared"), "review": r.FormValue("review"), "approved": r.FormValue("approved"),
 		"approveddate": primitive.NewDateTimeFromTime(approveddate), "expireddate": primitive.NewDateTimeFromTime(expireddate),
 	})
