@@ -8357,16 +8357,13 @@ func (s *Server) ca_loadpanelentry(w http.ResponseWriter, r *http.Request, ps ht
 
 // router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
 func (s *Server) ca_sendpanelentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
-	hardness, _ := strconv.ParseFloat(r.FormValue("hardness"), 64)
 	approveddate, _ := time.Parse("2006-01-02", r.FormValue("approveddate"))
 	expireddate, _ := time.Parse("2006-01-02", r.FormValue("expireddate"))
-
 	_, err := s.mgdb.Collection("colorpanel").InsertOne(context.Background(), bson.M{
 		"panelno": r.FormValue("panelno"), "user": r.FormValue("user"), "finishcode": r.FormValue("finishcode"), "finishname": r.FormValue("finishname"),
 		"substrate": r.FormValue("substrate"), "collection": r.FormValue("collection"), "brand": r.FormValue("brand"),
-		"chemicalsystem": r.FormValue("chemicalsystem"), "texture": r.FormValue("texture"), "thickness": thickness, "sheen": r.FormValue("sheen"),
-		"hardness": hardness, "prepared": r.FormValue("prepared"), "review": r.FormValue("review"), "approved": r.FormValue("approved"),
+		"chemicalsystem": r.FormValue("chemicalsystem"), "texture": r.FormValue("texture"), "thickness": r.FormValue("thickness"), "sheen": r.FormValue("sheen"),
+		"hardness": r.FormValue("hardness"), "prepared": r.FormValue("prepared"), "review": r.FormValue("review"), "approved": r.FormValue("approved"),
 		"approveddate": primitive.NewDateTimeFromTime(approveddate), "expireddate": primitive.NewDateTimeFromTime(expireddate),
 	})
 	if err != nil {
@@ -8568,24 +8565,24 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var colorpanelData []struct {
-		Id           string  `bson:"_id"`
-		PanelNo      string  `bson:"panelno"`
-		User         string  `bson:"user"`
-		FinishCode   string  `bson:"finishcode"`
-		FinishName   string  `bson:"finishname"`
-		Substrate    string  `bson:"substrate"`
-		Collection   string  `bson:"collection"`
-		Brand        string  `bson:"brand"`
-		FinishSystem string  `bson:"finishsystem"`
-		Texture      string  `bson:"texture"`
-		Thickness    float64 `bson:"thickness"`
-		Sheen        string  `bson:"sheen"`
-		Hardness     float64 `bson:"hardness"`
-		Prepared     string  `bson:"prepared"`
-		Review       string  `bson:"review"`
-		Approved     string  `bson:"approved"`
-		ApprovedDate string  `bson:"approveddate"`
-		ExpiredDate  string  `bson:"expireddate"`
+		Id           string `bson:"_id"`
+		PanelNo      string `bson:"panelno"`
+		User         string `bson:"user"`
+		FinishCode   string `bson:"finishcode"`
+		FinishName   string `bson:"finishname"`
+		Substrate    string `bson:"substrate"`
+		Collection   string `bson:"collection"`
+		Brand        string `bson:"brand"`
+		FinishSystem string `bson:"chemicalsystem"`
+		Texture      string `bson:"texture"`
+		Thickness    string `bson:"thickness"`
+		Sheen        string `bson:"sheen"`
+		Hardness     string `bson:"hardness"`
+		Prepared     string `bson:"prepared"`
+		Review       string `bson:"review"`
+		Approved     string `bson:"approved"`
+		ApprovedDate string `bson:"approveddate"`
+		ExpiredDate  string `bson:"expireddate"`
 	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
