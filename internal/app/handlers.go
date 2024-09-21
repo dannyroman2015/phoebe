@@ -8337,10 +8337,10 @@ func (s *Server) ca_loadbatchentry(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	defer cur.Close(context.Background())
 	var colorpanelData []struct {
-		Code     string `bson:"code"`
-		Color    string `bson:"color"`
-		Brand    string `bson:"brand"`
-		Supplier string `bson:"supplier"`
+		PanelNo string `bson:"panelno"`
+		// Color    string `bson:"color"`
+		// Brand    string `bson:"brand"`
+		// Supplier string `bson:"supplier"`
 	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
@@ -8385,6 +8385,7 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	mixingdate, _ := time.Parse("020120061504", batchno[0:4]+"20"+batchno[4:10])
 	issueddate := mixingdate.Add(time.Duration(rand.Intn(15)) * time.Minute)
 	step := r.FormValue("step")
+	name := r.FormValue("name")
 	volume, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	operator := r.FormValue("operator")
 	reciever := r.FormValue("receiver")
@@ -8406,22 +8407,22 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"code": code})
+	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"panelno": code})
 	if sr.Err() != nil {
 		log.Println(sr.Err())
 	}
 	var colorData struct {
-		Brand    string `bson:"brand"`
-		Supplier string `bson:"supplier"`
-		Name     string `bson:"name"`
+		Brand      string `bson:"brand"`
+		FinishCode string `bson:"finishcode"`
+		FinishName string `bson:"finishname"`
 	}
 	if err := sr.Decode(&colorData); err != nil {
 		log.Println(err)
 	}
 
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
-		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area, "step": step,
-		"operator": operator, "color": bson.M{"code": code, "name": colorData.Name, "brand": colorData.Brand, "supplier": colorData.Supplier}, "classification": classification, "sopno": sopno,
+		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area, "step": step, "name": name,
+		"operator": operator, "color": bson.M{"code": code, "name": colorData.FinishCode, "brand": colorData.Brand, "finishname": colorData.FinishName}, "classification": classification, "sopno": sopno,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
 	if err != nil {
@@ -9234,14 +9235,94 @@ func (s *Server) colorfilter(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-// router.DELETE("/colormixing/admin/deletepanel/:panelno", s.ca_deletepanel)
+// router.DELETE("/colormixing/admin/deletepanel/:id", s.ca_deletepanel)
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) ca_deletepanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"panelno": ps.ByName("panelno")})
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"_id": id})
 	if err != nil {
 		log.Println(err)
 		return
 	}
+}
+
+// router.GET("/colormixing/admin/panelupdateform/:id}", s.ca_panelupdateform)
+func (s *Server) ca_panelupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	result := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"_id": id})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var colorpanelData struct {
+		Id           string    `bson:"_id"`
+		PanelNo      string    `bson:"panelno"`
+		User         string    `bson:"user"`
+		FinishCode   string    `bson:"finishcode"`
+		FinishName   string    `bson:"finishname"`
+		Substrate    string    `bson:"substrate"`
+		Collection   string    `bson:"collection"`
+		Brand        string    `bson:"brand"`
+		FinishSystem string    `bson:"chemicalsystem"`
+		Texture      string    `bson:"texture"`
+		Thickness    string    `bson:"thickness"`
+		Sheen        string    `bson:"sheen"`
+		Hardness     string    `bson:"hardness"`
+		Prepared     string    `bson:"prepared"`
+		Review       string    `bson:"review"`
+		Approved     string    `bson:"approved"`
+		ApprovedDate time.Time `bson:"approveddate"`
+		ExpiredDate  time.Time `bson:"expireddate"`
+	}
+	if err := result.Decode(&colorpanelData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panelupdate_form.html")).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+	})
+}
+
+// router.PUT("/colormixing/admin/updatepanel/:id", s.ca_updatepanel)
+func (s *Server) ca_updatepanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	result := s.mgdb.Collection("colorpanel").FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{
+		"user": r.FormValue("user"),
+	}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		return
+	}
+	var colorpanelData struct {
+		Id           string    `bson:"_id"`
+		PanelNo      string    `bson:"panelno"`
+		User         string    `bson:"user"`
+		FinishCode   string    `bson:"finishcode"`
+		FinishName   string    `bson:"finishname"`
+		Substrate    string    `bson:"substrate"`
+		Collection   string    `bson:"collection"`
+		Brand        string    `bson:"brand"`
+		FinishSystem string    `bson:"chemicalsystem"`
+		Texture      string    `bson:"texture"`
+		Thickness    string    `bson:"thickness"`
+		Sheen        string    `bson:"sheen"`
+		Hardness     string    `bson:"hardness"`
+		Prepared     string    `bson:"prepared"`
+		Review       string    `bson:"review"`
+		Approved     string    `bson:"approved"`
+		ApprovedDate time.Time `bson:"approveddate"`
+		ExpiredDate  time.Time `bson:"expireddate"`
+	}
+	if err := result.Decode(&colorpanelData); err != nil {
+		log.Println(err)
+	}
+	colorpanelData.User = r.FormValue("user")
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panelupdated_tr.html")).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+	})
 }
 
 // router.GET("/mixingcolor/usingentry", s.mc_usingreports)
