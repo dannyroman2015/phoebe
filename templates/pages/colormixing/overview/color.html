@@ -14,7 +14,7 @@
         name="colorsearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
 
-    <div x-data="{
+    <!-- <div x-data="{
       popoverOpen: false,
       popoverArrow: true,
       popoverPosition: 'bottom',
@@ -199,27 +199,12 @@
                   </div>
                 </div>
 
-                <!-- <div class="grid items-center grid-cols-3 gap-4">
-                  <label for="mixingdatefrom" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    From
-                  </label>
-                  <input hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                    type="date" id="mixingdatefrom" name="mixingdatefrom" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label for="mixingdateto" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    To
-                  </label>
-                  <input hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                    type="date" id="mixingdateto" name="mixingdateto" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                </div> -->
               </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
   </div>
   
@@ -232,19 +217,7 @@
               <tr>
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Color</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Date</span>                              
-                  </button>
-                </th>      
-          
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Category</span>                              
+                    <span>Panle No.</span>                              
                   </button>
                 </th>
 
@@ -252,11 +225,29 @@
                   <button class="flex items-center gap-x-2">
                     <span>User</span>                              
                   </button>
+                </th>      
+          
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Finish Code</span>                              
+                  </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Apply On</span>                              
+                    <span>Finish Name</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Substrate</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Collection</span>                              
                   </button>
                 </th>
 
@@ -268,114 +259,175 @@
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Supplier</span>                              
+                    <span>Finish System</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Inspection</span>                              
-                  </button>
-                </th>
-
-                <!-- <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Remark</span>                              
-                  </button>
-                </th> -->
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Alert</span>                              
+                    <span>Texture</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Factory</span>                              
+                    <span>Thickness</span>                              
                   </button>
                 </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Hardness</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Prepared</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Review</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Approved</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Approved Date</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Expired Date</span>                              
+                  </button>
+                </th>
+
               </tr>
             </thead>
             
             <tbody x-data="{opens: [],}"  id="color_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
               {{range .colorpanelData}}
-              <tr @click="opens.includes('{{.Code}}') ? opens.splice(opens.indexOf('{{.Code}}'), 1) : opens.push('{{.Code}}');">
+              <tr @click="opens.includes('{{.PanelNo}}') ? opens.splice(opens.indexOf('{{.PanelNo}}'), 1) : opens.push('{{.PanelNo}}');">
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Code}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Name}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.PanelNo}}</p>
                   </div>
                 </td>
 
-                <td class="px-4 py-0 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Issued&nbsp&nbsp&nbsp&nbsp&nbsp: {{.Issued}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Remaked: {{.Remaked}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Expired&nbsp&nbsp&nbsp: {{.Expired}}</p>
-                  </div>
-                </td>
-
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Category}}</p>
-                  </div>
-                </td>        
-                
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.User}}</p>
                   </div>
-                </td> 
+                </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Surface&nbsp&nbsp&nbsp: {{.Surface}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Substrate: {{.Substrate}}</p>
-                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">Product&nbsp&nbsp&nbsp: {{.OnProduct}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishCode}}</p>
                   </div>
-                </td> 
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishName}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Substrate}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Collection}}</p>
+                  </div>
+                </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
                   </div>
-                </td> 
-  
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Supplier}}</p>
-                  </div>
-                </td> 
+                </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Status: {{.InspectionStatus}}</p>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Date&nbsp&nbsp: {{.Inspected}}</p>
-                  </div>
-                </td> 
-
-                <!-- <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Remark}}</p>
-                  </div>
-                </td>  -->
-
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Alert}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishSystem}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Factory}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Texture}}</p>
                   </div>
                 </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Thickness}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.PanelNo}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Sheen}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Hardness}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Prepared}}</p>
+                  </div>
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Review}}</p>
+                  </div>
+                </td>        
+                
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Approved}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.ApprovedDate}}</p>
+                  </div>
+                </td> 
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.ExpiredDate}}</p>
+                  </div>
+                </td> 
 
               </tr>
 
-              <tr x-show="opens.includes('{{.Code}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
+              <tr x-show="opens.includes('{{.PanelNo}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
                   class="p-6">
                 <td colspan="6">
                   <div class="overflow-x-auto p-6">
