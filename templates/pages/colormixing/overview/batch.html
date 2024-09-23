@@ -2,6 +2,10 @@
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-sm sm:text-lg font-medium text-gray-800 dark:text-white">Mixing Batch</h2>
+      <a hx-get="/colormixing/overview/changedisplay/colorpanel" hx-target="#container" hx-swap="outerHTML">
+        <p class="text-xs text-right text-blue-500 cursor-pointer">Color panel</p>
+      </a>
+      
     </div>
 
     <div class="relative flex items-center md:mt-0 p-0">
@@ -68,24 +72,6 @@
             </div>
             <form>
               <div class="grid gap-2">
-
-                <div class="flex space-x-1 select-none">
-                  <label class="radio flex flex-grow items-center justify-center rounded-lg cursor-pointer">
-                    <input hx-get="/colormixing/overview/changedisplay" hx-trigger="change" hx-target="#container" hx-swap="outerHTML"
-                        type="radio" name="display" value="mixingbatch" class="peer hidden" checked=""/>
-                    <span class="text-sm tracking-widest peer-checked:bg-black peer-checked:text-white text-gray-700 p-2 rounded-lg transition duration-150 ease-in-out">
-                      Mixing Batch
-                    </span>
-                  </label>
-
-                  <label class="radio flex flex-grow items-center justify-center rounded-lg  cursor-pointer">
-                    <input hx-get="/colormixing/overview/changedisplay" hx-target="#container" hx-swap="outerHTML"
-                        type="radio" name="display" value="colorpanel" class="peer hidden"/>
-                    <span class="text-sm tracking-widest peer-checked:bg-black peer-checked:text-white text-gray-700 p-2 rounded-lg transition duration-150 ease-in-out">
-                      Color Panel
-                    </span>
-                  </label>
-                </div>
 
                 <div class="grid items-center grid-cols-3 gap-4">
                   <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="operator">
@@ -261,7 +247,7 @@
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
-          
+
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
                     <span>Mixing Batch</span>
@@ -358,6 +344,7 @@
             <tbody x-data="{opens: [],}"  id="mixing_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
               {{range .mixingbatchData}}
               <tr @click="opens.includes('{{.BatchNo}}') ? opens.splice(opens.indexOf('{{.BatchNo}}'), 1) : opens.push('{{.BatchNo}}');">
+
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
                     <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>

@@ -1,27 +1,30 @@
 package models
 
-import "time"
-
 type ColorRecord_datestr struct {
-	Code             string `bson:"code"`
-	Issued           string `bson:"issued"`
-	Category         string `bson:"category"`
-	User             string `bson:"user"`
-	OnProduct        string `bson:"onproduct"`
-	Name             string `bson:"name"`
-	Brand            string `bson:"brand"`
-	Supplier         string `bson:"supplier"`
-	Substrate        string `bson:"substrate"`
-	Surface          string `bson:"surface"`
-	Expired          string `bson:"expired"`
-	Remaked          string `bson:"remaked"`
-	Inspected        string `bson:"inspected"`
-	InspectionStatus string `bson:"inspectionstatus"`
-	Remark           string `bson:"remark"`
-	Alert            string `bson:"alert"`
-	Factory          string `bson:"factory"`
-	Inspections      []struct {
-		Date   time.Time `bson:"date"`
-		Result string    `bson:"result"`
-	} `bson:"inspections"`
+	Id           string `bson:"_id"`
+	PanelNo      string `bson:"panelno"`
+	User         string `bson:"user"`
+	FinishCode   string `bson:"finishcode"`
+	FinishName   string `bson:"finishname"`
+	Substrate    string `bson:"substrate"`
+	Collection   string `bson:"collection"`
+	Brand        string `bson:"brand"`
+	FinishSystem string `bson:"chemicalsystem"`
+	Texture      string `bson:"texture"`
+	Thickness    string `bson:"thickness"`
+	Sheen        string `bson:"sheen"`
+	Hardness     string `bson:"hardness"`
+	Prepared     string `bson:"prepared"`
+	Review       string `bson:"review"`
+	Approved     string `bson:"approved"`
+	ApprovedDate string `bson:"approveddate"`
+	ExpiredDate  string `bson:"expireddate"`
+	Inspections  []struct {
+		Date   string `bson:"date"`
+		Result string `bson:"result"`
+	} `bson:"inpsections"`
+}
+type NewColor struct {
+	ColorRecord_datestr
+	ExpiredColor string
 }

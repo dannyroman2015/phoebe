@@ -1,10 +1,11 @@
 <section id="container" class="fade-in pt-3 px-2 mx-auto">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-sm sm:text-lg font-medium text-gray-800 dark:text-white">Color Panel</h2>
-      <a hx-get="/colormixing/admin/changedisplay/mixingbatch" hx-target="#container" hx-swap="outerHTML">
-        <p class="text-xs text-right text-blue-500 cursor-pointer">Mixing Batch</p>
+      <h2 class="text-sm sm:text-lg font-medium text-gray-800 dark:text-white">Mixing Batch</h2>
+      <a hx-get="/colormixing/admin/changedisplay/colorpanel" hx-target="#container" hx-swap="outerHTML">
+        <p class="text-xs text-right text-blue-500 cursor-pointer">Color panel</p>
       </a>
+      
     </div>
 
     <div class="relative flex items-center md:mt-0 p-0">
@@ -13,8 +14,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
         </svg>
       </span>
-      <input hx-post="/colormixing/admin/searchcolor" hx-trigger="input changed delay:500ms, search" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
-        name="colorsearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
+      <input hx-post="/colormixing/overview/searchbatch" hx-trigger="input changed delay:500ms, search" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+        name="batchsearch" type="text" placeholder="Search" class="block w-full py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg md:w-80 placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
     </div>
 
     <div x-data="{
@@ -45,7 +46,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('colorcode').focus();  }
+          if(value){ popoverPositionCalculate(); document.getElementById('operator').focus();  }
         });
       "
       class="relative">
@@ -67,37 +68,53 @@
           <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
           <div class="grid gap-4">
             <div class="space-y-3">
-              <h4 class="font-medium leading-none">Filter for color panel</h4>
+              <h4 class="font-medium leading-none">Filter for mixing batch</h4>
             </div>
             <form>
               <div class="grid gap-2">
 
                 <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="colorcode">
-                    Panel No.
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="operator">
+                    Mixer
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
-                      name="colorcode" id="colorcode" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      name="operator" id="operator" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .codes}}
+                      {{range .operators}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
                   </div>
                 </div>
 
-                <!-- <div class="grid items-center grid-cols-3 gap-4">
+                <div class="grid items-center grid-cols-3 gap-4">
                   <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="color">
-                    Name
+                    Color
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="color" id="color" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .colors}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="code">
+                    Color Code
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      name="code" id="code" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .codes}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -110,7 +127,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="brand" id="brand" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .brands}}
@@ -126,7 +143,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="supplier" id="supplier" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .suppliers}}
@@ -142,7 +159,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="classification" id="classification" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .classifications}}
@@ -158,7 +175,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="sopno" id="sopno" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .sopnos}}
@@ -174,7 +191,7 @@
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
                       name="status" id="status" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
                       {{range .statuses}}
@@ -182,8 +199,38 @@
                       {{end}}
                     </select>
                   </div>
-                </div> -->
+                </div>
 
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="operator">
+                    Finish Using
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                      name="isusingend" id="isusingend" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="mixingdatefrom" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    From
+                  </label>
+                  <input hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                    type="date" id="mixingdatefrom" name="mixingdatefrom" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="mixingdateto" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    To
+                  </label>
+                  <input hx-post="/colormixing/overview/filterbatch" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
+                    type="date" id="mixingdateto" name="mixingdateto" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
               </div>
             </form>
           </div>
@@ -201,267 +248,247 @@
             <thead class="bg-gray-50 dark:bg-gray-800">
               <tr>
 
-                <th scope="col" class="relative py-3.5 px-4">
-                  <span class="sr-only">Edit</span>
-                </th>
-
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Panle No.</span>                              
+                    <span>Mixing Batch</span>
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>User</span>                              
-                  </button>
-                </th>      
-          
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Finish Code</span>                              
+                    <span>Date</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Finish Name</span>                              
+                    <span>Use</span>                              
+                  </button>
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-center rtl:text-right text-gray-500 dark:text-gray-400">
+                  Status
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Color Code                        
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Color Name                        
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Step                        
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Brand                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  Viscosity                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  L                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  a                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  b                             
+                </th>
+
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Supplier</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Substrate</span>                              
+                    <span>Classification</span>                              
                   </button>
                 </th>
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Collection</span>                              
+                    <span>SOPNo.</span>                              
                   </button>
-                </th>
+                </th> 
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Brand</span>                              
+                    <span>Mixer</span>                              
                   </button>
-                </th>
+                </th>    
+                
+                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                  <button class="flex items-center gap-x-2">
+                    <span>Receiver</span>                              
+                  </button>
+                </th> 
 
                 <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                   <button class="flex items-center gap-x-2">
-                    <span>Finish System</span>                              
+                    <span>Area</span>                              
                   </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Texture</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Thickness</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Sheen</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Hardness</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Prepared</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Review</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Approved</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Approved Date</span>                              
-                  </button>
-                </th>
-
-                <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                  <button class="flex items-center gap-x-2">
-                    <span>Expired Date</span>                              
-                  </button>
-                </th>
+                </th> 
 
               </tr>
             </thead>
             
-            <tbody x-data="{opens: [],}"  id="color_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-              {{range .colorpanelData}}
-              <tr @click="opens.includes('{{.PanelNo}}') ? opens.splice(opens.indexOf('{{.PanelNo}}'), 1) : opens.push('{{.PanelNo}}');">
+            <tbody x-data="{opens: [],}"  id="mixing_tbody" class="fade-in bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+              {{range .mixingbatchData}}
+              <tr @click="opens.includes('{{.BatchNo}}') ? opens.splice(opens.indexOf('{{.BatchNo}}'), 1) : opens.push('{{.BatchNo}}');">
 
-                <td class="px-4 py-2 text-sm whitespace-nowrap">
-                  <div class="flex items-center gap-x-6">
-                    <button
-                      hx-delete="/colormixing/admin/deletepanel/{{.Id}}" hx-confirm="Are you sure?" hx-target="closest tr" hx-swap="outerHTML swap:1s"
-                      class="text-gray-500 transition-colors duration-200 dark:hover:text-red-500 dark:text-gray-300 hover:text-red-500 focus:outline-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                      </svg>
-                    </button>
-
-                    <button hx-get="/colormixing/admin/panelupdateform/{{.Id}}" hx-target="closest tr" hx-swap="outerHTML"
-                        class="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
-                    </button> 
-                    
-                    <!-- <button hx-get="/mixingcolor/addcolorform" hx-target="closest tr" hx-swap="beforebegin"
-                        class="text-gray-500 transition-colors duration-200 dark:hover:text-yellow-500 dark:text-gray-300 hover:text-yellow-500 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>  -->
-
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.BatchNo}}</p>
+                    <p>Weight: <span class="text-base text-right font-semibold text-gray-600 dark:text-gray-400">{{.Volume}} </span>(kg)</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.PanelNo}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Mix&nbsp&nbsp: {{.MixingDate}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Issue: {{.IssuedDate}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.User}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Start: {{.StartUse}}</p>
+                    {{ if .EndUse}}
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: {{.EndUse}}</p>
+                    {{else}}
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">End&nbsp: being using</p>
+                    {{end}}
+                  </div>
+                </td>
+                
+                <td class="px-4 py-2 text-sm text-center font-medium text-gray-700 whitespace-nowrap">
+                  {{ if eq .Status "Approved"}}
+                  <div class="inline-flex px-3 py-1 rounded-full gap-x-2 bg-emerald-100/60 dark:bg-gray-800">
+                    <h2 class="text-sm text-center font-normal text-emerald-500">{{.Status}}</h2>
+                  </div>
+                  {{else if eq .Status "Reject"}}
+                  <div class="inline-flex px-3 py-1 rounded-full gap-x-2 bg-red-100/60 dark:bg-gray-800">
+                    <h2 class="text-sm text-center font-normal text-red-600">{{.Status}}</h2>
+                  </div>
+                  {{else}}
+                  <div class="inline-flex px-3 py-1 rounded-full gap-x-2 dark:bg-gray-800">
+                    <h2 class="text-sm text-center font-normal text-gray-600">{{.Status}}</h2>
+                  </div>
+                  {{end}} 
+                </td>
+
+                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+                  <div>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Code}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishCode}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Name}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishName}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Step}}</p>
                   </div>
                 </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Substrate}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Brand}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Collection}}</p>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.Viscosity}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.LightDark}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.FinishSystem}}</p>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.RedGreen}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Texture}}</p>
+                    <p class="text-xs font-normal text-gray-600 dark:text-gray-400">{{.YellowBlue}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Thickness}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Color.Supplier}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Sheen}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Classification}}</p>
                   </div>
-                </td>
+                </td> 
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Hardness}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.SOPNo}}</p>
                   </div>
-                </td>
+                </td>      
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Prepared}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Operator}}</p>
                   </div>
                 </td>
-
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Review}}</p>
-                  </div>
-                </td>        
                 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Approved}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Receiver}}</p>
                   </div>
-                </td> 
+                </td>
 
                 <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
                   <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.ApprovedDate}}</p>
+                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Area}}</p>
                   </div>
-                </td> 
-
-                <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-                  <div>
-                    <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.ExpiredDate}}</p>
-                  </div>
-                </td> 
+                </td>
 
               </tr>
 
-              <tr x-show="opens.includes('{{.PanelNo}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
+              <tr x-show="opens.includes('{{.BatchNo}}')" x-transition:enter.duration.500ms x-transition:leave.duration.400ms 
                   class="p-6">
                 <td colspan="6">
                   <div class="overflow-x-auto p-6">
                     <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
                       <thead class="text-left ltr:text-left rtl:text-right">
                         <tr>
-                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Ngày kiểm định</th>
-                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Kết quả kiểm tra</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Item</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Mo</th>
                         </tr>
                       </thead>
                   
                       <tbody class="divide-y divide-gray-200">
-                        {{range .Inspections}}
+                        {{range .Items}}
                         <tr>
-                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Date}}</td>
-                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Result}}</td>
+                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Code}}</td>
+                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Mo}}</td>
                         </tr>
                         {{end}}
                       </tbody>
@@ -493,3 +520,8 @@
     transition: opacity 1s ease-in;
   }
 </style>
+
+<script>
+  document.getElementById("mixingdatefrom").valueAsDate = new Date(Date.now() - 3*86400000);
+  document.getElementById("mixingdateto").valueAsDate = new Date();
+</script>
