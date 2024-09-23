@@ -24,7 +24,3 @@ type ColorRecord_datestr struct {
 		Result string `bson:"result"`
 	} `bson:"inpsections"`
 }
-type NewColor struct {
-	ColorRecord_datestr
-	ExpiredColor string
-}

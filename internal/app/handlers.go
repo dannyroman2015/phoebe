@@ -9794,8 +9794,13 @@ func (s *Server) co_batchitems(w http.ResponseWriter, r *http.Request, ps httpro
 	})
 }
 
-// router.GET("/colormixing/overview/changedisplay/:type", s.co_changedisplay)
+// router.GET("/colormixing/overview/changedisplay/:type/edit/false", s.co_changedisplay)
 func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	allowedit := false
+	if ps.ByName("editable") == "true" {
+		allowedit = true
+	}
+
 	switch ps.ByName("type") {
 	case "colorpanel":
 		cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
@@ -9833,11 +9838,13 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 				Result string `bson:"result"`
 			} `bson:"inpsections"`
 			ExpiredColor string
+			AllowEdit    bool
 		}
 		if err := cur.All(context.Background(), &colorpanelData); err != nil {
 			log.Println(err)
 		}
 		for i := 0; i < len(colorpanelData); i++ {
+			colorpanelData[i].AllowEdit = allowedit
 			expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
 			if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
 				colorpanelData[i].ExpiredColor = "#FFD1D1"
@@ -9913,6 +9920,7 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 
 		template.Must(template.ParseFiles("templates/pages/colormixing/overview/color.html")).Execute(w, map[string]interface{}{
 			"colorpanelData": colorpanelData,
+			"allowedit":      allowedit,
 			"codes":          codes,
 			// "categories":         categories,
 			// "users":              users,
