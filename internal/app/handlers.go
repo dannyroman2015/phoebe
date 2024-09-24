@@ -8444,10 +8444,8 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/loadmixingbatch
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.GET("/colormixing/admin/loadmixingbatch", s.ca_loadmixingbatch)
+func (s *Server) ca_loadmixingbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
 		{{"$set", bson.M{
@@ -8461,31 +8459,7 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var mixingbatchData []struct {
-		BatchNo    string  `bson:"batchno"`
-		MixingDate string  `bson:"mixingdate"`
-		Volume     float64 `bson:"volume"`
-		Operator   string  `bson:"operator"`
-		Color      struct {
-			Code     string `bson:"code"`
-			Name     string `bson:"name"`
-			Brand    string `bson:"brand"`
-			Supplier string `bson:"supplier"`
-		} `bson:"color"`
-		Classification string  `bson:"classification"`
-		SOPNo          string  `bson:"sopno"`
-		Viscosity      float64 `bson:"viscosity"`
-		LightDark      float64 `bson:"lightdark"`
-		RedGreen       float64 `bson:"redgreen"`
-		YellowBlue     float64 `bson:"yellowblue"`
-		Status         string  `bson:"status"`
-		IssuedDate     string  `bson:"issueddate"`
-		StartUse       string  `bson:"startuse"`
-		EndUse         string  `bson:"enduse"`
-		Receiver       string  `bson:"receiver"`
-		Area           string  `bson:"area"`
-		Step           string  `bson:"step"`
-	}
+	var mixingbatchData []models.BatchRecord_datestr
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
 	}
@@ -8542,7 +8516,7 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 		statuses = append(statuses, k)
 	}
 
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixingbatch.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/mixingbatch.html")).Execute(w, map[string]interface{}{
 		"mixingbatchData": mixingbatchData,
 		"operators":       operators,
 		"colors":          colors,
@@ -8555,10 +8529,8 @@ func (s *Server) loadmixingbatch(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/loadcolorpanel
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.GET("/colormixing/admin/loadcolorpanel", s.ca_loadcolorpanel)
+func (s *Server) ca_loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.D{{"panelno", 1}}}},
 		{{"$set", bson.M{
@@ -8570,9 +8542,41 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var colorpanelData []models.ColorRecord_datestr
+	var colorpanelData []struct {
+		Id           string `bson:"_id"`
+		PanelNo      string `bson:"panelno"`
+		User         string `bson:"user"`
+		FinishCode   string `bson:"finishcode"`
+		FinishName   string `bson:"finishname"`
+		Substrate    string `bson:"substrate"`
+		Collection   string `bson:"collection"`
+		Brand        string `bson:"brand"`
+		FinishSystem string `bson:"chemicalsystem"`
+		Texture      string `bson:"texture"`
+		Thickness    string `bson:"thickness"`
+		Sheen        string `bson:"sheen"`
+		Hardness     string `bson:"hardness"`
+		Prepared     string `bson:"prepared"`
+		Review       string `bson:"review"`
+		Approved     string `bson:"approved"`
+		ApprovedDate string `bson:"approveddate"`
+		ExpiredDate  string `bson:"expireddate"`
+		Inspections  []struct {
+			Date   string `bson:"date"`
+			Result string `bson:"result"`
+		} `bson:"inpsections"`
+		ExpiredColor string
+	}
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(colorpanelData); i++ {
+		expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
+		if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
+			colorpanelData[i].ExpiredColor = "#FFD1D1"
+		} else {
+			colorpanelData[i].ExpiredColor = "white"
+		}
 	}
 
 	// var codeMap = make(map[string]bool, len(colorpanelData))
@@ -8654,10 +8658,50 @@ func (s *Server) loadcolorpanel(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/mixingsearch
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) mixingsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.POST("/colormixing/admin/searchpanel", s.ca_searchpanel)
+func (s *Server) ca_searchpanel(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("panelsearch") + ".*"
+
+	cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$or": bson.A{
+			bson.M{"panelno": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"user": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"finishcode": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"finishname": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"collection": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"brand": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"chemicalsystem": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"texture": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"thickness": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"sheen": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"hardness": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"approved": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"prepared": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"review": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}}},
+		{{"$sort", bson.D{{"panelno", 1}}}},
+		{{"$set", bson.M{
+			"approveddate": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$approveddate"}},
+			"expireddate":  bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$expireddate"}},
+		}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var colorpanelData []models.ColorRecord_datestr
+	if err := cur.All(context.Background(), &colorpanelData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panel_tbody.html")).Execute(w, map[string]interface{}{
+		"colorpanelData": colorpanelData,
+	})
+}
+
+// router.POST("/colormixing/admin/searchbatch", s.ca_searchbatch)
+func (s *Server) ca_searchbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	searchRegex := ".*" + r.FormValue("mixingSearch") + ".*"
 
 	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
@@ -8686,35 +8730,12 @@ func (s *Server) mixingsearch(w http.ResponseWriter, r *http.Request, ps httprou
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var mixingbatchData []struct {
-		BatchNo    string  `bson:"batchno"`
-		MixingDate string  `bson:"mixingdate"`
-		Volume     float64 `bson:"volume"`
-		Operator   string  `bson:"operator"`
-		Color      struct {
-			Code     string `bson:"code"`
-			Name     string `bson:"name"`
-			Brand    string `bson:"brand"`
-			Supplier string `bson:"supplier"`
-		} `bson:"color"`
-		Classification string  `bson:"classification"`
-		SOPNo          string  `bson:"sopno"`
-		Viscosity      float64 `bson:"viscosity"`
-		LightDark      float64 `bson:"lightdark"`
-		RedGreen       float64 `bson:"redgreen"`
-		YellowBlue     float64 `bson:"yellowblue"`
-		Status         string  `bson:"status"`
-		IssuedDate     string  `bson:"issueddate"`
-		StartUse       string  `bson:"startuse"`
-		EndUse         string  `bson:"enduse"`
-		Receiver       string  `bson:"receiver"`
-		Area           string  `bson:"area"`
-	}
+	var mixingbatchData []models.BatchRecord_datestr
 	if err := cur.All(context.Background(), &mixingbatchData); err != nil {
 		log.Println(err)
 	}
 
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/mixing_tbody.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batch_tbody.html")).Execute(w, map[string]interface{}{
 		"mixingbatchData": mixingbatchData,
 	})
 }
@@ -8823,8 +8844,8 @@ func (s *Server) mixingfilter(w http.ResponseWriter, r *http.Request, ps httprou
 	})
 }
 
-// router.GET("/mixingcolor/batchupdateform/:batchno", s.batchupdateform)
-func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.GET("/colormixing/admin/batchupdateform/:batchno", s.ca_batchupdateform)
+func (s *Server) ca_batchupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := ps.ByName("batchno")
 	result := s.mgdb.Collection("mixingbatch").FindOne(context.Background(), bson.M{"batchno": batchno})
 	if result.Err() != nil {
@@ -8854,18 +8875,19 @@ func (s *Server) batchupdateform(w http.ResponseWriter, r *http.Request, ps http
 		EndUse         time.Time `bson:"enduse"`
 		Area           string    `bson:"area"`
 		Receiver       string    `bson:"receiver"`
+		Step           string    `bson:"step"`
 	}
 	if err := result.Decode(&mixingbatchRecord); err != nil {
 		log.Println(err)
 	}
 
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/batchupdateform.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchupdateform.html")).Execute(w, map[string]interface{}{
 		"mixingbatchRecord": mixingbatchRecord,
 	})
 }
 
-// router.PUT("/mixingcolor/updatebatch/:batchno", s.updatebatch)
-func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.PUT("/colormixing/admin/updatebatch/:batchno", s.ca_updatebatch)
+func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := ps.ByName("batchno")
 	batchinput := r.FormValue("batchno")
 	weight, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
@@ -8873,6 +8895,7 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
+	step := r.FormValue("step")
 	code := r.FormValue("code")
 	name := r.FormValue("name")
 	supplier := r.FormValue("supplier")
@@ -8886,7 +8909,7 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 	result := s.mgdb.Collection("mixingbatch").FindOneAndUpdate(context.Background(), bson.M{"batchno": batchno}, bson.M{
 		"$set": bson.M{"batchno": batchinput, "volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
 			"color.name": name, "color.supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
-			"receiver": receiver, "area": area,
+			"receiver": receiver, "area": area, "step": step,
 		}})
 	if result.Err() != nil {
 		log.Println(result.Err())
@@ -8919,6 +8942,7 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 		EndUse         time.Time `bson:"enduse"`
 		Area           string    `bson:"area"`
 		Receiver       string    `bson:"receiver"`
+		Step           string    `bson:"step"`
 	}
 	if err := result.Decode(&mixingbatchRecord); err != nil {
 		log.Println(err)
@@ -8939,12 +8963,13 @@ func (s *Server) updatebatch(w http.ResponseWriter, r *http.Request, ps httprout
 	mixingbatchRecord.Receiver = receiver
 	mixingbatchRecord.SOPNo = sopno
 	mixingbatchRecord.Area = area
+	mixingbatchRecord.Step = step
 	mixingbatchRecord.MixingDateStr = mixingbatchRecord.MixingDate.Format("15:04 02-01-2006")
 	mixingbatchRecord.IssuedDateStr = mixingbatchRecord.IssuedDate.Format("15:04 02-01-2006")
 	mixingbatchRecord.StartUseStr = mixingbatchRecord.StartUse.Format("15:04 02-01-2006")
 	mixingbatchRecord.EndUseStr = mixingbatchRecord.EndUse.Format("15:04 02-01-2006")
 
-	template.Must(template.ParseFiles("templates/pages/mixingcolor/batchupdated_tr.html")).Execute(w, map[string]interface{}{
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchupdated_tr.html")).Execute(w, map[string]interface{}{
 		"mixingbatchRecord": mixingbatchRecord,
 	})
 }
@@ -8983,10 +9008,8 @@ func (s *Server) deletereport(w http.ResponseWriter, r *http.Request, ps httprou
 
 }
 
-// //////////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/deletemixing/:batchno
-// //////////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) deletemixing(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.DELETE("/colormixing/admin/deletemixing/:batchno", s.ca_deletemixing)
+func (s *Server) ca_deletemixing(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := ps.ByName("batchno")
 	_, err := s.mgdb.Collection("mixingbatch").DeleteOne(context.Background(), bson.M{"batchno": batchno})
 	if err != nil {

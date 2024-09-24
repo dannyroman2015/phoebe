@@ -359,15 +359,11 @@ func (s *Server) routes() http.Handler {
 	router.POST("/mixingcolor/entry/sendbatchentry", s.mce_sendbatchentry)
 
 	router.POST("/mixingcolor/sendmixingentry", s.sendmixingentry)
-	router.GET("/mixingcolor/loadmixingbatch", s.loadmixingbatch)
-	router.GET("/mixingcolor/loadcolorpanel", s.loadcolorpanel)
-	router.POST("/mixingcolor/mixingsearch", s.mixingsearch)
 	router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
-	router.GET("/mixingcolor/batchupdateform/:batchno", s.batchupdateform)
-	router.PUT("/mixingcolor/updatebatch/:batchno", s.updatebatch)
+
 	router.POST("/mixingcolor/mixingreports/:batchno", s.mixingreports)
 	router.GET("/mixingcolor/deletereports", s.deletereport)
-	router.DELETE("/mixingcolor/deletemixing/:batchno", s.deletemixing)
+
 	router.GET("/mixingcolor/addcolorform", s.addcolorform)
 	router.PUT("/mixingcolor/addcolor", s.addcolor)
 	router.POST("/mixingcolor/colorsearch", s.colorsearch)
@@ -406,7 +402,13 @@ func (s *Server) routes() http.Handler {
 	router.GET("/colormixing/admin/loadusingtimeform", s.ca_loadusingtimeform)
 	router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
 	router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
-
+	router.GET("/colormixing/admin/loadmixingbatch", s.ca_loadmixingbatch)
+	router.POST("/colormixing/admin/searchbatch", s.ca_searchbatch)
+	router.GET("/colormixing/admin/loadcolorpanel", s.ca_loadcolorpanel)
+	router.POST("/colormixing/admin/searchpanel", s.ca_searchpanel)
+	router.DELETE("/colormixing/admin/deletemixing/:batchno", s.ca_deletemixing)
+	router.GET("/colormixing/admin/batchupdateform/:batchno", s.ca_batchupdateform)
+	router.PUT("/colormixing/admin/updatebatch/:batchno", s.ca_updatebatch)
 	// end Color Mixing
 
 	////////////////////////////////////////////////////////////////////
