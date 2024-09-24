@@ -88,16 +88,32 @@
                   </div>
                 </div>
 
-                <!-- <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="color">
-                    Name
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="colorcode">
+                    Finish Name
                   </label>
                   <div class="col-span-2 w-full">
                     <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="color" id="color" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="finishname" id="finishname" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
                       <option value="" selected>All</option>
-                      {{range .colors}}
+                      {{range .names}}
+                      <option value="{{.}}">{{.}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="colorcode">
+                    Users
+                  </label>
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen;"
+                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#color_tbody" hx-swap="outerHTML settle:200ms"
+                      name="user" id="user" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="" selected>All</option>
+                      {{range .users}}
                       <option value="{{.}}">{{.}}</option>
                       {{end}}
                     </select>
@@ -119,70 +135,6 @@
                     </select>
                   </div>
                 </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="supplier">
-                    Supplier
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="supplier" id="supplier" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .suppliers}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="classification">
-                    Classification
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="classification" id="classification" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .classifications}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="sopno">
-                    SOPNo.
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="sopno" id="sopno" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .sopnos}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="status">
-                    Status
-                  </label>
-                  <div class="col-span-2 w-full">
-                    <select @change="popoverOpen=!popoverOpen;"
-                      hx-post="/colormixing/overview/filtercolor" hx-trigger="input" hx-target="#mixing_tbody" hx-swap="outerHTML settle:200ms"
-                      name="status" id="status" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                      <option value="" selected>All</option>
-                      {{range .statuses}}
-                      <option value="{{.}}">{{.}}</option>
-                      {{end}}
-                    </select>
-                  </div>
-                </div> -->
 
               </div>
             </form>

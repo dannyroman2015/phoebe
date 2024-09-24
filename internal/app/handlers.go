@@ -8331,22 +8331,22 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 
 // router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
 func (s *Server) ca_loadbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
-	if err != nil {
-		log.Println(err)
-	}
-	defer cur.Close(context.Background())
-	var colorpanelData []struct {
-		PanelNo string `bson:"panelno"`
-		// Color    string `bson:"color"`
-		// Brand    string `bson:"brand"`
-		// Supplier string `bson:"supplier"`
-	}
-	if err := cur.All(context.Background(), &colorpanelData); err != nil {
-		log.Println(err)
-	}
+	// cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// defer cur.Close(context.Background())
+	// var colorpanelData []struct {
+	// 	PanelNo string `bson:"panelno"`
+	// 	// Color    string `bson:"color"`
+	// 	// Brand    string `bson:"brand"`
+	// 	// Supplier string `bson:"supplier"`
+	// }
+	// if err := cur.All(context.Background(), &colorpanelData); err != nil {
+	// 	log.Println(err)
+	// }
 	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchentry.html")).Execute(w, map[string]interface{}{
-		"colorpanelData": colorpanelData,
+		// "colorpanelData": colorpanelData,
 	})
 }
 
@@ -8375,18 +8375,14 @@ func (s *Server) ca_sendpanelentry(w http.ResponseWriter, r *http.Request, ps ht
 	})
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /mixingcolor/sendmixingentry
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// router.POST("/colormixing/admin/sendbatchentry", s.ca_sendmixingentry)
+func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	batchno := r.FormValue("batchno")
-	// mixingdate, _ := time.Parse("2006-01-02T15:04", r.FormValue("mixingdate"))
-	// issueddate, _ := time.Parse("2006-01-02T15:04", r.FormValue("issueddate"))
+
 	mixingdate, _ := time.Parse("020120061504", batchno[0:4]+"20"+batchno[4:10])
 	issueddate := mixingdate.Add(time.Duration(rand.Intn(15)) * time.Minute)
 
 	code := r.FormValue("code")
-	step := r.FormValue("step")
 	name := r.FormValue("name")
 	brand := r.FormValue("brand")
 	supplier := r.FormValue("supplier")
@@ -8411,22 +8407,9 @@ func (s *Server) sendmixingentry(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 
-	// sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"panelno": code})
-	// if sr.Err() != nil {
-	// 	log.Println(sr.Err())
-	// }
-	// var colorData struct {
-	// 	Brand      string `bson:"brand"`
-	// 	FinishCode string `bson:"finishcode"`
-	// 	FinishName string `bson:"finishname"`
-	// }
-	// if err := sr.Decode(&colorData); err != nil {
-	// 	log.Println(err)
-	// }
-
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
 		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area,
-		"color":    bson.M{"code": code, "step": step, "name": name, "brand": brand},
+		"color":    bson.M{"code": code, "name": name, "brand": brand},
 		"operator": operator, "classification": classification, "sopno": sopno, "supplier": supplier,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
@@ -8702,7 +8685,7 @@ func (s *Server) ca_searchpanel(w http.ResponseWriter, r *http.Request, ps httpr
 
 // router.POST("/colormixing/admin/searchbatch", s.ca_searchbatch)
 func (s *Server) ca_searchbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	searchRegex := ".*" + r.FormValue("mixingSearch") + ".*"
+	searchRegex := ".*" + r.FormValue("batchsearch") + ".*"
 
 	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$or": bson.A{
@@ -9877,83 +9860,57 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 		}
 
 		var codeMap = make(map[string]bool, len(colorpanelData))
-		// var categoryMap = make(map[string]bool, len(colorpanelData))
-		// var userMap = make(map[string]bool, len(colorpanelData))
-		// var onproductMap = make(map[string]bool, len(colorpanelData))
-		// var supplierMap = make(map[string]bool, len(colorpanelData))
-		// var nameMap = make(map[string]bool, len(colorpanelData))
-		// var brandMap = make(map[string]bool, len(colorpanelData))
-		// var substrateMap = make(map[string]bool, len(colorpanelData))
-		// var surfaceMap = make(map[string]bool, len(colorpanelData))
-		// var inspectionstatusMap = make(map[string]bool, len(colorpanelData))
+		var userMap = make(map[string]bool, len(colorpanelData))
+		var nameMap = make(map[string]bool, len(colorpanelData))
+		var brandMap = make(map[string]bool, len(colorpanelData))
+		var substrateMap = make(map[string]bool, len(colorpanelData))
 
 		for _, v := range colorpanelData {
 			codeMap[v.PanelNo] = true
-			// categoryMap[v.Category] = true
-			// userMap[v.User] = true
-			// onproductMap[v.OnProduct] = true
-			// supplierMap[v.Supplier] = true
-			// nameMap[v.Name] = true
-			// brandMap[v.Brand] = true
-			// substrateMap[v.Substrate] = true
-			// surfaceMap[v.Surface] = true
-			// inspectionstatusMap[v.InspectionStatus] = true
+			userMap[v.User] = true
+			nameMap[v.FinishName] = true
+			brandMap[v.Brand] = true
+			substrateMap[v.Substrate] = true
 		}
+
 		var codes = make([]string, 0, len(codeMap))
 		for k, _ := range codeMap {
 			codes = append(codes, k)
 		}
 		slices.Sort(codes)
-		// var categories = make([]string, 0, len(categoryMap))
-		// for k, _ := range categoryMap {
-		// 	categories = append(categories, k)
-		// }
-		// var users = make([]string, 0, len(userMap))
-		// for k, _ := range userMap {
-		// 	users = append(users, k)
-		// }
-		// var onproducts = make([]string, 0, len(onproductMap))
-		// for k, _ := range onproductMap {
-		// 	onproducts = append(onproducts, k)
-		// }
-		// var suppliers = make([]string, 0, len(supplierMap))
-		// for k, _ := range supplierMap {
-		// 	suppliers = append(suppliers, k)
-		// }
-		// var colors = make([]string, 0, len(nameMap))
-		// for k, _ := range nameMap {
-		// 	colors = append(colors, k)
-		// }
-		// var brands = make([]string, 0, len(brandMap))
-		// for k, _ := range brandMap {
-		// 	brands = append(brands, k)
-		// }
-		// var substrates = make([]string, 0, len(substrateMap))
-		// for k, _ := range substrateMap {
-		// 	substrates = append(substrates, k)
-		// }
-		// var surfaces = make([]string, 0, len(surfaceMap))
-		// for k, _ := range surfaceMap {
-		// 	surfaces = append(surfaces, k)
-		// }
-		// var inspectionstatuses = make([]string, 0, len(inspectionstatusMap))
-		// for k, _ := range inspectionstatusMap {
-		// 	inspectionstatuses = append(inspectionstatuses, k)
-		// }
+
+		var names = make([]string, 0, len(nameMap))
+		for k, _ := range nameMap {
+			names = append(names, k)
+		}
+		slices.Sort(names)
+
+		var users = make([]string, 0, len(userMap))
+		for k, _ := range userMap {
+			users = append(users, k)
+		}
+		slices.Sort(users)
+
+		var brands = make([]string, 0, len(brandMap))
+		for k, _ := range brandMap {
+			brands = append(brands, k)
+		}
+		slices.Sort(brands)
+
+		var substrates = make([]string, 0, len(substrateMap))
+		for k, _ := range substrateMap {
+			substrates = append(substrates, k)
+		}
+		slices.Sort(substrates)
 
 		template.Must(template.ParseFiles("templates/pages/colormixing/overview/color.html")).Execute(w, map[string]interface{}{
 			"colorpanelData": colorpanelData,
 			"allowedit":      allowedit,
 			"codes":          codes,
-			// "categories":         categories,
-			// "users":              users,
-			// "onproducts":         onproducts,
-			// "suppliers":          suppliers,
-			// "colors":             colors,
-			// "brands":             brands,
-			// "substrates":         substrates,
-			// "surfaces":           surfaces,
-			// "inspectionstatuses": inspectionstatuses,
+			"names":          names,
+			"users":          users,
+			"brands":         brands,
+			"substrates":     substrates,
 		})
 	case "mixingbatch":
 		cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
@@ -10090,36 +10047,15 @@ func (s *Server) co_filtercolor(w http.ResponseWriter, r *http.Request, ps httpr
 	if r.FormValue("colorcode") != "" {
 		filters = append(filters, bson.M{"panelno": r.FormValue("colorcode")})
 	}
-	// if r.FormValue("category") != "" {
-	// 	filters = append(filters, bson.M{"category": r.FormValue("category")})
-	// }
-	// if r.FormValue("user") != "" {
-	// 	filters = append(filters, bson.M{"user": r.FormValue("user")})
-	// }
-	// if r.FormValue("onproduct") != "" {
-	// 	filters = append(filters, bson.M{"onproduct": r.FormValue("onproduct")})
-	// }
-	// if r.FormValue("colorsupplier") != "" {
-	// 	filters = append(filters, bson.M{"supplier": r.FormValue("colorsupplier")})
-	// }
-	// if r.FormValue("color") != "" {
-	// 	filters = append(filters, bson.M{"color": r.FormValue("color")})
-	// }
-	// if r.FormValue("brand") != "" {
-	// 	filters = append(filters, bson.M{"brand": r.FormValue("brand")})
-	// }
-	// if r.FormValue("substrate") != "" {
-	// 	filters = append(filters, bson.M{"substrate": r.FormValue("substrate")})
-	// }
-	// if r.FormValue("surface") != "" {
-	// 	filters = append(filters, bson.M{"surface": r.FormValue("surface")})
-	// }
-	// if r.FormValue("inspectionstatus") != "" {
-	// 	filters = append(filters, bson.M{"inspectionstatus": r.FormValue("inspectionstatus")})
-	// }
-	// if r.FormValue("mixingdate") != "" {
-	// 	filters = append(filters, bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(mixingdate)}}, bson.M{"mixingdate": bson.M{"$lt": primitive.NewDateTimeFromTime(mixingdate.AddDate(0, 0, 1))}}}})
-	// }
+	if r.FormValue("user") != "" {
+		filters = append(filters, bson.M{"user": r.FormValue("user")})
+	}
+	if r.FormValue("finishname") != "" {
+		filters = append(filters, bson.M{"finishname": r.FormValue("finishname")})
+	}
+	if r.FormValue("brand") != "" {
+		filters = append(filters, bson.M{"brand": r.FormValue("brand")})
+	}
 
 	var cur *mongo.Cursor
 	var err interface{}
@@ -10154,16 +10090,6 @@ func (s *Server) co_filtercolor(w http.ResponseWriter, r *http.Request, ps httpr
 	template.Must(template.ParseFiles("templates/pages/colormixing/overview/color_tbody.html")).Execute(w, map[string]interface{}{
 		"colorpanelData": colorpanelData,
 	})
-}
-
-// ////////////////////////////////////////////////////////////////////////////////////////////
-// /batchcontrol
-// ////////////////////////////////////////////////////////////////////////////////////////////
-func (s *Server) batchcontrol(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	template.Must(template.ParseFiles(
-		"templates/pages/batchcontrol/admin.html",
-		"templates/shared/navbar.html",
-	)).Execute(w, nil)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////

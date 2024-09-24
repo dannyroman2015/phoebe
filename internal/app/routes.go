@@ -358,7 +358,6 @@ func (s *Server) routes() http.Handler {
 	router.GET("/mixingcolor/entry/loadbatchform", s.mce_loadbatchform)
 	router.POST("/mixingcolor/entry/sendbatchentry", s.mce_sendbatchentry)
 
-	router.POST("/mixingcolor/sendmixingentry", s.sendmixingentry)
 	router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
 
 	router.POST("/mixingcolor/mixingreports/:batchno", s.mixingreports)
@@ -394,6 +393,7 @@ func (s *Server) routes() http.Handler {
 
 	router.GET("/colormixing/admin", s.c_admin)
 	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
+	router.POST("/colormixing/admin/sendbatchentry", s.ca_sendmixingentry)
 	router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
 	router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
 	router.DELETE("/colormixing/admin/deletepanel/:id", s.ca_deletepanel)
@@ -410,12 +410,6 @@ func (s *Server) routes() http.Handler {
 	router.GET("/colormixing/admin/batchupdateform/:batchno", s.ca_batchupdateform)
 	router.PUT("/colormixing/admin/updatebatch/:batchno", s.ca_updatebatch)
 	// end Color Mixing
-
-	////////////////////////////////////////////////////////////////////
-	// Mixing Color ////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////
-	router.GET("/batchcontrol", s.batchcontrol)
-	// end Mixing Color
 
 	////////////////////////////////////////////////////////////////////
 	// Quality ////////////////////////////////////////////////////////
