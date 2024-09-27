@@ -8957,6 +8957,53 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
+// router.GET("/colormixing/admin/loadauditentry", s.ca_loadauditentry)
+func (s *Server) ca_loadauditentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("audit").Find(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var auditdata []struct {
+		Id       string `bson:"_id"`
+		Category string `bson:"category"`
+		Name     string `bson:"name"`
+	}
+	if err := cur.All(context.Background(), &auditdata); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/admin/audit_entry.html")).Execute(w, map[string]interface{}{
+		"auditdata": auditdata,
+	})
+}
+
+// router.GET("/colormixing/admin/failaudit/:id", s.ca_failaudit)
+func (s *Server) ca_failaudit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	auditdate, _ := time.Parse("2006-01-02", r.FormValue("auditdate"))
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+	_, err := s.mgdb.Collection("audit").UpdateOne(context.Background(), bson.M{"_id": id}, bson.M{
+		"$push": bson.M{"audits": bson.M{"date": primitive.NewDateTimeFromTime(auditdate), "result": "Failed",
+			"inspector": r.FormValue("inspector"), "supervisor": r.FormValue("supervisor"), "factory": r.FormValue("factory")}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// router.POST("/colormixing/admin/passaudit/:id", s.ca_passaduti)
+func (s *Server) ca_passaduti(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	auditdate, _ := time.Parse("2006-01-02", r.FormValue("auditdate"))
+	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+	_, err := s.mgdb.Collection("audit").UpdateOne(context.Background(), bson.M{"_id": id}, bson.M{
+		"$push": bson.M{"audits": bson.M{"date": primitive.NewDateTimeFromTime(auditdate), "result": "Passed",
+			"inspector": r.FormValue("inspector"), "supervisor": r.FormValue("supervisor"), "factory": r.FormValue("factory")}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // /mixingcolor/mixingreports/:batchno
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -9802,11 +9849,6 @@ func (s *Server) co_batchitems(w http.ResponseWriter, r *http.Request, ps httpro
 
 // router.GET("/colormixing/overview/changedisplay/:type/edit/false", s.co_changedisplay)
 func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	allowedit := false
-	if ps.ByName("editable") == "true" {
-		allowedit = true
-	}
-
 	switch ps.ByName("type") {
 	case "colorpanel":
 		cur, err := s.mgdb.Collection("colorpanel").Aggregate(context.Background(), mongo.Pipeline{
@@ -9844,13 +9886,11 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 				Result string `bson:"result"`
 			} `bson:"inpsections"`
 			ExpiredColor string
-			AllowEdit    bool
 		}
 		if err := cur.All(context.Background(), &colorpanelData); err != nil {
 			log.Println(err)
 		}
 		for i := 0; i < len(colorpanelData); i++ {
-			colorpanelData[i].AllowEdit = allowedit
 			expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
 			if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
 				colorpanelData[i].ExpiredColor = "#FFD1D1"
@@ -9905,13 +9945,13 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 
 		template.Must(template.ParseFiles("templates/pages/colormixing/overview/color.html")).Execute(w, map[string]interface{}{
 			"colorpanelData": colorpanelData,
-			"allowedit":      allowedit,
 			"codes":          codes,
 			"names":          names,
 			"users":          users,
 			"brands":         brands,
 			"substrates":     substrates,
 		})
+
 	case "mixingbatch":
 		cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"mixingdate": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -3))}}, bson.M{"mixingdate": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
@@ -9996,7 +10036,39 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 			"sopnos":          sopnos,
 			"statuses":        statuses,
 		})
+
+	case "audit":
+		cur, err := s.mgdb.Collection("audit").Aggregate(context.Background(), mongo.Pipeline{})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var auditdata []struct {
+			Id         string `bson:"_id"`
+			Name       string `bson:"name"`
+			EName      string `bson:"ename"`
+			Category   string `bson:"category"`
+			Department string `bson:"department"`
+			Audits     []struct {
+				Date       time.Time `bson:"date"`
+				Inspector  string    `bson:"inspector"`
+				Supervisor string    `bson:"supervisor"`
+				Result     string    `bson:"result"`
+			} `bson:"audits"`
+		}
+		if err := cur.All(context.Background(), &auditdata); err != nil {
+			log.Println(err)
+		}
+		var auditdates []string
+		for _, d := range auditdata[0].Audits {
+			auditdates = append(auditdates, d.Date.Format("02/01"))
+		}
+		template.Must(template.ParseFiles("templates/pages/colormixing/overview/audit.html")).Execute(w, map[string]interface{}{
+			"auditdata":  auditdata,
+			"auditdates": auditdates,
+		})
 	}
+
 }
 
 // router.POST("/colormixing/overview/searchcolor", s.co_searchcolor)
