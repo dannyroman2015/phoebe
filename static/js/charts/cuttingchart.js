@@ -374,7 +374,7 @@ const drawCuttingChart3 = (data, manhr) => {
 
   const y = d3.scaleLinear()
     .domain([0, d3.max(data, d => d.qty)])
-    .rangeRound([innerHeight, innerHeight/3])
+    .rangeRound([innerHeight, innerHeight/2])
     .nice()
 
   const color = d3.scaleOrdinal()

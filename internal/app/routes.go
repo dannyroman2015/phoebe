@@ -391,7 +391,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/colormixing/overview/searchcolor", s.co_searchcolor)
 	router.POST("/colormixing/overview/filtercolor", s.co_filtercolor)
 
-	router.GET("/colormixing/admin", s.c_admin)
+	router.GET("/colormixing/admin", withAuth(s.c_admin))
 	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
 	router.POST("/colormixing/admin/sendbatchentry", s.ca_sendmixingentry)
 	router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
