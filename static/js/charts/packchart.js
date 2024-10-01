@@ -323,7 +323,7 @@ const drawPackChart2 = (data, target) => {
   const margin = {top: 20, right: 40, bottom: 20, left: 50};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
-  
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
@@ -510,7 +510,7 @@ const drawValueTargetChart = (data, target) => {
   let flag = true;
 
   const series = d3.stack()
-    .keys(d3.union(data.map(d => d.type)))
+    .keys(d3.union(data.map(d => d.type).sort()))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
     (d3.index(data, d => d.date, d => d.type))
 
