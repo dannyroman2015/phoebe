@@ -8,6 +8,8 @@ type BatchRecord_datestr struct {
 	Classification string  `bson:"classification"`
 	SOPNo          string  `bson:"sopno"`
 	Viscosity      float64 `bson:"viscosity"`
+	Nk2            float64 `bson:"nk2"`
+	Fordcup4       float64 `bson:"fordcup4"`
 	LightDark      float64 `bson:"lightdark"`
 	RedGreen       float64 `bson:"redgreen"`
 	YellowBlue     float64 `bson:"yellowblue"`

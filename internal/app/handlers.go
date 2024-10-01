@@ -8394,6 +8394,8 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 	classification := r.FormValue("classification")
 	sopno := r.FormValue("sopno")
 	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	nk2, _ := strconv.ParseFloat(r.FormValue("nk2"), 64)
+	fordcup4, _ := strconv.ParseFloat(r.FormValue("fordcup4"), 64)
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
@@ -8409,7 +8411,7 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
 		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area,
-		"color":    bson.M{"code": code, "name": name, "brand": brand},
+		"color": bson.M{"code": code, "name": name, "brand": brand}, "nk2": nk2, "fordcup4": fordcup4,
 		"operator": operator, "classification": classification, "sopno": sopno, "supplier": supplier,
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
@@ -8849,6 +8851,8 @@ func (s *Server) ca_batchupdateform(w http.ResponseWriter, r *http.Request, ps h
 		Classification string    `bson:"classification"`
 		SOPNo          string    `bson:"sopno"`
 		Viscosity      float64   `bson:"viscosity"`
+		Nk2            float64   `bson:"nk2"`
+		Fordcup4       float64   `bson:"fordcup4"`
 		LightDark      float64   `bson:"lightdark"`
 		RedGreen       float64   `bson:"redgreen"`
 		YellowBlue     float64   `bson:"yellowblue"`
@@ -8875,6 +8879,8 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 	batchinput := r.FormValue("batchno")
 	weight, _ := strconv.ParseFloat(r.FormValue("volume"), 64)
 	viscosity, _ := strconv.ParseFloat(r.FormValue("viscosity"), 64)
+	nk2, _ := strconv.ParseFloat(r.FormValue("nk2"), 64)
+	fordcup4, _ := strconv.ParseFloat(r.FormValue("fordcup4"), 64)
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
@@ -8892,7 +8898,7 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 	result := s.mgdb.Collection("mixingbatch").FindOneAndUpdate(context.Background(), bson.M{"batchno": batchno}, bson.M{
 		"$set": bson.M{"batchno": batchinput, "volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
 			"color.name": name, "color.supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
-			"receiver": receiver, "area": area, "step": step,
+			"receiver": receiver, "area": area, "step": step, "nk2": nk2, "fordcup4": fordcup4,
 		}})
 	if result.Err() != nil {
 		log.Println(result.Err())
@@ -8913,6 +8919,8 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 		Classification string    `bson:"classification"`
 		SOPNo          string    `bson:"sopno"`
 		Viscosity      float64   `bson:"viscosity"`
+		Nk2            float64   `bson:"nk2"`
+		Fordcup4       float64   `bson:"fordcup4"`
 		LightDark      float64   `bson:"lightdark"`
 		RedGreen       float64   `bson:"redgreen"`
 		YellowBlue     float64   `bson:"yellowblue"`
@@ -8933,6 +8941,8 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 	mixingbatchRecord.BatchNo = batchinput
 	mixingbatchRecord.Volume = weight
 	mixingbatchRecord.Viscosity = viscosity
+	mixingbatchRecord.Nk2 = nk2
+	mixingbatchRecord.Fordcup4 = fordcup4
 	mixingbatchRecord.LightDark = lightdark
 	mixingbatchRecord.RedGreen = redgreen
 	mixingbatchRecord.YellowBlue = yellowblue
@@ -10230,6 +10240,143 @@ func (s *Server) q_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// router.GET("/gnhh/overview", s.g_overview)
+func (s *Server) g_overview(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/overview.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// router.GET("/gnhh/overview/loadchart", s.go_loadchart)
+func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"mo": "MO-221"}}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// defer cur.Close(context.Background())
+	// var gnhhdata []struct {
+	// 	ItemCode   string `bson:"itemcode" json:"itemcode"`
+	// 	ParentCode string `bson:"parentcode" json:"parentcode"`
+	// }
+	// if err := cur.All(context.Background(), &gnhhdata); err != nil {
+	// 	log.Println(err)
+	// }
+
+	cur, _ := s.mgdb.Collection("gnhh").Find(context.Background(), bson.M{})
+	var gnhhdata []struct {
+		Name     string `bson:"item" json:"item"`
+		Children []struct {
+			Name     string `bson:"item" json:"item"`
+			Children []struct {
+				Name     string `bson:"item" json:"item"`
+				Children []struct {
+					Name string `bson:"item" json:"item"`
+				} `bson:"children" json:"children"`
+			} `bson:"children" json:"children"`
+		} `bson:"children" json:"children"`
+	}
+	cur.All(context.Background(), &gnhhdata)
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/chart.html")).Execute(w, map[string]interface{}{
+		"gnhhdata": gnhhdata,
+	})
+}
+
+// router.GET("/gnhh/overview/loadtimeline", s.go_loadtimeline)
+func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline.html")).Execute(w, nil)
+}
+
+// router.GET("/gnhh/entry/import", s.ge_import)
+func (s *Server) ge_import(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/gnhh/entry/import.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// router.POST("/gnhh/entry/importdata", s.ge_importdata)
+func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("inputfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	rows, _ := f.Rows("Output")
+	// var data = struct {
+	// 	Item     string `json:"item"`
+	// 	Children []struct {
+	// 		Item     string `json:"item"`
+	// 		Children []struct {
+	// 			Item string `json:"item"`
+	// 		} `json:"children"`
+	// 	} `json:"children"`
+	// }{
+	// 	Item: "MO-221",
+	// }
+
+	// var bdoc []interface{}
+	rows.Next()
+	// for rows.Next() {
+	// 	row, _ := rows.Columns()
+	// 	if row[2] == "0" {
+	// 		data.Children = append(data.Children, struct {
+	// 			Item string "json:\"item\""
+	// 			struct{Item string "json:\"item\""; Children []struct{Item string "json:\"item\""} "json:\"children\""}
+	// 		}{Item: row[0]})
+	// 	}
+	// 	if row[2] == "1" {
+
+	// 	}
+	// }
+	// j, err := json.Marshal(data)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(data)
+	// log.Println(string(j))
+	// var bd bson.M
+	// err = bson.UnmarshalExtJSON(j, true, &bd)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(bd)
+	// _, err = s.mgdb.Collection("gnhh").InsertOne(context.Background(), bd)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// for rows.Next() {
+	// 	row, _ := rows.Columns()
+	// 	qty, _ := strconv.Atoi(row[7])
+	// 	level, _ := strconv.Atoi(row[2])
+	// 	b := bson.M{
+	// 		"mo":          "MO-221",
+	// 		"itemcode":    row[0],
+	// 		"itemname":    row[1],
+	// 		"itemlevel":   level,
+	// 		"productcode": row[3],
+	// 		"parentcode":  row[4],
+	// 		"category":    row[5],
+	// 		"itemtype":    row[6],
+	// 		"qty":         qty,
+	// 		"unit":        row[8],
+	// 	}
+	// 	bdoc = append(bdoc, b)
+	// }
+
+	// _, err = s.mgdb.Collection("gnhh").InsertMany(context.Background(), bdoc)
+	// if err != nil {
+	// 	log.Println("failed to insert many to employee collection", err)
+	// }
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/entry/import.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{})
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
