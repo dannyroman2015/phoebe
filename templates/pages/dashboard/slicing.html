@@ -6,7 +6,7 @@
         slicingcharttype.dispatchEvent(new Event('input', {bubble: true}));
       "
       href="/sections/slicing/overview" class="mb-1 font-bold hover:underline">
-      Slicing (tesing)
+      Slicing
     </a>
     
     <div class="flex">
@@ -80,7 +80,7 @@
             <form>
               <div class="grid gap-2">
                 
-                <div class="grid items-center grid-cols-3 gap-4">
+                <!-- <div class="grid items-center grid-cols-3 gap-4">
                   <label for="slicingcharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Chart
                   </label>
@@ -92,9 +92,9 @@
                       <option value="efficiency">Efficiency</option>
                     </select>
                   </div>
-                </div>
+                </div> -->
 
-                <div class="grid items-center grid-cols-3 gap-4">
+                <!-- <div class="grid items-center grid-cols-3 gap-4">
                   <label for="slicingFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     From Date
                   </label>
@@ -108,7 +108,7 @@
                   </label>
                   <input hx-post="/dashboard/slicing/getchart" hx-trigger="input" hx-target="#slicing-container" hx-swap="innerHTML settle:200ms"
                     type="date" id="slicingToDate" name="slicingToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                </div>
+                </div> -->
               
               </div>
             </form>
