@@ -39,7 +39,7 @@
             popoverPositionCalculate();
           });
           $watch('popoverOpen', function(value){
-            if(value){ popoverPositionCalculate(); document.getElementById('productioncharttype').focus();  }
+            if(value){ popoverPositionCalculate(); }
           });
         "
         class="relative">
@@ -103,7 +103,7 @@
                       MTDs
                     </label>
                     <input hx-post="/dashboard/production/getchart" hx-trigger="input" hx-target="#production-container" hx-swap="innerHTML settle:200ms"
-                      type="number" min="0" step="1" id="numberOfMTDs" name="numberOfMTDs" value="2" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      type="number" min="0" step="1" id="numberOfMTDs" name="numberOfMTDs" value="3" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
 
                 </div>

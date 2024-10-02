@@ -959,12 +959,68 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	})
 }
 
+// router.GET("/dashboard/loadslicing", s.d_loadslicing)
+func (s *Server) d_loadslicing(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("slicing").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var slicingData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Qty      float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &slicingData); err != nil {
+		log.Println(err)
+	}
+	// get target of slicing
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "slicing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var slicingTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &slicingTarget); err != nil {
+		log.Println(err)
+	}
+	// get last update time of slicing
+	slicingSr := s.mgdb.Collection("slicing").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if slicingSr.Err() != nil {
+		log.Println(slicingSr.Err())
+	}
+	var slicingLastReport struct {
+		CreatedDate time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := slicingSr.Decode(&slicingLastReport); err != nil {
+		log.Println(err)
+	}
+
+	slicingUpTime := slicingLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
+	template.Must(template.ParseFiles("templates/pages/dashboard/slicing.html")).Execute(w, map[string]interface{}{
+		"slicingData":   slicingData,
+		"slicingTarget": slicingTarget,
+		"slicingUpTime": slicingUpTime,
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/loadwoodrecovery - load woodrecovery area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodrecovery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodrecovery").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -30))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.D{{"date", 1}, {"prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -4457,6 +4513,136 @@ func (s *Server) sla_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
 
 	_, err := s.mgdb.Collection("lamination").DeleteOne(context.Background(), bson.M{"_id": reportid})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+// router.GET("/sections/slicing/entry", s.ss_entry)
+func (s *Server) ss_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/slicing/entry/entry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/sections/slicing/entry/loadform", s.sse_loadform)
+func (s *Server) sse_loadform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/slicing/entry/form.html")).Execute(w, nil)
+}
+
+// outer.POST("/sections/slicing/entry/sendentry", s.sse_sendentry)
+func (s *Server) sse_sendentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+	prodtype := r.FormValue("prodtype")
+	log.Println(qty)
+	if r.FormValue("prodtype") == "" || r.FormValue("qty") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/slicing/entry/form.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("slicing").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "prodtype": prodtype, "qty": qty, "createdat": primitive.NewDateTimeFromTime(time.Now()), "reporter": username,
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/slicing/entry/form.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/slicing/entry/form.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// router.GET("/sections/slicing/admin", s.ss_admin)
+func (s *Server) ss_admin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/slicing/admin/admin.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// router.GET("/sections/slicing/admin/loadreport", s.ssa_loadreport)
+func (s *Server) ssa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("slicing").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -3))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{
+			"date":      bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$createdat"}},
+		}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var slicingData []struct {
+		Id        string  `bson:"_id"`
+		Date      string  `bson:"date"`
+		CreatedAt string  `bson:"createdat"`
+		ProdType  string  `bson:"prodtype"`
+		Qty       float64 `bson:"qty"`
+		Reporter  string  `bson:"reporter"`
+	}
+	if err := cur.All(context.Background(), &slicingData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/slicing/admin/report.html")).Execute(w, map[string]interface{}{
+		"slicingData": slicingData,
+	})
+}
+
+// router.POST("/sections/slicing/admin/reportsearch", s.ssa_reportsearch)
+func (s *Server) ssa_reportsearch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("reportsearch") + ".*"
+
+	cur, err := s.mgdb.Collection("slicing").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$or": bson.A{
+			bson.M{"prodtype": bson.M{"$regex": searchRegex, "$options": "i"}},
+			bson.M{"report": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}}},
+		{{"$sort", bson.D{{"date", -1}, {"createdat", -1}}}},
+		{{"$set", bson.M{
+			"date":      bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}},
+			"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$createdat"}},
+		}}},
+	})
+
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var slicingData []struct {
+		Id        string  `bson:"_id"`
+		Date      string  `bson:"date"`
+		CreatedAt string  `bson:"createdat"`
+		ProdType  string  `bson:"prodtype"`
+		Qty       float64 `bson:"qty"`
+		Reporter  string  `bson:"reporter"`
+	}
+	if err := cur.All(context.Background(), &slicingData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/slicing/admin/table.html")).Execute(w, map[string]interface{}{
+		"slicingData": slicingData,
+	})
+}
+
+// router.DELETE("/sections/slicing/admin/deletereport/:id", s.ssa_deletereport)
+func (s *Server) ssa_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
+
+	_, err := s.mgdb.Collection("slicing").DeleteOne(context.Background(), bson.M{"_id": reportid})
 	if err != nil {
 		log.Println(err)
 		return

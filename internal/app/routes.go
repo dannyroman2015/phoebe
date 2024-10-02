@@ -35,8 +35,9 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
 	router.GET("/dashboard/loadfinemill", s.d_loadfinemill)
 	router.GET("/dashboard/loadpack", s.d_loadpack)
-	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
+	router.GET("/dashboard/loadslicing", s.d_loadslicing)
 	router.GET("/dashboard/loadquality", s.d_loadquality)
+	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
 	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
 	router.GET("/dashboard/loadsixs", s.d_loadsixs)
 	router.GET("/dashboard/loadsafety", s.d_loadsafety)
@@ -146,6 +147,17 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/lamination/admin/searchreport", s.sla_searchreport)
 	router.DELETE("/sections/lamination/admin/deletereport/:reportid", s.sla_deletereport)
 	// end Lamination/////////////////////////////////////////////////////////////
+
+	// Slicing ////////////////////////////////////////////////////////
+	router.GET("/sections/slicing/entry", s.ss_entry)
+	router.GET("/sections/slicing/entry/loadform", s.sse_loadform)
+	router.POST("/sections/slicing/entry/sendentry", s.sse_sendentry)
+
+	router.GET("/sections/slicing/admin", s.ss_admin)
+	router.GET("/sections/slicing/admin/loadreport", s.ssa_loadreport)
+	router.POST("/sections/slicing/admin/reportsearch", s.ssa_reportsearch)
+	router.DELETE("/sections/slicing/admin/deletereport/:id", s.ssa_deletereport)
+	// end Slicing/////////////////////////////////////////////////////////////
 
 	// Reededline ////////////////////////////////////////////////////////
 	router.GET("/sections/reededline/overview", s.sr_overview)

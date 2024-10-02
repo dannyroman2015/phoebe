@@ -245,7 +245,7 @@ const drawProdMtdChart = (data) => {
     pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
     avg = curmonthData[curmonthData.length-2].value / pastDays
     estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
-    for (let i = pastDays+2; i < 24; i++) { // làm tạm theo số ngày đã được plan trước
+    for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
       estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
     }
   }
@@ -268,7 +268,7 @@ const drawProdMtdChart = (data) => {
 
   const color = d3.scaleOrdinal()
     .domain(data.map(d => d.month))
-    .range(["red", "blue", "green"])
+    .range(["#FEEFAD", "#FDDE55", "#68D2E8", "#03AED2"])
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height]);
@@ -283,10 +283,11 @@ const drawProdMtdChart = (data) => {
     .curve(d3.curveCatmullRom)
 
   data.forEach(serie => {
+    console.log(serie)
     innerChart.append("path")
       .attr("d", area(serie.dat))
       .attr("fill", color(serie.month))
-      .attr("fill-opacity", 0.3)
+      .attr("fill-opacity", serie == data[data.length-1] ? 0.9 : 0.4)
 
     innerChart.append("text")
       .text(`${serie.month} - $ ${d3.format(",.0f")(serie.dat[serie.dat.length-1].value)}`)
