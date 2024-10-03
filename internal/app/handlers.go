@@ -8277,13 +8277,13 @@ func (s *Server) ca_loadusingtimeform(w http.ResponseWriter, r *http.Request, ps
 
 // router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
 func (s *Server) ca_loadinspectionform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"code": 1}))
+	cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"panelno": 1}))
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
 	var colorData []struct {
-		Code string `bson:"code"`
+		Code string `bson:"panelno"`
 	}
 	if err := cur.All(context.Background(), &colorData); err != nil {
 		log.Println(err)

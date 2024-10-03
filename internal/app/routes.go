@@ -149,7 +149,7 @@ func (s *Server) routes() http.Handler {
 	// end Lamination/////////////////////////////////////////////////////////////
 
 	// Slicing ////////////////////////////////////////////////////////
-	router.GET("/sections/slicing/entry", s.ss_entry)
+	router.GET("/sections/slicing/entry", withAuth(s.ss_entry))
 	router.GET("/sections/slicing/entry/loadform", s.sse_loadform)
 	router.POST("/sections/slicing/entry/sendentry", s.sse_sendentry)
 
