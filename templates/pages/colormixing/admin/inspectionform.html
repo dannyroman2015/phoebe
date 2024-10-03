@@ -2,24 +2,45 @@
   <div class="mx-auto max-w-screen-sm px-4 py-16 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 gap-x-16 gap-y-8">
       <form class="space-y-5" hx-post="/colormixing/admin/addinspection" hx-target="#entry-container" hx-swap="outerHTML">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+          <div class="flex justify-center mt-4 text-center">
+            <select
+                class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                name="panelno" id="panelno" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <option value="" disabled selected>Chọn mã color</option>
+              {{range .colorData}}
+              <option value="{{.Code}}">{{.Code}} - {{.User}}</option>
+              {{end}}
+            </select>
+          </div>
 
-        <div class="flex justify-center mt-4 text-center">
-          <select class="flex text-center justify-center w-1/2 h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-              name="code" id="code" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
-            <option value="" disabled selected>Chọn mã color</option>
-            {{range .colorData}}
-            <option value="{{.Code}}">{{.Code}}</option>
-            {{end}}
-          </select>
-        </div>
+          <div class="mt-4 text-center">
+            <label for="inspecteddate" class="relative block rounded-md border">
+              <input type="date" id="inspecteddate" name="inspecteddate"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Date</span>
+            </label>
+          </div>
 
-        <div class="mt-4 flex justify-center text-center">
-          <label for="inspecteddate" class="relative block rounded-md border">
-            <input type="date" id="inspecteddate" name="inspecteddate"
-              class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
-            <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
-              Date</span>
-          </label>
+          <div class="mt-4 text-center">
+            <label for="delta" class="relative block rounded-md border">
+              <input type="number" id="delta" name="delta" step="0.1"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Delta</span>
+            </label>
+          </div>
+
+          <div class="mt-4 text-center">
+            <label for="inspector" class="relative block rounded-md border">
+              <input type="tel" id="inspector" name="inspector"
+                class="p-3 peer flex w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"/>
+              <span class="pointer-events-none absolute start-2.5 top-0 -translate-y-1/2 bg-white p-0.5 text-xs text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                Inspector</span>
+            </label>
+          </div>
+
         </div>
 
         <div class="flex flex-row items-center justify-center space-x-4 p-5">

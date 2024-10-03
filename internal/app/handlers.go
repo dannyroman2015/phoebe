@@ -8284,6 +8284,7 @@ func (s *Server) ca_loadinspectionform(w http.ResponseWriter, r *http.Request, p
 	defer cur.Close(context.Background())
 	var colorData []struct {
 		Code string `bson:"panelno"`
+		User string `bson:"user"`
 	}
 	if err := cur.All(context.Background(), &colorData); err != nil {
 		log.Println(err)
@@ -8296,9 +8297,14 @@ func (s *Server) ca_loadinspectionform(w http.ResponseWriter, r *http.Request, p
 // router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
 func (s *Server) ca_addinspection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	inspecteddate, _ := time.Parse("2006-01-02", r.FormValue("inspecteddate"))
-	_, err := s.mgdb.Collection("colorpanel").UpdateOne(context.Background(), bson.M{"code": r.FormValue("code")}, bson.M{"$push": bson.M{"inspections": bson.M{
-		"date": inspecteddate, "result": r.FormValue("inspectionresult"),
-	}}})
+	delta, _ := strconv.ParseFloat(r.FormValue("delta"), 64)
+	_, err := s.mgdb.Collection("colorpanel").UpdateOne(context.Background(), bson.M{"panelno": r.FormValue("panelno")}, bson.M{"$push": bson.M{
+		"inspections": bson.M{"$each": bson.A{bson.M{
+			"date":      inspecteddate.Format("02-01-2006"),
+			"result":    r.FormValue("inspectionresult"),
+			"delta":     delta,
+			"inspector": r.FormValue("inspector"),
+		}}, "$position": 0}}})
 	if err != nil {
 		log.Println(err)
 		template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{
@@ -10058,40 +10064,25 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 			log.Println(err)
 		}
 		defer cur.Close(context.Background())
-		var colorpanelData []struct {
-			Id           string `bson:"_id"`
-			PanelNo      string `bson:"panelno"`
-			User         string `bson:"user"`
-			FinishCode   string `bson:"finishcode"`
-			FinishName   string `bson:"finishname"`
-			Substrate    string `bson:"substrate"`
-			Collection   string `bson:"collection"`
-			Brand        string `bson:"brand"`
-			FinishSystem string `bson:"chemicalsystem"`
-			Texture      string `bson:"texture"`
-			Thickness    string `bson:"thickness"`
-			Sheen        string `bson:"sheen"`
-			Hardness     string `bson:"hardness"`
-			Prepared     string `bson:"prepared"`
-			Review       string `bson:"review"`
-			Approved     string `bson:"approved"`
-			ApprovedDate string `bson:"approveddate"`
-			ExpiredDate  string `bson:"expireddate"`
-			Inspections  []struct {
-				Date   string `bson:"date"`
-				Result string `bson:"result"`
-			} `bson:"inpsections"`
-			ExpiredColor string
-		}
+
+		var colorpanelData []models.ColorRecord_datestr
 		if err := cur.All(context.Background(), &colorpanelData); err != nil {
 			log.Println(err)
 		}
+
 		for i := 0; i < len(colorpanelData); i++ {
 			expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
 			if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
 				colorpanelData[i].ExpiredColor = "#FFD1D1"
 			} else {
 				colorpanelData[i].ExpiredColor = "white"
+			}
+			if len(colorpanelData[i].Inspections) != 0 {
+				nextInspectionDate, _ := time.Parse("02-01-2006", colorpanelData[i].Inspections[0].Date)
+				colorpanelData[i].NextInspection = nextInspectionDate.AddDate(0, 0, 15).Format("02-01-2006") + " (next inspection...)"
+				if len(colorpanelData[i].Inspections) > 3 {
+					colorpanelData[i].Inspections = colorpanelData[i].Inspections[:3]
+				}
 			}
 		}
 
@@ -10304,6 +10295,22 @@ func (s *Server) co_searchcolor(w http.ResponseWriter, r *http.Request, ps httpr
 		log.Println(err)
 	}
 
+	for i := 0; i < len(colorpanelData); i++ {
+		expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
+		if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
+			colorpanelData[i].ExpiredColor = "#FFD1D1"
+		} else {
+			colorpanelData[i].ExpiredColor = "white"
+		}
+		if len(colorpanelData[i].Inspections) != 0 {
+			nextInspectionDate, _ := time.Parse("02-01-2006", colorpanelData[i].Inspections[0].Date)
+			colorpanelData[i].NextInspection = nextInspectionDate.AddDate(0, 0, 15).Format("02-01-2006") + " (next inspection...)"
+			if len(colorpanelData[i].Inspections) > 3 {
+				colorpanelData[i].Inspections = colorpanelData[i].Inspections[:3]
+			}
+		}
+	}
+
 	template.Must(template.ParseFiles("templates/pages/colormixing/overview/color_tbody.html")).Execute(w, map[string]interface{}{
 		"colorpanelData": colorpanelData,
 	})
@@ -10353,6 +10360,22 @@ func (s *Server) co_filtercolor(w http.ResponseWriter, r *http.Request, ps httpr
 	var colorpanelData []models.ColorRecord_datestr
 	if err := cur.All(context.Background(), &colorpanelData); err != nil {
 		log.Println(err)
+	}
+
+	for i := 0; i < len(colorpanelData); i++ {
+		expireddate, _ := time.Parse("02-01-2006", colorpanelData[i].ExpiredDate)
+		if expireddate.AddDate(0, -1, 0).Compare(time.Now()) < 1 {
+			colorpanelData[i].ExpiredColor = "#FFD1D1"
+		} else {
+			colorpanelData[i].ExpiredColor = "white"
+		}
+		if len(colorpanelData[i].Inspections) != 0 {
+			nextInspectionDate, _ := time.Parse("02-01-2006", colorpanelData[i].Inspections[0].Date)
+			colorpanelData[i].NextInspection = nextInspectionDate.AddDate(0, 0, 15).Format("02-01-2006") + " (next inspection...)"
+			if len(colorpanelData[i].Inspections) > 3 {
+				colorpanelData[i].Inspections = colorpanelData[i].Inspections[:3]
+			}
+		}
 	}
 
 	template.Must(template.ParseFiles("templates/pages/colormixing/overview/color_tbody.html")).Execute(w, map[string]interface{}{

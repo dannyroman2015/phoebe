@@ -20,7 +20,11 @@ type ColorRecord_datestr struct {
 	ApprovedDate string `bson:"approveddate"`
 	ExpiredDate  string `bson:"expireddate"`
 	Inspections  []struct {
-		Date   string `bson:"date"`
-		Result string `bson:"result"`
-	} `bson:"inpsections"`
+		Date      string  `bson:"date"`
+		Result    string  `bson:"result"`
+		Delta     float64 `bson:"delta"`
+		Inspector string  `bson:"inspector"`
+	} `bson:"inspections"`
+	ExpiredColor   string
+	NextInspection string
 }

@@ -377,15 +377,22 @@
                     <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
                       <thead class="text-left ltr:text-left rtl:text-right">
                         <tr>
-                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Ngày kiểm định</th>
-                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Kết quả kiểm tra</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Ngày kiểm</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Người kiểm</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Delta</th>
+                          <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Kết quả</th>
                         </tr>
                       </thead>
                   
                       <tbody class="divide-y divide-gray-200">
+                        <tr>
+                          <td colspan="4" class="whitespace-nowrap px-4 py-2 text-gray-700">{{.NextInspection}}</td>
+                        </tr>
                         {{range .Inspections}}
                         <tr>
                           <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Date}}</td>
+                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Inspector}}</td>
+                          <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Delta}}</td>
                           <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Result}}</td>
                         </tr>
                         {{end}}
