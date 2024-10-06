@@ -440,6 +440,8 @@ func (s *Server) routes() http.Handler {
 	router.GET("/gnhh/overview", s.g_overview)
 	router.GET("/gnhh/overview/loadchart", s.go_loadchart)
 	router.GET("/gnhh/overview/loadtimeline", s.go_loadtimeline)
+	router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
+	router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
 
 	router.GET("/gnhh/entry/import", s.ge_import)
 	router.POST("/gnhh/entry/importdata", s.ge_importdata)
@@ -468,7 +470,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/item/entry", s.i_importitemlist)
 
 	router.GET("/item/admin", s.i_admin)
-	router.POST("/item/admin/additem", s.i_additem)
+	// router.POST("/item/admin/additem", s.i_additem)
 	router.POST("/item/admin/addpart", s.i_addpart)
 	// end item --------------------------------------------------------
 

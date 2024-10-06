@@ -1,21 +1,31 @@
+function convertToHierachy(raw, parent = "MO-222") {
+  let result = []
+
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i].parent == parent) {
+      const dataObj = {
+        ...raw[i],
+      }
+      const children = convertToHierachy(raw, raw[i].itemcode)
+      if(children.length > 0) {
+        dataObj.children = children;
+      }
+
+      result.push(dataObj);
+    }
+   
+  }
+  return result
+  
+}
+
 const drawGNHHChart = (rawdata) => {
-  console.log(rawdata)
-  // const data = {
-  //   "name": "root",
-  //   "children": [
-  //     {
-  //       "name": "child 1",
-  //       "children": [],
-  //     },
-  //     {
-  //       "name": "child 2",
-  //       "children": [],
-  //     }
-  //   ]
-  // }
-  const data = rawdata[0];
-  console.log(data);
-  const width = 928;
+  const data = {
+    "itemcode": "MO-222",
+    "children": convertToHierachy(rawdata),
+  }
+
+  const width = 1080;
   const marginTop = 10;
   const marginRight = 10;
   const marginBottom = 10;
@@ -95,7 +105,7 @@ const drawGNHHChart = (rawdata) => {
         .attr("dy", "0.31em")
         .attr("x", d => d._children ? -6 : 6)
         .attr("text-anchor", d => d._children ? "end" : "start")
-        .text(d => d.data.item)
+        .text(d => d.data.itemcode)
         .attr("stroke-linejoin", "round")
         .attr("stroke-width", 3)
         .attr("stroke", "white")
@@ -153,6 +163,144 @@ const drawGNHHChart = (rawdata) => {
   });
 
   update(null, root);
+
+  return svg.node();
+}
+
+
+const drawGNHHChart2 = (data) => {
+  const nodeSize = 23;
+  const root = d3.hierarchy(data).eachBefore((i => d => d.index = i++)(0));
+  const nodes = root.descendants();
+  const width = 500;
+  const height = (nodes.length + 1) * nodeSize;
+
+  const svg = d3.create("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [-nodeSize / 2, -nodeSize * 3 / 2, width, height])
+      .attr("style", "max-width: 100%; height: auto; font: 12px sans-serif; overflow: visible;");
+
+  const link = svg.append("g")
+      .attr("fill", "none")
+      .attr("stroke", "#999")
+    .selectAll()
+    .data(root.links())
+    .join("path")
+      .attr("d", d => `
+        M${d.source.depth * nodeSize},${d.source.index * nodeSize}
+        V${d.target.index * nodeSize}
+        h${nodeSize}
+      `);
+
+  var defs = svg.append("defs")
+  var gradient = defs.append("linearGradient")
+    .attr("id", "gradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%")
+    .attr("y1", "0%")
+    .attr("y2", "0%")
+  gradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "white")
+  gradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#91DDCF")
+
+  const node = svg.append("g")
+    .selectAll()
+    .data(nodes)
+    .join("g")
+      .attr("transform", d => `translate(0,${d.index * nodeSize})`);
+
+  node.append("rect")
+      .attr("x", d => d.depth * nodeSize + 6)
+      .attr("y", "-0.67em")
+      .attr("height", "1.3em")
+      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (394 - d.depth * nodeSize) : 0)
+      .attr("fill", "url(#gradient)")
+      .attr("fill-opacity", 0.5)
+
+  node.append("circle")
+      .attr("cx", d => d.depth * nodeSize)
+      .attr("r", 2.5)
+      .attr("fill", d => d.children ? null : "#999");
+
+  node.append("text")
+      .attr("dy", "0.32em")
+      .attr("x", d => d.depth * nodeSize + 6)
+      .text(d =>  d.data.itemcode)
+      .on("click", (e, d) => {
+        document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
+        document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
+        document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
+      })
+
+  node.append("title")
+      .text(d => d.ancestors().reverse().map(d => d.data.itemcode).join("/"));
+
+  svg.append("text")
+    .attr("dy", "0.32em")
+    .attr("y", -nodeSize)
+    .attr("x", 280)
+    .attr("text-anchor", "end")
+    .attr("font-weight", "bold")
+    .text("Done");
+
+  node.append("text")
+      .attr("dy", "0.32em")
+      .attr("x", 280)
+      .attr("text-anchor", "end")
+      .attr("fill", d => d.children ? null : "#555")
+    .data(root.copy().descendants())
+      .text(d => d.data.done ? d3.format(".3f")(d.data.done) : "")
+
+  svg.append("text")
+    .attr("dy", "0.32em")
+    .attr("y", -nodeSize)
+    .attr("x", 400)
+    .attr("text-anchor", "end")
+    .attr("font-weight", "bold")
+    .text("Needed");
+  
+  node.append("text")
+      .attr("dy", "0.32em")
+      .attr("x", 400)
+      .attr("text-anchor", "end")
+      .attr("fill", d => d.children ? null : "#555")
+    .data(root.copy().descendants())
+      .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
+
+  // for (const {label, value, format, x} of columns) {
+  //   svg.append("text")
+  //       .attr("dy", "0.32em")
+  //       .attr("y", -nodeSize)
+  //       .attr("x", x)
+  //       .attr("text-anchor", "end")
+  //       .attr("font-weight", "bold")
+  //       .text(label);
+
+  //   // node.append("text")
+  //   //     .attr("dy", "0.32em")
+  //   //     .attr("x", x)
+  //   //     .attr("text-anchor", "end")
+  //   //     .attr("fill", d => d.children ? null : "#555")
+  //   //   .data(root.copy().sum(value).descendants())
+  //   //     .text(d => format(d.value, d));
+
+  //   node.append("text")
+  //       .attr("dy", "0.32em")
+  //       .attr("x", x)
+  //       .attr("text-anchor", "end")
+  //       .attr("fill", d => d.children ? null : "#555")
+  //     // .data(root.copy().sum(value).descendants())
+  //     .data(root.copy().descendants())
+  //       .text(d => {
+  //         console.log(d)
+  //         // return d.data.qty
+  //         return format(d.value, d)
+  //       });
+  // }
 
   return svg.node();
 }

@@ -1,3 +1,6 @@
+// lưu ý khi sử dụng updateOne, updateMany (đặc biệt set 1 trường bằng giá trị 1 trường khác) sử dụng [] (bson.A) ở phần updater
+vd: s.mgdb.Collection("gnhh").UpdateOne(context.Background(), filter, bson.A{bson.M{"$set": bson.M{"done": "$qty"}}})
+// khi set mà không tham chiếu tới một trường khác thì bỏ []
 
 // question icon svg
 <svg class="h-3" viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg">
