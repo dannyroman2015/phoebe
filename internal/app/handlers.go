@@ -9089,7 +9089,7 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 
 	result := s.mgdb.Collection("mixingbatch").FindOneAndUpdate(context.Background(), bson.M{"batchno": batchno}, bson.M{
 		"$set": bson.M{"batchno": batchinput, "volume": weight, "viscosity": viscosity, "lightdark": lightdark, "redgreen": redgreen, "yellowblue": yellowblue, "color.code": code,
-			"color.name": name, "color.supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
+			"color.name": name, "color.supplier": supplier, "supplier": supplier, "color.brand": brand, "classification": classification, "sopno": sopno, "operator": operator,
 			"receiver": receiver, "area": area, "step": step, "nk2": nk2, "fordcup4": fordcup4,
 		}})
 	if result.Err() != nil {
@@ -9116,6 +9116,7 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 		LightDark      float64   `bson:"lightdark"`
 		RedGreen       float64   `bson:"redgreen"`
 		YellowBlue     float64   `bson:"yellowblue"`
+		Supplier       string    `bson:"supplier"`
 		Status         string    `bson:"status"`
 		IssuedDate     time.Time `bson:"issueddate"`
 		IssuedDateStr  string
@@ -9142,6 +9143,7 @@ func (s *Server) ca_updatebatch(w http.ResponseWriter, r *http.Request, ps httpr
 	mixingbatchRecord.Color.Name = name
 	mixingbatchRecord.Color.Brand = brand
 	mixingbatchRecord.Color.Supplier = supplier
+	mixingbatchRecord.Supplier = supplier
 	mixingbatchRecord.Classification = classification
 	mixingbatchRecord.Operator = operator
 	mixingbatchRecord.Classification = classification

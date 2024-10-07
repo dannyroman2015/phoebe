@@ -14,6 +14,7 @@ type BatchRecord_datestr struct {
 	RedGreen       float64 `bson:"redgreen"`
 	YellowBlue     float64 `bson:"yellowblue"`
 	Status         string  `bson:"status"`
+	Supplier       string  `bson:"supplier"`
 	IssuedDate     string  `bson:"issueddate"`
 	StartUse       string  `bson:"startuse"`
 	EndUse         string  `bson:"enduse"`
