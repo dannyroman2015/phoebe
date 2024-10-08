@@ -5092,7 +5092,7 @@ func (s *Server) so_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/output/admin/loadreport
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) soa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("output").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("output").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(20))
 	if err != nil {
 		log.Println(err)
 	}
