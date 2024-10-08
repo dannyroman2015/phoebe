@@ -220,6 +220,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/assembly/overview/loadreport", s.sao_loadreport)
 	router.POST("/sections/assembly/overview/reportsearch", s.sao_reportsearch)
 	router.POST("/sections/assembly/overview/reportdatefilter", s.sao_reportdatefilter)
+	router.POST("/sections/assembly/overview/addplanvalue", s.sao_addplanvalue)
 
 	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)

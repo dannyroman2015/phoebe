@@ -1,4 +1,4 @@
-<div class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div id="assembly-container" class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <!-- title & control -->
   <div class="flex justify-between">
     <a @mouseover="
@@ -20,7 +20,7 @@
 
     <div class="flex space-x-2">
       
-      <div x-data="{ modalOpen: false }"
+      <div x-data="{ modalOpen: false, isDragging: false, offsetX: 0, offsetY: 0 }"
     @keydown.escape.window="modalOpen = false"
     :class="{ 'z-40': modalOpen }" class="relative w-auto h-auto">
     <button @click="modalOpen=true" class="flex items-center justify-center w-8 h-8 bg-white border rounded-full shadow-sm cursor-pointer hover:bg-neutral-100 focus-visible:ring-gray-400 focus-visible:ring-2 focus-visible:outline-none active:bg-white border-neutral-200/70">
@@ -44,20 +44,57 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-90"
+                @mousedown="isDragging = true; offsetX = $event.clientX - $el.offsetLeft; offsetY = $event.clientY - $el.offsetTop"
+                @mousemove="if (isDragging) { $el.style.left = ($event.clientX - offsetX) + 'px'; $el.style.top = ($event.clientY - offsetY) + 'px'}"
+                @mouseup="isDragging = false" style="position: absolute;"
                 class="relative w-full py-6 bg-white shadow-md px-7 bg-opacity-100 drop-shadow-md sm:max-w-lg sm:rounded-lg">
-                <div class="flex items-center justify-between pb-3">
-                    <h3 class="text-lg font-semibold">Tieu de</h3>
-                    <button @click="modalOpen=false" class="absolute top-0 right-0 flex items-center justify-center w-8 h-8 mt-5 mr-5 text-gray-600 rounded-full hover:text-gray-800 hover:bg-gray-50">
+                <form id="modalform">
+                  <div class="flex items-center justify-between pb-3">
+                    <h3 class="text-lg font-semibold">Đặt kế hoạch theo ngày</h3>
+                    <!-- <button @click="modalOpen=false" class="absolute top-0 right-0 flex items-center justify-center w-8 h-8 mt-5 mr-5 text-gray-600 rounded-full hover:text-gray-800 hover:bg-gray-50">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>  
-                    </button>
-                </div>
-                <div class="relative w-auto pb-8">
-                    <p>dat form o day.</p>
-                </div>
-                <div class="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
-                    <button @click="modalOpen=false" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors border rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-100 focus:ring-offset-2">Huy</button>
-                    <button @click="modalOpen=false" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium text-white transition-colors border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 bg-neutral-950 hover:bg-neutral-900">Ok</button>
-                </div>
+                    </button> -->
+                  </div>
+
+                  <div class="relative w-auto pb-8">
+                    <div class="p-2 overflow-y-auto">
+                      <label for="plandate" class="block text-sm font-medium mb-2 dark:text-white">Ngày</label>
+                      <input type="date" id="plandate" name="plandate" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                    </div>
+
+                    <div class="flex space-x-2 p-2 overflow-y-auto">
+                      <div>
+                        <label for="brand" tabindex="0"
+                                class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+                          <input class="sr-only" value="brand" id="brand" type="radio" tabindex="-1" name="plantype"/>
+                          <span class="text-sm">Brand</span>
+                        </label>
+                      </div>
+                      
+                      <div>
+                        <label for="rh" tabindex="0"
+                                class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+                          <input class="sr-only" value="rh" id="rh" type="radio" tabindex="-1" name="plantype" />
+                          <span class="text-sm">RH</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="p-2 overflow-y-auto">
+                      <label for="planvalue" class="block text-sm font-medium mb-2 dark:text-white">Sản lượng kế hoạch</label>
+                      <input type="number" min="0" step="0.1" id="planvalue" name="planvalue" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                    </div>       
+                    
+                  </div>
+
+                  <div class="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
+                      <button @click="modalOpen=false" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors border rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-100 focus:ring-offset-2">
+                        Huy</button>
+                      <button @click="modalOpen=false;" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium text-white transition-colors border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 bg-neutral-950 hover:bg-neutral-900">
+                        Ok</button>
+                  </div>
+                </form>
+                
             </div>
         </div>
     </template>
@@ -178,8 +215,7 @@
 </div>
 
 <script>
-  document.getElementById("assemblyToDate").valueAsDate = new Date();
-  document.getElementById("assemblyFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
+  document.getElementById("plandate").valueAsDate = new Date();
 
   assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyPlanData}}, {{.assemblyInventoryData}}, {{.assemblyTarget}}))
 
