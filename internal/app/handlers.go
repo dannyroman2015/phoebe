@@ -5693,6 +5693,7 @@ func (s *Server) sao_reportdatefilter(w http.ResponseWriter, r *http.Request, ps
 func (s *Server) sao_addplanvalue(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	date, _ := time.Parse("2006-01-02", r.FormValue("plandate"))
 	value, _ := strconv.ParseFloat(r.FormValue("planvalue"), 64)
+
 	_, err := s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
 		"type": "plan", "date": date, "plantype": r.FormValue("plantype"), "plan": value,
 	})
