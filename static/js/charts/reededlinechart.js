@@ -1,4 +1,4 @@
-const drawReededlineChart = (data) => {
+const drawReededlineChart = (data, wood25data) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 20};
@@ -10,7 +10,6 @@ const drawReededlineChart = (data) => {
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.tone))
 
-
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, innerWidth])
@@ -18,7 +17,12 @@ const drawReededlineChart = (data) => {
 
   const y = d3.scaleLinear()
     .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
-    .rangeRound([innerHeight, 0])
+    .rangeRound([innerHeight, innerHeight/3])
+    .nice()
+
+  const y1 = d3.scaleLinear()
+    .domain([0, d3.max(wood25data, d => d.qty)])
+    .rangeRound([innerHeight/3, 0])
     .nice()
 
   const color = d3.scaleOrdinal()
@@ -134,10 +138,37 @@ const drawReededlineChart = (data) => {
         .attr("stroke", "#75485E")
         .attr("stroke-width", 1);
 
+  // wood25 cutting
+  console.log(data)
+  console.log(wood25data)
+  // draw wood25 cutting
+  innerChart.append("path")
+    .attr("fill", "none")
+    .attr("stroke", "#75485E")
+    .attr("stroke-width", 1.5)
+    .attr("d", d => d3.line()
+        .x(d => x(d.date) + x.bandwidth()/2)
+        .y(d => y1(d.qty)).curve(d3.curveStep)(wood25data));
+
+  innerChart.append("g")
+      .attr("font-family", "san-serif")
+      .attr("font-size", 14)
+      .attr("font-weight", 600)
+    .selectAll()
+    .data(wood25data)
+    .join("text")
+      .text(d => d3.format(",.3s")(d.qty))
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "start")
+      .attr("x", d => x(d.date) + x.bandwidth()/2)
+      .attr("y", d => y1(d.qty))
+      .attr("dy", "-0.1em")
+      .attr("fill", "#75485E")
+
   return svg.node();
 }
 
-const drawReededlineChart1 = (data, target) => {
+const drawReededlineChart1 = (data, wood25data, target) => {
   const width = 900;
   const height = 350;
   const margin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -149,7 +180,6 @@ const drawReededlineChart1 = (data, target) => {
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.tone))
 
-
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, innerWidth])
@@ -158,6 +188,11 @@ const drawReededlineChart1 = (data, target) => {
   const y = d3.scaleLinear()
     // .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
     .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
+    .rangeRound([innerHeight, 0])
+    .nice()
+
+  const y1 = d3.scaleLinear()
+    .domain(0, d3.max(wood25data, d => d.qty))
     .rangeRound([innerHeight, 0])
     .nice()
 
@@ -226,6 +261,16 @@ const drawReededlineChart1 = (data, target) => {
           d[1] - d[0] >= 30 ? d3.format(".0f")(d[1]-d[0]) : ""
         )
   })
+
+  console.log(wood25data)
+  // draw wood25 cutting
+  innerChart.append("path")
+    .attr("fill", "none")
+    .attr("stroke", "red")
+    .attr("stroke-width", 1.5)
+    .attr("d", d => d3.line()
+        .x(d => x(d.date) + x.bandwidth()/2)
+        .y(d => y1(d.qty)).curve(d3.curveCatmullRom)(wood25data));
 
   //draw target lines
   const dates = data.map(d => d.date)

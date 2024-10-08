@@ -225,6 +225,13 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)
 	router.POST("/sections/assembly/entry/sendentry", s.sae_sendentry)
 
+	router.GET("/sections/assembly/planentry", s.sae_planentry)
+	router.GET("/sections/assembly/entry/loadplanform", s.sae_loadplanform)
+	router.POST("/sections/assembly/entry/sendplanentry", s.sae_sendplanentry)
+
+	router.GET("/sections/assembly/inventoryentry", s.sai_inventoryentry)
+	router.GET("/sections/assembly/entry/loadinventoryform", s.sai_loadinventoryform)
+
 	router.GET("/sections/assembly/admin", withAuth(s.sa_admin))
 	router.GET("/sections/assembly/admin/loadreport", s.saa_loadreport)
 	router.POST("/sections/assembly/admin/searchreport", s.saa_searchreport)

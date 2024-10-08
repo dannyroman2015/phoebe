@@ -134,7 +134,7 @@
   document.getElementById("assemblyToDate").valueAsDate = new Date();
   document.getElementById("assemblyFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
 
-  assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyTarget}}))
+  assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyPlanData}}, {{.assemblyInventoryData}}, {{.assemblyTarget}}))
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
   const pc_interval = d3.interval(() =>{

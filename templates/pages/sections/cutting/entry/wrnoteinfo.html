@@ -33,3 +33,21 @@
       Số lượng (m<sup>3</sup>) còn lại</span>
   </label>
 </div>
+
+{{if .showForReeded}}
+<div>
+  <label for="forreeded" tabindex="0"
+    class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+    <input class="sr-only" value="true" id="forreeded" type="radio" tabindex="-1" name="forreeded"/>
+    <span class="text-sm">Cắt cho Reeded</span>
+  </label>
+</div>
+
+<div>
+  <label for="notreeded" tabindex="0"
+        class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+    <input class="sr-only" value="false" id="notreeded" type="radio" tabindex="-1" name="forreeded" />
+    <span class="text-sm">Không cắt cho Reeded</span>
+  </label>
+</div>
+{{end}}

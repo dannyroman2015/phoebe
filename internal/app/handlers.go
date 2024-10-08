@@ -497,6 +497,25 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 
+	// get data of Gỗ 25 of cutting
+	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"thickness": 25}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var wood25data []struct {
+		Date string  `bson:"date" json:"date"`
+		Qty  float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &wood25data); err != nil {
+		log.Println(err)
+	}
+
 	// get target of reededline
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"name": "reededline total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -529,6 +548,7 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/reededline.html")).Execute(w, map[string]interface{}{
 		"reededlinedata":   reededlinedata,
+		"wood25data":       wood25data,
 		"reededlineTarget": reededlineTarget,
 		"reededlineUpTime": reededlineUpTime,
 	})
@@ -723,7 +743,7 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -739,6 +759,43 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 		Value float64 `bson:"value" json:"value"`
 	}
 	if err := cur.All(context.Background(), &assemblyData); err != nil {
+		log.Println(err)
+	}
+
+	// get plan data
+	cur, err = s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyPlanData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Plantype string  `bson:"plantype" json:"plantype"`
+		Plan     float64 `bson:"plan" json:"plan"`
+	}
+
+	if err := cur.All(context.Background(), &assemblyPlanData); err != nil {
+		log.Println(err)
+	}
+
+	// get inventory
+	cur, err = s.mgdb.Collection("assembly").Find(context.Background(), bson.M{"type": "inventory"}, options.Find().SetSort(bson.M{"prodtype": 1}))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var assemblyInventoryData []struct {
+		Prodtype  string  `bson:"prodtype" json:"prodtype"`
+		Inventory float64 `bson:"inventory" json:"inventory"`
+	}
+
+	if err := cur.All(context.Background(), &assemblyInventoryData); err != nil {
 		log.Println(err)
 	}
 
@@ -772,9 +829,11 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	assemblyUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/assembly.html")).Execute(w, map[string]interface{}{
-		"assemblyData":   assemblyData,
-		"assemblyTarget": assemblyTarget,
-		"assemblyUpTime": assemblyUpTime,
+		"assemblyData":          assemblyData,
+		"assemblyPlanData":      assemblyPlanData,
+		"assemblyInventoryData": assemblyInventoryData,
+		"assemblyTarget":        assemblyTarget,
+		"assemblyUpTime":        assemblyUpTime,
 	})
 }
 
@@ -3930,9 +3989,13 @@ func (s *Server) sc_wrnoteinfo(w http.ResponseWriter, r *http.Request, ps httpro
 	if err := sresult.Decode(&wrnoteinfo); err != nil {
 		log.Println(err)
 	}
-
+	showForReeded := false
+	if wrnoteinfo.Thickness == 25 {
+		showForReeded = true
+	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/wrnoteinfo.html")).Execute(w, map[string]interface{}{
-		"wrnoteinfo": wrnoteinfo,
+		"wrnoteinfo":    wrnoteinfo,
+		"showForReeded": showForReeded,
 	})
 }
 
@@ -3999,6 +4062,8 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	prodtype := r.FormValue("prodtype")
 	thickness, _ := strconv.ParseFloat(r.FormValue("thickness"), 64)
 	wrnote := r.FormValue("wrnote")
+	forreeded, _ := strconv.ParseBool(r.FormValue("forreeded"))
+
 	usernameToken, err := r.Cookie("username")
 	if err != nil {
 		log.Println(err)
@@ -4014,6 +4079,7 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
 		"type": "report", "wrnote": wrnote, "woodtype": woodtype, "prodtype": prodtype, "qtycbm": qty, "thickness": thickness, "reporter": usernameToken.Value,
 		"date": primitive.NewDateTimeFromTime(occurdate), "createddate": primitive.NewDateTimeFromTime(time.Now()), "lastmodified": primitive.NewDateTimeFromTime(time.Now()),
+		"is25reeded": forreeded,
 	})
 	if err != nil {
 		log.Println(err)
@@ -5682,6 +5748,64 @@ func (s *Server) sae_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// router.GET("/sections/assembly/planentry", s.sae_planentry)
+func (s *Server) sae_planentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/assembly/entry/planentry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/sections/assembly/entry/loadplanform", s.sae_loadplanform)
+func (s *Server) sae_loadplanform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/planform.html")).Execute(w, nil)
+}
+
+// router.POST("/sections/assembly/entry/sendplanentry", s.sae_sendplanentry)
+func (s *Server) sae_sendplanentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, _ := r.Cookie("username")
+	username := usernameToken.Value
+
+	date, _ := time.Parse("Jan 02, 2006", r.FormValue("occurdate"))
+	value, _ := strconv.ParseFloat(r.FormValue("value"), 64)
+
+	if r.FormValue("value") == "" {
+		template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/planform.html")).Execute(w, map[string]interface{}{
+			"showMissingDialog": true,
+			"msgDialog":         "Thông tin bị thiếu, vui lòng nhập lại.",
+		})
+		return
+	}
+	_, err := s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"date": primitive.NewDateTimeFromTime(date), "plan": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/planform.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+		})
+		return
+	}
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/planform.html")).Execute(w, map[string]interface{}{
+		"showSuccessDialog": true,
+		"msgDialog":         "Gửi dữ liệu thành công.",
+	})
+}
+
+// router.GET("/sections/assembly/inventoryentry", s.sai_inventoryentry)
+func (s *Server) sai_inventoryentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles(
+		"templates/pages/sections/assembly/entry/inventoryentry.html",
+		"templates/shared/navbar.html",
+	)).Execute(w, nil)
+}
+
+// router.GET("/sections/assembly/entry/loadinventoryform", s.sai_loadinventoryform)
+func (s *Server) sai_loadinventoryform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/inventoryform.html")).Execute(w, nil)
 }
 
 // ///////////////////////////////////////////////////////////////////////

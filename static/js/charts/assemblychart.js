@@ -509,11 +509,11 @@ innerChart.append("g")
   return svg.node();
 }
 
-const drawAssemblyVTChart = (data, target) => {
+const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
   if (data == undefined) return;
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 20, bottom: 20, left: 40};
+  const margin = {top: 20, right: 20, bottom: 20, left: 80};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   
@@ -525,6 +525,11 @@ const drawAssemblyVTChart = (data, target) => {
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
     (d3.index(data, d => d.date, d => d.type))
+
+  const planseries = d3.stack()
+    .keys(d3.union(plandata.map(d => d.plantype)))
+    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).plan)
+    (d3.index(plandata, d => d.date, d => d.plantype))
 
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
@@ -538,8 +543,8 @@ const drawAssemblyVTChart = (data, target) => {
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh"])
-    .range(["#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE"])
+    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh", "brand", "rh"])
+    .range(["#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE"])
     .unknown("white");
 
   const svg = d3.create("svg")
@@ -557,10 +562,10 @@ const drawAssemblyVTChart = (data, target) => {
     .selectAll("rect")
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
-        .attr("x", d => x(d.data[0]))
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/3)
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - 5 : y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
-        .attr("width", x.bandwidth())
+        .attr("width", 2*x.bandwidth()/3)
         .on("mouseover", e => {
           flag = !flag;
           change(flag);
@@ -576,30 +581,30 @@ const drawAssemblyVTChart = (data, target) => {
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 14)
+    .attr("font-size", 12)
   .selectAll()
   .data(series[series.length-1])
   .join("text")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+    .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
     .attr("y", d => y(d[1]) - 15)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(",.0f")(d[1])}` )
+    .text(d => `Σ${d3.format(",.0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
-        .attr("font-size", 14)
+        .attr("font-size", 12)
       .selectAll()
       .data(serie)
       .join("text")
         .attr("class", d => d.key.substring(0,2))
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+        .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
         .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - (y(d[1]) - y(d[0]))/2 - 5 : y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
         .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
@@ -615,20 +620,17 @@ const drawAssemblyVTChart = (data, target) => {
       .selectAll()
       .data(x1rhdata)
       .join("text")
-        .text(d => d[1] > 3500 ? `Σ ${d3.format(",.0f")(d[1])}` : "")
+        .text(d => d[1] > 3500 ? `Σ${d3.format(",.0f")(d[1])}` : "")
         .attr("class", "x1total")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "hanging")
-        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+        .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
         .attr("y", d => y(d[0]))
         .attr("dy", "0.1em")
         .attr("fill", "#921A40")
-        .attr("font-size", 14)
+        .attr("font-size", 12)
         .attr("opacity", 0)
-    // let flag = true;
-    // innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
-    // innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
-    // setInterval(() => {
+
       if (flag) {
         innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))
         innerChart.call(g => g.selectAll(".x1total").attr("opacity", 0))
@@ -636,8 +638,6 @@ const drawAssemblyVTChart = (data, target) => {
         innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
         innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
       }
-    //   flag = !flag
-    // }, 10000);
   }
 
   svg.append("text")
@@ -707,6 +707,59 @@ const drawAssemblyVTChart = (data, target) => {
       .style("transition", "opacity 2s ease-out")
   setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 5000)
 
+  // cột plan
+  innerChart
+    .selectAll()
+    .data(planseries)
+    .join("g")
+      .attr("fill", d => color(d.key))
+      .attr("fill-opacity", 0.9)
+    .selectAll("rect")
+    .data(D => D.map(d => (d.key = D.key, d)))
+    .join("rect")
+        .attr("x", d => x(d.data[0]))
+        .attr("y", d => {console.log(d); return y(d[1]);} )
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth()/3)
+        .attr("stroke", "#FF9874")
+        .on("mouseover", e => {
+          flag = !flag;
+          change(flag);
+        })
+      .append("title")
+        .text(d => d[1] - d[0])
+
+  planseries.forEach(planserie => {
+    innerChart.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
+      .selectAll()
+      .data(planserie)
+      .join("text")
+        .text(d => `${d3.format(",.0f")(d[1]-d[0])}`)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/6)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
+        .attr("dy", "0.1em")
+        .attr("fill", "#102C57")
+        .attr("transform", d => `rotate(-90, ${x(d.data[0]) + x.bandwidth()/6}, ${y(d[1]) - (y(d[1]) - y(d[0]))/2})`)
+  })
+
+  console.log(plandata)
+  console.log(planseries[planseries.length-1])
+  innerChart.append("text")
+        .text("plan -->")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", x(plandata[plandata.length-1].date) + x.bandwidth()/6)
+        .attr("y", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30)
+        .attr("fill", "#FA7070")
+        .attr("font-size", 14)
+        .attr("transform", `rotate(90, ${x(plandata[plandata.length-1].date) + x.bandwidth()/6}, ${y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30})`)
+
+  // end cột plan
+
   //draw target lines
   if (target != undefined) { 
     const dates = data.map(d => d.date)
@@ -748,6 +801,80 @@ const drawAssemblyVTChart = (data, target) => {
 
   }
   // end target line
+
+  // inventory bar
+  if (inventorydata != undefined) {
+    svg.append("line")
+      .attr("x1", 70)
+      .attr("y1", height)
+      .attr("x2", 70)
+      .attr("y2", 0)
+      .attr("stroke", "black")
+      .attr("stroke-opacity", 0.2)
+
+    svg.append("rect")
+      .attr("x", 10)
+      .attr("y", y(inventorydata[0].inventory) + margin.bottom)
+      .attr("width", 45)
+      .attr("height", innerHeight - y(inventorydata[0].inventory))
+      .attr("fill", color(inventorydata[0].prodtype));
+
+    svg.append("rect")
+      .attr("x", 10)
+      .attr("y", y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("width", 45)
+      .attr("height", innerHeight - y(inventorydata[1].inventory))
+      .attr("fill", color(inventorydata[1].prodtype));
+
+    svg.append("text")
+      .text(`${d3.format(",.0f")(inventorydata[0].inventory)}`)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 32)
+      .attr("y",  y(inventorydata[0].inventory/2) + margin.bottom)
+      .attr("fill", "#102C57")
+      .attr("font-size", 12)
+
+    svg.append("text")
+      .text(`${d3.format(",.0f")(inventorydata[1].inventory)}`)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 32)
+      .attr("y",  y(inventorydata[1].inventory/2) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("fill", "#102C57")
+      .attr("font-size", 12)
+
+    svg.append("text")
+      .text("Inventory")
+      .attr("text-anchor", "start")
+      .attr("x", 5)
+      .attr("y", height)
+      .attr("dy", "-0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", 12)
+
+    // svg.append("text")
+    //   .text(d3.format(",.0f")(inventory.qty))
+    //   .attr("text-anchor", "middle")
+    //   .attr("x", innerWidth + 3* x.bandwidth() /2)
+    //   .attr("y", y2(inventory.qty) + margin.bottom)
+    //   .attr("dy", "-0.15em")
+    //   .attr("fill", "#75485E")
+    //   .attr("font-size", 14)
+    //   .attr("font-weight", 600)
+
+    // svg.append("text")
+    //   .text(inventory.qty != 0 ? inventory.date : "")
+    //   .attr("text-anchor", "middle")
+    //   .attr("alignment-baseline", "end")
+    //   .attr("x", innerWidth + 3*x.bandwidth()/4)
+    //   .attr("y", height/2)
+    //   .attr("dy", "1em")
+    //   .attr("fill", "#75485E")
+    //   .attr("font-size", 14)
+    //   .attr("transform", `rotate(-90, ${innerWidth + 3*x.bandwidth()/4}, ${height/2})`)
+  } 
+
 
   return svg.node();
 

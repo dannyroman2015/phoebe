@@ -137,9 +137,9 @@
   document.getElementById("reededlineToDate").valueAsDate = new Date();
   document.getElementById("reededlineFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
   if ({{.reededlineTarget}} == undefined) {
-    reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+    reededlinechart.append(drawReededlineChart({{.reededlinedata}}, {{.wood25data}}))
   } else {
-    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.reededlineTarget}}))
+    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.wood25data}}, {{.reededlineTarget}}))
   }
 
   /*const panelcncChart = document.getElementById("panelcnccharttype")
