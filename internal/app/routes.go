@@ -221,6 +221,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/assembly/overview/reportsearch", s.sao_reportsearch)
 	router.POST("/sections/assembly/overview/reportdatefilter", s.sao_reportdatefilter)
 	router.POST("/sections/assembly/overview/addplanvalue", s.sao_addplanvalue)
+	router.POST("/sections/assembly/overview/updateinventory", s.sao_updateinventory)
 
 	router.GET("/sections/assembly/entry", withAuth(s.sa_entry))
 	router.GET("/sections/assembly/entry/loadform", s.sae_loadform)

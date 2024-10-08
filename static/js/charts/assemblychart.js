@@ -845,6 +845,17 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
     svg.append("text")
+      .text(inventorydata[1].createdatstr)
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 60)
+      .attr("y", y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("fill", "#FA7070")
+      .attr("font-size", 12)
+      .attr("transform", `rotate(90, 60, ${y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory))})`)
+    // end inventory
+
+    svg.append("text")
       .text("Inventory")
       .attr("text-anchor", "start")
       .attr("x", 5)

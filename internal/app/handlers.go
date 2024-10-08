@@ -785,20 +785,25 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// get inventory
-	cur, err = s.mgdb.Collection("assembly").Find(context.Background(), bson.M{"type": "inventory"}, options.Find().SetSort(bson.M{"prodtype": 1}))
+	cur, err = s.mgdb.Collection("assembly").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
 	var assemblyInventoryData []struct {
-		Prodtype  string  `bson:"prodtype" json:"prodtype"`
-		Inventory float64 `bson:"inventory" json:"inventory"`
+		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Inventory    float64   `bson:"inventory" json:"inventory"`
+		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+		CreatedAtStr string    `json:"createdatstr"`
 	}
 
 	if err := cur.All(context.Background(), &assemblyInventoryData); err != nil {
 		log.Println(err)
 	}
 
+	for i := 0; i < len(assemblyInventoryData); i++ {
+		assemblyInventoryData[i].CreatedAtStr = assemblyInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 01/02")
+	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -5691,15 +5696,55 @@ func (s *Server) sao_reportdatefilter(w http.ResponseWriter, r *http.Request, ps
 
 // router.POST("/sections/assembly/overview/addplanvalue", s.sao_addplanvalue)
 func (s *Server) sao_addplanvalue(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
 	date, _ := time.Parse("2006-01-02", r.FormValue("plandate"))
-	value, _ := strconv.ParseFloat(r.FormValue("planvalue"), 64)
+	brandplanvalue, _ := strconv.ParseFloat(r.FormValue("brandplanvalue"), 64)
+	rhplanvalue, _ := strconv.ParseFloat(r.FormValue("rhplanvalue"), 64)
 
-	_, err := s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
-		"type": "plan", "date": date, "plantype": r.FormValue("plantype"), "plan": value,
+	_, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+// router.POST("/sections/assembly/overview/updateinventory", s.sao_updateinventory)
+func (s *Server) sao_updateinventory(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+
+	brandinventory, _ := strconv.ParseFloat(r.FormValue("brandinventory"), 64)
+	rhinventory, _ := strconv.ParseFloat(r.FormValue("rhinventory"), 64)
+
+	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "rh", "inventory": rhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		log.Println(err)
 	}
+
+	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "brand", "inventory": brandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
