@@ -10694,6 +10694,7 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
+
 	var timelinedata []struct {
 		CodePath  string  `bson:"codepath"`
 		Title     string  `bson:"title"`
@@ -10703,9 +10704,11 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 		CreatedAt string  `bson:"createdat"`
 		Code      string
 	}
+
 	if err := cur.All(context.Background(), &timelinedata); err != nil {
 		log.Println(err)
 	}
+
 	for i := 0; i < len(timelinedata); i++ {
 		arr := strings.Split(timelinedata[i].CodePath, "->")
 		timelinedata[i].Code = arr[len(arr)-1]
@@ -10754,6 +10757,149 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	switch timelinetype {
+
+	case "Lãnh đủ vật tư":
+		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var rc PP
+		if err := sr.Decode(&rc); err != nil {
+			log.Println(err)
+		}
+		qty = rc.Qty
+
+		switch len(path) {
+		case 2:
+			qty = rc.Qty
+			rc.Done = rc.Qty
+			rc.DeliveryQty = rc.Qty
+
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"done": qty, "deliveryqty": qty}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 3:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					qty = rc.Children[i].Qty
+					rc.Children[i].Done = qty
+					rc.Children[i].DeliveryQty = qty
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 4:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							qty = rc.Children[i].Children[j].Qty
+							rc.Children[i].Children[j].Done = qty
+							rc.Children[i].Children[j].DeliveryQty = qty
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 5:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									qty = rc.Children[i].Children[j].Children[k].Qty
+									rc.Children[i].Children[j].Children[k].Done = qty
+									rc.Children[i].Children[j].Children[k].DeliveryQty = qty
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 6:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									for l := 0; l < len(rc.Children[i].Children[j].Children[k].Children); l++ {
+										if rc.Children[i].Children[j].Children[k].Children[l].Itemcode == path[5] {
+											qty = rc.Children[i].Children[j].Children[k].Children[l].Qty
+											rc.Children[i].Children[j].Children[k].Children[l].Done = qty
+											rc.Children[i].Children[j].Children[k].Children[l].DeliveryQty = qty
+											break
+										}
+									}
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 7:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									for l := 0; l < len(rc.Children[i].Children[j].Children[k].Children); l++ {
+										if rc.Children[i].Children[j].Children[k].Children[l].Itemcode == path[5] {
+											for m := 0; m < len(rc.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+												if rc.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == path[6] {
+													qty = rc.Children[i].Children[j].Children[k].Children[l].Children[m].Qty
+													rc.Children[i].Children[j].Children[k].Children[l].Children[m].Done = qty
+													rc.Children[i].Children[j].Children[k].Children[l].Children[m].DeliveryQty = qty
+													break
+												}
+											}
+											break
+										}
+									}
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+		}
 
 	case "Hoàn thành toàn bộ":
 		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
@@ -11480,15 +11626,17 @@ func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprout
 	defer cur.Close(context.Background())
 
 	type PP struct {
-		Id       string  `bson:"_id" json:"id"`
-		Mo       string  `bson:"mo" json:"mo"`
-		Itemcode string  `bson:"itemcode" json:"itemcode"`
-		ItemName string  `bson:"itemname" json:"itemname"`
-		Parent   string  `bson:"parent" json:"parent"`
-		Qty      float64 `bson:"qty" json:"qty"`
-		Unit     string  `bson:"unit" json:"unit"`
-		Done     float64 `bson:"done" json:"done"`
-		Children []PP    `bson:"children" json:"children"`
+		Id          string  `bson:"_id" json:"id"`
+		Mo          string  `bson:"mo" json:"mo"`
+		Itemcode    string  `bson:"itemcode" json:"itemcode"`
+		ItemName    string  `bson:"itemname" json:"itemname"`
+		Parent      string  `bson:"parent" json:"parent"`
+		Qty         float64 `bson:"qty" json:"qty"`
+		Unit        string  `bson:"unit" json:"unit"`
+		Done        float64 `bson:"done" json:"done"`
+		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert       bool    `bson:"alert" json:"alert"`
+		Children    []PP    `bson:"children" json:"children"`
 	}
 
 	var gnhhdata []PP
