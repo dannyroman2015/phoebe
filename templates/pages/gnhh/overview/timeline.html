@@ -101,7 +101,7 @@
     
     <div x-data="{ id: $id('accordion') }" :class="{ 'border-neutral-200/60 text-neutral-800' : activeAccordion==id, 'border-transparent text-black hover:text-neutral-800' : activeAccordion!=id }" 
           class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
-      <button @click="setActiveAccordion(id)" class="flex items-center justify-center space-x-6 w-full px-5 py-2 font-semibold text-center text-blue-400 select-none">
+      <button id="timelinecreate" @click="setActiveAccordion(id)" class="flex items-center justify-center space-x-6 w-full px-5 py-2 font-semibold text-center text-blue-400 select-none">
         <span>Create New</span>
         
         <div :class="{ 'rotate-90': activeAccordion==id }" class="relative flex items-center justify-center w-2.5 h-2.5 duration-300 ease-out">
@@ -130,15 +130,19 @@
                 <select name="timelinetype" id="timelinetype" 
                         class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
                   <option value="">Select</option>
-                  <option value="complete">Hoàn thành</option>
-                  <option value="done">Làm được</option>
-                  <option value="other">Khác</option>
+                  <option value="Hoàn thành toàn bộ">Hoàn thành</option>
+                  <option value="Làm được">Làm được</option>
+                  <option value="Giao hàng">Giao hàng</option>
+                  <option value="Xác nhận Nhận hàng">Xác nhận Nhận hàng</option>
+                  <option value="Cảnh báo">Cảnh báo</option>
+                  <option value="Tắt cảnh báo">Tắt cảnh báo</option>
+                  <option value="Khác">Khác</option>
                 </select>
               </div>
 
               <div class="col-span-full sm:col-span-1">
                 <label for="qty" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
-                  <input type="number" id="qty" name="qty" placeholder="qty"
+                  <input type="number" id="qty" name="qty" placeholder="qty" step="any"
                           class="peer h-8 w-full text-center border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"/>
   
                   <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
@@ -181,7 +185,7 @@
     {{range .timelinedata}}
     <div class="flex gap-x-3">
 
-      <div class="w-16 text-end">
+      <div class="w-10 sm:w-20 text-end">
         <span class="text-xs text-gray-500 dark:text-neutral-400">{{.CreatedAt}}</span>
       </div>
 
@@ -200,7 +204,11 @@
             <line x1="16" x2="8" y1="17" y2="17"></line>
             <line x1="10" x2="8" y1="9" y2="9"></line>
           </svg>
-          {{.Title}}
+          {{if eq .Qty 0.0}} 
+            {{.Title}} 
+          {{else}}
+          {{.Title}} (Số lượng: {{.Qty}})
+          {{end}}
         </h3>
         <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
           {{.Note}}

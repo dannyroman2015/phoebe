@@ -217,7 +217,7 @@ const drawGNHHChart2 = (data) => {
       .attr("x", d => d.depth * nodeSize + 6)
       .attr("y", "-0.67em")
       .attr("height", "1.3em")
-      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (394 - d.depth * nodeSize) : 0)
+      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (444 - d.depth * nodeSize) : 0)
       .attr("fill", "url(#gradient)")
       .attr("fill-opacity", 0.5)
 
@@ -227,14 +227,24 @@ const drawGNHHChart2 = (data) => {
       .attr("fill", d => d.children ? null : "#999");
 
   node.append("text")
-      .attr("dy", "0.32em")
-      .attr("x", d => d.depth * nodeSize + 6)
-      .text(d =>  d.data.itemcode)
-      .on("click", (e, d) => {
-        document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
-        document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
-        document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
-      })
+    .text(d => {
+        if (d.data.deliveryqty == undefined || d.data.deliveryqty == 0) {
+          return d.data.itemcode;
+        } else {
+          return Math.abs(d.data.deliveryqty - d.data.done) > 0.005  ? `${d.data.itemcode} ✈️(${d.data.deliveryqty})` : `${d.data.itemcode} ✈️(100%)`}
+        }        
+      )
+    .attr("dy", "0.32em")
+    .attr("x", d => d.depth * nodeSize + 6)
+    .attr("fill", d => d.data.alert ? "red": "black")
+    .style("cursor", "pointer")
+    .on("click", (e, d) => {
+      document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
+      document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
+      document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
+      document.getElementById("timelinecreate").click();
+      document.getElementById("timelinecreate").focus();
+    })
 
   node.append("title")
       .text(d => d.ancestors().reverse().map(d => d.data.itemcode).join("/"));
@@ -242,65 +252,35 @@ const drawGNHHChart2 = (data) => {
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 280)
+    .attr("x", 350)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
     .text("Done");
 
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 280)
+      .attr("x", 350)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
-      .text(d => d.data.done ? d3.format(".3f")(d.data.done) : "")
+      .text(d => d.data.done ? Math.round(d.data.done*1000)/1000 : "")
 
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 400)
+    .attr("x", 450)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
     .text("Needed");
   
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 400)
+      .attr("x", 450)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
-      .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
-
-  // for (const {label, value, format, x} of columns) {
-  //   svg.append("text")
-  //       .attr("dy", "0.32em")
-  //       .attr("y", -nodeSize)
-  //       .attr("x", x)
-  //       .attr("text-anchor", "end")
-  //       .attr("font-weight", "bold")
-  //       .text(label);
-
-  //   // node.append("text")
-  //   //     .attr("dy", "0.32em")
-  //   //     .attr("x", x)
-  //   //     .attr("text-anchor", "end")
-  //   //     .attr("fill", d => d.children ? null : "#555")
-  //   //   .data(root.copy().sum(value).descendants())
-  //   //     .text(d => format(d.value, d));
-
-  //   node.append("text")
-  //       .attr("dy", "0.32em")
-  //       .attr("x", x)
-  //       .attr("text-anchor", "end")
-  //       .attr("fill", d => d.children ? null : "#555")
-  //     // .data(root.copy().sum(value).descendants())
-  //     .data(root.copy().descendants())
-  //       .text(d => {
-  //         console.log(d)
-  //         // return d.data.qty
-  //         return format(d.value, d)
-  //       });
-  // }
+      // .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
+      .text(d => d.data.qty ? `${Math.round(d.data.qty*1000)/1000} (${d.data.unit.toLowerCase()})`  : "");
 
   return svg.node();
 }

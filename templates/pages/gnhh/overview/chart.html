@@ -95,15 +95,12 @@
 
   </div>
 
-   <div id="chart-container">
-    <div id="gnhhchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+   <div id="chart-container" hx-get="/gnhh/overview/loadtree" hx-trigger="every 300s" hx-target="this" hx-swap="innerHTML settle:200ms">
+    <div class="fade-in" id="gnhhchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
    </div>
 </div>
 
 <script>
-  //document.getElementById("prodtypeToDate").valueAsDate = new Date();
- // document.getElementById("prodtypeFromDate").valueAsDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-
   if ({{.gnhhdata}} != undefined) {
     gnhhchart.append(drawGNHHChart2({{.gnhhdata}}))
   }
