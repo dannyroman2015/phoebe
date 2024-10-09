@@ -10701,11 +10701,15 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 		Note      string  `bson:"note"`
 		Reporter  string  `bson:"reporter"`
 		CreatedAt string  `bson:"createdat"`
+		Code      string
 	}
 	if err := cur.All(context.Background(), &timelinedata); err != nil {
 		log.Println(err)
 	}
-
+	for i := 0; i < len(timelinedata); i++ {
+		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Code = arr[len(arr)-1]
+	}
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
 	})
@@ -11445,16 +11449,21 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	defer cur.Close(context.Background())
 	var timelinedata []struct {
-		CodePath  string `bson:"codepath"`
-		Title     string `bson:"title"`
-		Note      string `bson:"note"`
-		Reporter  string `bson:"reporter"`
-		CreatedAt string `bson:"createdat"`
+		CodePath  string  `bson:"codepath"`
+		Title     string  `bson:"title"`
+		Qty       float64 `bson:"qty"`
+		Note      string  `bson:"note"`
+		Reporter  string  `bson:"reporter"`
+		CreatedAt string  `bson:"createdat"`
+		Code      string
 	}
 	if err := cur.All(context.Background(), &timelinedata); err != nil {
 		log.Println(err)
 	}
-
+	for i := 0; i < len(timelinedata); i++ {
+		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Code = arr[len(arr)-1]
+	}
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline_report.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
 	})
