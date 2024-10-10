@@ -181,7 +181,7 @@
             popoverPositionCalculate();
           });
           $watch('popoverOpen', function(value){
-            if(value){ popoverPositionCalculate(); document.getElementById('assemblycharttype').focus();  }
+            if(value){ popoverPositionCalculate(); }
           });
         "
         class="relative">
@@ -263,7 +263,8 @@
 </div>
 
 <script>
-  document.getElementById("plandate").valueAsDate = new Date();
+  document.getElementById("assemblyToDate").valueAsDate = new Date();
+  document.getElementById("assemblyFromDate").valueAsDate = new Date(Date.now() - 12*86400000);
 
   assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyPlanData}}, {{.assemblyInventoryData}}, {{.assemblyTarget}}))
 
