@@ -1,9 +1,5 @@
 <div class="fade-in" id="assemblychart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
 
 <script>
-  if ({{.assemblyTarget}} == undefined) {
-    assemblychart.append(drawAssemblyChart1({{.assemblyChartData}}))
-  } else {
-    assemblychart.append(drawAssemblyChart2({{.assemblyChartData}}, {{.assemblyTarget}}))
-  }
+  assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyPlanData}}, {{.assemblyInventoryData}}, {{.assemblyTarget}}))
 </script>

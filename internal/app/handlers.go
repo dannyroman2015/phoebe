@@ -248,7 +248,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	monthstart, _ := time.Parse("2006-01-02", "2024-10-01")
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(monthstart)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(monthstart)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": "$prodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
 		{{"$set", bson.M{"prodtype": "$_id"}}},
@@ -1012,7 +1012,7 @@ func (s *Server) d_loadfinemill(w http.ResponseWriter, r *http.Request, ps httpr
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -1021,14 +1021,56 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	if err != nil {
 		log.Println(err)
 	}
-	defer cur.Close(context.Background())
-	var packChartData []struct {
+	var packData []struct {
 		Date  string  `bson:"date" json:"date"`
 		Type  string  `bson:"type" json:"type"`
 		Value float64 `bson:"value" json:"value"`
 	}
-	if err := cur.All(context.Background(), &packChartData); err != nil {
+	if err := cur.All(context.Background(), &packData); err != nil {
 		log.Println(err)
+	}
+
+	// get plan data
+	cur, err = s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packPlanData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Plantype string  `bson:"plantype" json:"plantype"`
+		Plan     float64 `bson:"plan" json:"plan"`
+	}
+
+	if err := cur.All(context.Background(), &packPlanData); err != nil {
+		log.Println(err)
+	}
+
+	// get inventory
+	cur, err = s.mgdb.Collection("pack").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var packInventoryData []struct {
+		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Inventory    float64   `bson:"inventory" json:"inventory"`
+		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+		CreatedAtStr string    `json:"createdatstr"`
+	}
+
+	if err := cur.All(context.Background(), &packInventoryData); err != nil {
+		log.Println(err)
+	}
+
+	for i := 0; i < len(packInventoryData); i++ {
+		packInventoryData[i].CreatedAtStr = packInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
 	}
 
 	// get target
@@ -1040,14 +1082,13 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	if err != nil {
 		log.Println(err)
 	}
-	var packingTarget []struct {
+	var packTarget []struct {
 		Date  string  `bson:"date" json:"date"`
 		Value float64 `bson:"value" json:"value"`
 	}
-	if err = cur.All(context.Background(), &packingTarget); err != nil {
+	if err = cur.All(context.Background(), &packTarget); err != nil {
 		log.Println(err)
 	}
-
 	// get time of latest update
 	sr := s.mgdb.Collection("pack").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
 	if sr.Err() != nil {
@@ -1059,12 +1100,14 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	if err := sr.Decode(&LastReport); err != nil {
 		log.Println(err)
 	}
-	packingUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+	packUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/pack.html")).Execute(w, map[string]interface{}{
-		"packChartData": packChartData,
-		"packingTarget": packingTarget,
-		"packingUpTime": packingUpTime,
+		"packData":          packData,
+		"packPlanData":      packPlanData,
+		"packInventoryData": packInventoryData,
+		"packTarget":        packTarget,
+		"packUpTime":        packUpTime,
 	})
 }
 
@@ -1434,25 +1477,68 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 	switch pickedChart {
 	case "general":
 		cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": "$date", "itemtype": "$itemtype"}, "value": bson.M{"$sum": "$value"}}}},
-			{{"$sort", bson.D{{"_id.date", 1}, {"_id.itemtype", -1}}}},
-			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.itemtype"}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
 			{{"$unset", "_id"}},
 		})
 		if err != nil {
 			log.Println(err)
 		}
 		defer cur.Close(context.Background())
-		var assemblyChartData []struct {
+		var assemblyData []struct {
 			Date  string  `bson:"date" json:"date"`
 			Type  string  `bson:"type" json:"type"`
 			Value float64 `bson:"value" json:"value"`
 		}
-		if err := cur.All(context.Background(), &assemblyChartData); err != nil {
+		if err := cur.All(context.Background(), &assemblyData); err != nil {
 			log.Println(err)
 		}
-		// get target of assembly
+
+		// get plan data
+		cur, err = s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var assemblyPlanData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Plantype string  `bson:"plantype" json:"plantype"`
+			Plan     float64 `bson:"plan" json:"plan"`
+		}
+
+		if err := cur.All(context.Background(), &assemblyPlanData); err != nil {
+			log.Println(err)
+		}
+
+		// get inventory
+		cur, err = s.mgdb.Collection("assembly").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var assemblyInventoryData []struct {
+			Prodtype     string    `bson:"prodtype" json:"prodtype"`
+			Inventory    float64   `bson:"inventory" json:"inventory"`
+			CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+			CreatedAtStr string    `json:"createdatstr"`
+		}
+
+		if err := cur.All(context.Background(), &assemblyInventoryData); err != nil {
+			log.Println(err)
+		}
+
+		for i := 0; i < len(assemblyInventoryData); i++ {
+			assemblyInventoryData[i].CreatedAtStr = assemblyInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+		}
+		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
@@ -1470,8 +1556,10 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_generalchart.html")).Execute(w, map[string]interface{}{
-			"assemblyChartData": assemblyChartData,
-			"assemblyTarget":    assemblyTarget,
+			"assemblyData":          assemblyData,
+			"assemblyPlanData":      assemblyPlanData,
+			"assemblyInventoryData": assemblyInventoryData,
+			"assemblyTarget":        assemblyTarget,
 		})
 
 	case "detail":
@@ -2540,7 +2628,7 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "valuetarget":
 		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -2549,15 +2637,58 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err != nil {
 			log.Println(err)
 		}
-		defer cur.Close(context.Background())
-		var packChartData []struct {
+		var packData []struct {
 			Date  string  `bson:"date" json:"date"`
 			Type  string  `bson:"type" json:"type"`
 			Value float64 `bson:"value" json:"value"`
 		}
-		if err := cur.All(context.Background(), &packChartData); err != nil {
+		if err := cur.All(context.Background(), &packData); err != nil {
 			log.Println(err)
 		}
+
+		// get plan data
+		cur, err = s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var packPlanData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Plantype string  `bson:"plantype" json:"plantype"`
+			Plan     float64 `bson:"plan" json:"plan"`
+		}
+
+		if err := cur.All(context.Background(), &packPlanData); err != nil {
+			log.Println(err)
+		}
+
+		// get inventory
+		cur, err = s.mgdb.Collection("pack").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var packInventoryData []struct {
+			Prodtype     string    `bson:"prodtype" json:"prodtype"`
+			Inventory    float64   `bson:"inventory" json:"inventory"`
+			CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+			CreatedAtStr string    `json:"createdatstr"`
+		}
+
+		if err := cur.All(context.Background(), &packInventoryData); err != nil {
+			log.Println(err)
+		}
+
+		for i := 0; i < len(packInventoryData); i++ {
+			packInventoryData[i].CreatedAtStr = packInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+		}
+
 		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -2567,16 +2698,32 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err != nil {
 			log.Println(err)
 		}
-		var packingTarget []struct {
+		var packTarget []struct {
 			Date  string  `bson:"date" json:"date"`
 			Value float64 `bson:"value" json:"value"`
 		}
-		if err = cur.All(context.Background(), &packingTarget); err != nil {
+		if err = cur.All(context.Background(), &packTarget); err != nil {
 			log.Println(err)
 		}
+		// get time of latest update
+		sr := s.mgdb.Collection("pack").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var LastReport struct {
+			Createdat time.Time `bson:"createdat" json:"createdat"`
+		}
+		if err := sr.Decode(&LastReport); err != nil {
+			log.Println(err)
+		}
+		packUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/pack_valuechart.html")).Execute(w, map[string]interface{}{
-			"packChartData": packChartData,
-			"packingTarget": packingTarget,
+			"packData":          packData,
+			"packPlanData":      packPlanData,
+			"packInventoryData": packInventoryData,
+			"packTarget":        packTarget,
+			"packUpTime":        packUpTime,
 		})
 
 	case "efficiency":
@@ -6546,6 +6693,60 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// router.POST("/sections/pack/overview/updateinventory", s.spo_updateinventory)
+func (s *Server) spo_updateinventory(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+
+	packbrandinventory, _ := strconv.ParseFloat(r.FormValue("packbrandinventory"), 64)
+	packrhinventory, _ := strconv.ParseFloat(r.FormValue("packrhinventory"), 64)
+
+	_, err = s.mgdb.Collection("pack").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "rh", "inventory": packrhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	_, err = s.mgdb.Collection("pack").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "brand", "inventory": packbrandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+// router.POST("/sections/pack/overview/addplanvalue", s.spo_addplanvalue)
+func (s *Server) spo_addplanvalue(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+	date, _ := time.Parse("2006-01-02", r.FormValue("packplandate"))
+	packbrandplanvalue, _ := strconv.ParseFloat(r.FormValue("packbrandplanvalue"), 64)
+	packrhplanvalue, _ := strconv.ParseFloat(r.FormValue("packrhplanvalue"), 64)
+
+	_, err = s.mgdb.Collection("pack").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": packbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = s.mgdb.Collection("pack").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": packrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 // ///////////////////////////////////////////////////////////////////////

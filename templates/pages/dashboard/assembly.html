@@ -1,4 +1,4 @@
-<div id="assembly-container" class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div id="container" class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
   <!-- title & control -->
   <div class="flex justify-between">
     <a @mouseover="
@@ -218,7 +218,7 @@
                       <select x-data @change="popoverOpen=!popoverOpen"
                         hx-post="/dashboard/assembly/getchart" hx-trigger="input" hx-target="#assembly-container" hx-swap="innerHTML settle:200ms"
                         name="assemblycharttype" id="assemblycharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
-                        <option value="value-target">Value-Target</option>
+                        <option value="general">General</option>
                         <option value="efficiency">Efficiency</option>
                         <!-- <option value="detail">Detail</option>
                         <option value="general">General</option> -->
@@ -264,7 +264,7 @@
 
 <script>
   document.getElementById("assemblyToDate").valueAsDate = new Date();
-  document.getElementById("assemblyFromDate").valueAsDate = new Date(Date.now() - 12*86400000);
+  document.getElementById("assemblyFromDate").valueAsDate = new Date(Date.now() - 11*86400000);
 
   assemblychart.append(drawAssemblyVTChart({{.assemblyData}}, {{.assemblyPlanData}}, {{.assemblyInventoryData}}, {{.assemblyTarget}}))
 

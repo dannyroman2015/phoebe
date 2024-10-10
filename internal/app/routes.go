@@ -266,6 +266,9 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/pack/entry/loadform", s.spk_loadform)
 	router.POST("/sections/pack/entry/sendentry", s.spk_sendentry)
 
+	router.POST("/sections/pack/overview/updateinventory", s.spo_updateinventory)
+	router.POST("/sections/pack/overview/addplanvalue", s.spo_addplanvalue)
+
 	router.GET("/sections/pack/admin", withAuth(s.spk_admin))
 	router.GET("/sections/pack/admin/loadreport", s.spka_loadreport)
 	router.POST("/sections/pack/admin/searchreport", s.spka_searchreport)

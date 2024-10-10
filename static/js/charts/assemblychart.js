@@ -746,8 +746,6 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
         .attr("transform", d => `rotate(-90, ${x(d.data[0]) + x.bandwidth()/6}, ${y(d[1]) - (y(d[1]) - y(d[0]))/2})`)
   })
 
-  console.log(plandata)
-  console.log(planseries[planseries.length-1])
   innerChart.append("text")
         .text("plan -->")
         .attr("text-anchor", "middle")
@@ -863,27 +861,6 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
       .attr("dy", "-0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", 12)
-
-    // svg.append("text")
-    //   .text(d3.format(",.0f")(inventory.qty))
-    //   .attr("text-anchor", "middle")
-    //   .attr("x", innerWidth + 3* x.bandwidth() /2)
-    //   .attr("y", y2(inventory.qty) + margin.bottom)
-    //   .attr("dy", "-0.15em")
-    //   .attr("fill", "#75485E")
-    //   .attr("font-size", 14)
-    //   .attr("font-weight", 600)
-
-    // svg.append("text")
-    //   .text(inventory.qty != 0 ? inventory.date : "")
-    //   .attr("text-anchor", "middle")
-    //   .attr("alignment-baseline", "end")
-    //   .attr("x", innerWidth + 3*x.bandwidth()/4)
-    //   .attr("y", height/2)
-    //   .attr("dy", "1em")
-    //   .attr("fill", "#75485E")
-    //   .attr("font-size", 14)
-    //   .attr("transform", `rotate(-90, ${innerWidth + 3*x.bandwidth()/4}, ${height/2})`)
   } 
 
 
