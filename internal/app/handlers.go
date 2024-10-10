@@ -887,12 +887,115 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	})
 }
 
+// router.GET("/dashboard/loadwhitewood", s.d_loadwhitewood)
+func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodData []struct {
+		Date  string  `bson:"date" json:"date"`
+		Type  string  `bson:"type" json:"type"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &whitewoodData); err != nil {
+		log.Println(err)
+	}
+
+	// get plan data
+	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodPlanData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Plantype string  `bson:"plantype" json:"plantype"`
+		Plan     float64 `bson:"plan" json:"plan"`
+	}
+
+	if err := cur.All(context.Background(), &whitewoodPlanData); err != nil {
+		log.Println(err)
+	}
+
+	// get inventory
+	cur, err = s.mgdb.Collection("whitewood").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodInventoryData []struct {
+		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Inventory    float64   `bson:"inventory" json:"inventory"`
+		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+		CreatedAtStr string    `json:"createdatstr"`
+	}
+
+	if err := cur.All(context.Background(), &whitewoodInventoryData); err != nil {
+		log.Println(err)
+	}
+
+	for i := 0; i < len(whitewoodInventoryData); i++ {
+		whitewoodInventoryData[i].CreatedAtStr = whitewoodInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+	}
+	// get target
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var whitewoodTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &whitewoodTarget); err != nil {
+		log.Println(err)
+	}
+
+	// get time of latest update
+	sr := s.mgdb.Collection("whitewood").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	whitewoodUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/whitewood.html")).Execute(w, map[string]interface{}{
+		"whitewoodData":          whitewoodData,
+		"whitewoodPlanData":      whitewoodPlanData,
+		"whitewoodInventoryData": whitewoodInventoryData,
+		"whitewoodTarget":        whitewoodTarget,
+		"whitewoodUpTime":        whitewoodUpTime,
+	})
+}
+
 // ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/loadwoodfinish - load woodfinish area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -911,6 +1014,48 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 
+	// get plan data
+	cur, err = s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishPlanData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Plantype string  `bson:"plantype" json:"plantype"`
+		Plan     float64 `bson:"plan" json:"plan"`
+	}
+
+	if err := cur.All(context.Background(), &woodfinishPlanData); err != nil {
+		log.Println(err)
+	}
+
+	// get inventory
+	cur, err = s.mgdb.Collection("woodfinish").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var woodfinishInventoryData []struct {
+		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Inventory    float64   `bson:"inventory" json:"inventory"`
+		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+		CreatedAtStr string    `json:"createdatstr"`
+	}
+
+	if err := cur.All(context.Background(), &woodfinishInventoryData); err != nil {
+		log.Println(err)
+	}
+
+	for i := 0; i < len(woodfinishInventoryData); i++ {
+		woodfinishInventoryData[i].CreatedAtStr = woodfinishInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -940,10 +1085,13 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 		log.Println(err)
 	}
 	woodfinishUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 	template.Must(template.ParseFiles("templates/pages/dashboard/woodfinish.html")).Execute(w, map[string]interface{}{
-		"woodfinishData":   woodfinishData,
-		"woodfinishTarget": woodfinishTarget,
-		"woodfinishUpTime": woodfinishUpTime,
+		"woodfinishData":          woodfinishData,
+		"woodfinishPlanData":      woodfinishPlanData,
+		"woodfinishInventoryData": woodfinishInventoryData,
+		"woodfinishTarget":        woodfinishTarget,
+		"woodfinishUpTime":        woodfinishUpTime,
 	})
 }
 
@@ -1750,7 +1898,7 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "value-target":
 		cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -1769,6 +1917,48 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 
+		// get plan data
+		cur, err = s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var woodfinishPlanData []struct {
+			Date     string  `bson:"date" json:"date"`
+			Plantype string  `bson:"plantype" json:"plantype"`
+			Plan     float64 `bson:"plan" json:"plan"`
+		}
+
+		if err := cur.All(context.Background(), &woodfinishPlanData); err != nil {
+			log.Println(err)
+		}
+
+		// get inventory
+		cur, err = s.mgdb.Collection("woodfinish").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var woodfinishInventoryData []struct {
+			Prodtype     string    `bson:"prodtype" json:"prodtype"`
+			Inventory    float64   `bson:"inventory" json:"inventory"`
+			CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+			CreatedAtStr string    `json:"createdatstr"`
+		}
+
+		if err := cur.All(context.Background(), &woodfinishInventoryData); err != nil {
+			log.Println(err)
+		}
+
+		for i := 0; i < len(woodfinishInventoryData); i++ {
+			woodfinishInventoryData[i].CreatedAtStr = woodfinishInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+		}
 		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
@@ -1785,9 +1975,26 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err = cur.All(context.Background(), &woodfinishTarget); err != nil {
 			log.Println(err)
 		}
+
+		// get time of latest update
+		sr := s.mgdb.Collection("woodfinish").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var LastReport struct {
+			Createdat time.Time `bson:"createdat" json:"createdat"`
+		}
+		if err := sr.Decode(&LastReport); err != nil {
+			log.Println(err)
+		}
+		woodfinishUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/wf_valuetargetchart.html")).Execute(w, map[string]interface{}{
-			"woodfinishData":   woodfinishData,
-			"woodfinishTarget": woodfinishTarget,
+			"woodfinishData":          woodfinishData,
+			"woodfinishPlanData":      woodfinishPlanData,
+			"woodfinishInventoryData": woodfinishInventoryData,
+			"woodfinishTarget":        woodfinishTarget,
+			"woodfinishUpTime":        woodfinishUpTime,
 		})
 
 	case "efficiency":
@@ -6397,6 +6604,60 @@ func (s *Server) swe_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
 	})
+}
+
+// router.POST("/sections/woodfinish/overview/addplanvalue", s.swo_addplanvalue)
+func (s *Server) swo_addplanvalue(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+	woodfinishdate, _ := time.Parse("2006-01-02", r.FormValue("woodfinishplandate"))
+	woodfinishbrandplanvalue, _ := strconv.ParseFloat(r.FormValue("woodfinishbrandplanvalue"), 64)
+	woodfinishrhplanvalue, _ := strconv.ParseFloat(r.FormValue("woodfinishrhplanvalue"), 64)
+
+	_, err = s.mgdb.Collection("woodfinish").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(woodfinishdate)}, {"plantype", "brand"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "brand", "plan": woodfinishbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = s.mgdb.Collection("woodfinish").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(woodfinishdate)}, {"plantype", "rh"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "rh", "plan": woodfinishrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+// router.POST("/sections/woodfinish/overview/updateinventory", s.swo_updateinventory)
+func (s *Server) swo_updateinventory(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+
+	woodfinishbrandinventory, _ := strconv.ParseFloat(r.FormValue("woodfinishbrandinventory"), 64)
+	woodfinishrhinventory, _ := strconv.ParseFloat(r.FormValue("woodfinishrhinventory"), 64)
+
+	_, err = s.mgdb.Collection("woodfinish").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "rh", "inventory": woodfinishrhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	_, err = s.mgdb.Collection("woodfinish").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "brand", "inventory": woodfinishbrandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 // ///////////////////////////////////////////////////////////////////////

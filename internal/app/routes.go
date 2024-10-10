@@ -32,6 +32,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadpanelcnc", s.d_loadpanelcnc)
 	router.GET("/dashboard/loadveneer", s.d_loadveneer)
 	router.GET("/dashboard/loadassembly", s.d_loadassembly)
+	router.GET("/dashboard/loadwhitewood", s.d_loadwhitewood)
 	router.GET("/dashboard/loadwoodfinish", s.d_loadwoodfinish)
 	router.GET("/dashboard/loadfinemill", s.d_loadfinemill)
 	router.GET("/dashboard/loadpack", s.d_loadpack)
@@ -249,6 +250,9 @@ func (s *Server) routes() http.Handler {
 	router.GET("/sections/woodfinish/entry", withAuth(s.sw_entry))
 	router.GET("/sections/woodfinish/entry/loadform", s.swe_loadform)
 	router.POST("/sections/woodfinish/entry/sendentry", s.swe_sendentry)
+
+	router.POST("/sections/woodfinish/overview/addplanvalue", s.swo_addplanvalue)
+	router.POST("/sections/woodfinish/overview/updateinventory", s.swo_updateinventory)
 
 	router.GET("/sections/woodfinish/admin", withAuth(s.sw_admin))
 	router.GET("/sections/woodfinish/admin/loadreport", s.swa_loadreport)
