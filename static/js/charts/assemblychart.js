@@ -531,8 +531,10 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).plan)
     (d3.index(plandata, d => d.date, d => d.plantype))
 
+  console.log()
   const x = d3.scaleBand()
-    .domain(data.map(d => d.date))
+    // .domain(data.map(d => d.date))
+    .domain(d3.union(data.map(d=> d.date), plandata.map(d => d.date)))
     .range([0, innerWidth])
     .padding(0.1);
 
@@ -718,7 +720,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
         .attr("x", d => x(d.data[0]))
-        .attr("y", d => {console.log(d); return y(d[1]);} )
+        .attr("y", d => y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth()/3)
         .attr("stroke", "#FF9874")

@@ -788,7 +788,7 @@ func (s *Server) d_loadveneer(w http.ResponseWriter, r *http.Request, ps httprou
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -809,8 +809,10 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 
 	// get plan data
 	cur, err = s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -820,13 +822,22 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var assemblyPlanData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Plantype string  `bson:"plantype" json:"plantype"`
-		Plan     float64 `bson:"plan" json:"plan"`
+		Date     string    `bson:"date" json:"date"`
+		Plantype string    `bson:"plantype" json:"plantype"`
+		Plan     float64   `bson:"plan" json:"plan"`
+		Plans    []float64 `bson:"plans" json:"plans"`
+		Change   float64   `json:"change"`
 	}
 
 	if err := cur.All(context.Background(), &assemblyPlanData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(assemblyPlanData); i++ {
+		if len(assemblyPlanData[i].Plans) >= 2 {
+			assemblyPlanData[i].Change = assemblyPlanData[i].Plan - assemblyPlanData[i].Plans[1]
+		} else {
+			assemblyPlanData[i].Change = 0
+		}
 	}
 
 	// get inventory
@@ -851,7 +862,8 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -1392,11 +1404,12 @@ func (s *Server) d_loadquality(w http.ResponseWriter, r *http.Request, ps httpro
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loaddowntime(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("downtime").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -20).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
+		// {{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": time.Now().AddDate(0, 0, -20).Format("2006-01-02")}}, bson.M{"date": bson.M{"$lte": time.Now().Format("2006-01-02")}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "section": "$section"}, "downtime": bson.M{"$sum": "$downtime"}}}},
-		{{"$sort", bson.D{{"_id.date", 1}, {"_id.section", 1}}}},
+		{{"$sort", bson.D{{"_id.date", -1}, {"_id.section", 1}}}},
 		{{"$set", bson.M{"date": "$_id.date", "section": "$_id.section"}}},
 		{{"$unset", "_id"}},
+		{{"$limit", 11}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -6163,15 +6176,21 @@ func (s *Server) sao_addplanvalue(w http.ResponseWriter, r *http.Request, ps htt
 	brandplanvalue, _ := strconv.ParseFloat(r.FormValue("brandplanvalue"), 64)
 	rhplanvalue, _ := strconv.ParseFloat(r.FormValue("rhplanvalue"), 64)
 
-	_, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	// _, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
+	// 	"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	// }, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	// _, err = s.mgdb.Collection("assembly").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
+	// 	"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	// }, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+		"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
 	if err != nil {
 		log.Println(err)
 	}
@@ -6763,6 +6782,16 @@ func (s *Server) swa_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 
 // router.POST("/sections/whitewood/overview/addmoney", s.swo_addmoney)
 func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// authurlsToken, err := r.Cookie("authurls")
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	// 		return
+	// 	}
+	// 	if !strings.Contains(authurlsToken.Value, r.URL.Path) {
+	// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	// 		return
+	// 	}
 	usernameTk, _ := r.Cookie("username")
 	date, _ := time.Parse("2006-01-02", r.FormValue("whitewoodmoneydate"))
 	brandmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandmoney"), 64)
@@ -6785,6 +6814,106 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 			log.Println(err)
 		}
 	}
+
+	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodData []struct {
+		Date  string  `bson:"date" json:"date"`
+		Type  string  `bson:"type" json:"type"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &whitewoodData); err != nil {
+		log.Println(err)
+	}
+
+	// get plan data
+	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodPlanData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Plantype string  `bson:"plantype" json:"plantype"`
+		Plan     float64 `bson:"plan" json:"plan"`
+	}
+
+	if err := cur.All(context.Background(), &whitewoodPlanData); err != nil {
+		log.Println(err)
+	}
+
+	// get inventory
+	cur, err = s.mgdb.Collection("whitewood").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var whitewoodInventoryData []struct {
+		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Inventory    float64   `bson:"inventory" json:"inventory"`
+		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+		CreatedAtStr string    `json:"createdatstr"`
+	}
+
+	if err := cur.All(context.Background(), &whitewoodInventoryData); err != nil {
+		log.Println(err)
+	}
+
+	for i := 0; i < len(whitewoodInventoryData); i++ {
+		whitewoodInventoryData[i].CreatedAtStr = whitewoodInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+	}
+	// get target
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var whitewoodTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &whitewoodTarget); err != nil {
+		log.Println(err)
+	}
+
+	// get time of latest update
+	sr := s.mgdb.Collection("whitewood").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var LastReport struct {
+		Createdat time.Time `bson:"createdat" json:"createdat"`
+	}
+	if err := sr.Decode(&LastReport); err != nil {
+		log.Println(err)
+	}
+	whitewoodUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/whitewood_generalchart.html")).Execute(w, map[string]interface{}{
+		"whitewoodData":          whitewoodData,
+		"whitewoodPlanData":      whitewoodPlanData,
+		"whitewoodInventoryData": whitewoodInventoryData,
+		"whitewoodTarget":        whitewoodTarget,
+		"whitewoodUpTime":        whitewoodUpTime,
+	})
 }
 
 // router.POST("/sections/whitewood/overview/addplanvalue", s.swwo_addplanvalue)
