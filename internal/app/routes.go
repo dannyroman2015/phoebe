@@ -260,6 +260,12 @@ func (s *Server) routes() http.Handler {
 	router.DELETE("/sections/woodfinish/admin/deletereport/:reportid", s.swa_deletereport)
 	// end WoodFinish/////////////////////////////////////////////////////////////
 
+	// White Wood ////////////////////////////////////////////////////////
+	router.POST("/sections/whitewood/overview/addmoney", s.swo_addmoney)
+	router.POST("/sections/whitewood/overview/addplanvalue", s.swwo_addplanvalue)
+	router.POST("/sections/whitewood/overview/updateinventory", s.swwo_updateinventory)
+	// end White Wood/////////////////////////////////////////////////////////////
+
 	// Pack ////////////////////////////////////////////////////////
 	router.GET("/sections/pack/overview", s.spk_overview)
 	router.GET("/sections/pack/overview/loadreport", s.pko_loadreport)

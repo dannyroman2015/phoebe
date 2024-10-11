@@ -6761,6 +6761,86 @@ func (s *Server) swa_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
+// router.POST("/sections/whitewood/overview/addmoney", s.swo_addmoney)
+func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameTk, _ := r.Cookie("username")
+	date, _ := time.Parse("2006-01-02", r.FormValue("whitewoodmoneydate"))
+	brandmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandmoney"), 64)
+	rhmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodrhmoney"), 64)
+
+	if r.FormValue("whitewoodbrandmoney") != "" {
+		_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
+			"date": primitive.NewDateTimeFromTime(date), "prodtype": "brand", "value": brandmoney, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	if r.FormValue("whitewoodrhmoney") != "" {
+		_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
+			"date": primitive.NewDateTimeFromTime(date), "prodtype": "rh", "value": rhmoney, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+// router.POST("/sections/whitewood/overview/addplanvalue", s.swwo_addplanvalue)
+func (s *Server) swwo_addplanvalue(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+	date, _ := time.Parse("2006-01-02", r.FormValue("whitewoodplandate"))
+	brandplanvalue, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandplanvalue"), 64)
+	rhplanvalue, _ := strconv.ParseFloat(r.FormValue("whitewoodrhplanvalue"), 64)
+
+	_, err = s.mgdb.Collection("whitewood").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	_, err = s.mgdb.Collection("whitewood").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
+		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
+// router.POST("/sections/whitewood/overview/updateinventory", s.swwo_updateinventory)
+func (s *Server) swwo_updateinventory(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		w.Write([]byte("Không có thẩm quyền"))
+		return
+	}
+
+	brandinventory, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandinventory"), 64)
+	rhinventory, _ := strconv.ParseFloat(r.FormValue("whitewoodrhinventory"), 64)
+
+	_, err = s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "rh", "inventory": brandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	_, err = s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
+		"type": "Inventory", "prodtype": "brand", "inventory": rhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+}
+
 // ///////////////////////////////////////////////////////////////////////////////
 // /sections/pack/overview - get page overview of assembly
 // ///////////////////////////////////////////////////////////////////////////////
@@ -9047,6 +9127,20 @@ func (s *Server) ca_loadinspectionform(w http.ResponseWriter, r *http.Request, p
 func (s *Server) ca_addinspection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	inspecteddate, _ := time.Parse("2006-01-02", r.FormValue("inspecteddate"))
 	delta, _ := strconv.ParseFloat(r.FormValue("delta"), 64)
+
+	sr := s.mgdb.Collection("colorpanel").FindOne(context.Background(), bson.M{"panelno": r.FormValue("panelno"), "inspections.date": inspecteddate.Format("02-01-2006")})
+	var rc interface{}
+	if err := sr.Decode(&rc); err != nil {
+		log.Println(err)
+	}
+	if rc != nil {
+		template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{
+			"showErrDialog": true,
+			"msgDialog":     "Cập nhật thất bại, đã tồn tại",
+		})
+		return
+	}
+
 	_, err := s.mgdb.Collection("colorpanel").UpdateOne(context.Background(), bson.M{"panelno": r.FormValue("panelno")}, bson.M{"$push": bson.M{
 		"inspections": bson.M{"$each": bson.A{bson.M{
 			"date":      inspecteddate.Format("02-01-2006"),
@@ -9054,6 +9148,7 @@ func (s *Server) ca_addinspection(w http.ResponseWriter, r *http.Request, ps htt
 			"delta":     delta,
 			"inspector": r.FormValue("inspector"),
 		}}, "$position": 0}}})
+
 	if err != nil {
 		log.Println(err)
 		template.Must(template.ParseFiles("templates/pages/colormixing/admin/inspectionform.html")).Execute(w, map[string]interface{}{

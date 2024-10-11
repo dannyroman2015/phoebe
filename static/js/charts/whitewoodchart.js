@@ -5,10 +5,6 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
   const margin = {top: 20, right: 20, bottom: 20, left: 80};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
-  
-  let flag = true;
-
-  data.sort((a, b) => a.type.localeCompare(b.type))
 
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
@@ -26,15 +22,14 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
     .padding(0.1);
 
   const y = d3.scaleLinear()
-    // .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
     .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), target == undefined ? 0 : d3.max(target, d => d.value)])])
     .rangeRound([innerHeight, 0])
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh", "brand", "rh"])
-    .range(["#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE"])
-    .unknown("white");
+    .domain(series.map(d => d.key))
+    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    .unknown("#ccc");
 
   const svg = d3.create("svg")
     .attr("viewBox", [0, 0, width, height])
@@ -52,13 +47,9 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/3)
-        .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - 5 : y(d[1]))
+        .attr("y", d => y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", 2*x.bandwidth()/3)
-        .on("mouseover", e => {
-          flag = !flag;
-          change(flag);
-        })
       .append("title")
         .text(d => d[1] - d[0])
 
@@ -94,40 +85,13 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
-        .attr("y", d => d.key.startsWith("X2") ? y(d[1]) - (y(d[1]) - y(d[0]))/2 - 5 : y(d[1]) - (y(d[1]) - y(d[0]))/2)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
-        .attr("fill", d => d.key.startsWith("X1") ? "#921A40" : "#102C57")
+        .attr("fill", "#75485E")
         .text(d => {
-          if (d[1] - d[0] >= 3500) { return `${d3.format(",.0f")(d[1]-d[0])}` }
+          if (d[1] - d[0] >= 500) { return `${d3.format(",.0f")(d[1]-d[0])}` }
         })
   })
-
-  const x1data = series.filter(s => s.key.startsWith("X1"))
-  const x1rhdata = x1data[x1data.length-1]
-  if (x1rhdata != undefined) {
-    innerChart.append("g")
-      .selectAll()
-      .data(x1rhdata)
-      .join("text")
-        .text(d => d[1] > 3500 ? `Σ${d3.format(",.0f")(d[1])}` : "")
-        .attr("class", "x1total")
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "hanging")
-        .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
-        .attr("y", d => y(d[0]))
-        .attr("dy", "0.1em")
-        .attr("fill", "#921A40")
-        .attr("font-size", 12)
-        .attr("opacity", 0)
-
-      if (flag) {
-        innerChart.call(g => g.selectAll(".X1").attr("opacity", 1))
-        innerChart.call(g => g.selectAll(".x1total").attr("opacity", 0))
-      } else {
-        innerChart.call(g => g.selectAll(".X1").attr("opacity", 0))
-        innerChart.call(g => g.selectAll(".x1total").attr("opacity", 1))
-      }
-  }
 
   svg.append("text")
     .text("RH")
@@ -207,14 +171,10 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
         .attr("x", d => x(d.data[0]))
-        .attr("y", d => {console.log(d); return y(d[1]);} )
+        .attr("y", d => y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth()/3)
         .attr("stroke", "#FF9874")
-        .on("mouseover", e => {
-          flag = !flag;
-          change(flag);
-        })
       .append("title")
         .text(d => d[1] - d[0])
 
