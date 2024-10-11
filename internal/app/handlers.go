@@ -1007,7 +1007,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -1028,7 +1028,8 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 
 	// get plan data
 	cur, err = s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
@@ -1070,7 +1071,8 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -1172,7 +1174,7 @@ func (s *Server) d_loadfinemill(w http.ResponseWriter, r *http.Request, ps httpr
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -1192,7 +1194,8 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 
 	// get plan data
 	cur, err = s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
@@ -1235,7 +1238,8 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})

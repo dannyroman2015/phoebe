@@ -531,7 +531,6 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).plan)
     (d3.index(plandata, d => d.date, d => d.plantype))
 
-  console.log()
   const x = d3.scaleBand()
     // .domain(data.map(d => d.date))
     .domain(d3.union(data.map(d=> d.date), plandata.map(d => d.date)))
