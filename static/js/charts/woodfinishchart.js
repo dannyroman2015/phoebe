@@ -958,6 +958,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
   setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 5000)
 
   // cột plan
+  console.log(plandata)
   innerChart
     .selectAll()
     .data(planseries)
@@ -968,7 +969,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
     .data(D => D.map(d => (d.key = D.key, d)))
     .join("rect")
         .attr("x", d => x(d.data[0]))
-        .attr("y", d => {console.log(d); return y(d[1]);} )
+        .attr("y", d =>  y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth()/3)
         .attr("stroke", "#FF9874")

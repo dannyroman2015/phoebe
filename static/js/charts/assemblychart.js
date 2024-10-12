@@ -730,6 +730,48 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
       .append("title")
         .text(d => d[1] - d[0])
 
+    const diffs = d3.rollups(plandata, D => {console.log(D); return {
+      "current": D[0].plan + D[1].plan, "prev": D[0].plan + D[1].plan + D[0].change + D[1].change
+    }} ,d => d.date)
+    innerChart
+      .selectAll()
+      .data(diffs)
+      .join("rect")
+          .attr("x", d => x(d[0]))
+          .attr("y", d => d[1].current >= d[1].prev ? y(d[1].current) : y(d[1].prev))
+          .attr("height", d => y(0) - y(Math.abs(d[1].current-d[1].prev)))
+          .attr("width", x.bandwidth()/3)
+          .attr("fill", "url(#diffpattern)")
+          .attr("fill-opacity", 0.3)
+        .append("title")
+          .text(d => Math.abs(d[1].current-d[1].prev))
+
+    innerChart
+      .selectAll()
+      .data(diffs)
+      .join("text")
+        .text(d => {
+          if (d[1].current > d[1].prev) {
+            return "︽"
+          }
+          if (d[1].current < d[1].prev) {
+            return "︾"
+          }
+        })
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d[0]) + x.bandwidth()/6)
+        .attr("y", d => d[1].current >= d[1].prev ? y(d[1].current) + 10 : y(d[1].prev) + 10)
+        .attr("font-weight", 900)
+        .attr("fill", d => {
+          if (d[1].current > d[1].prev) {
+            return "#3572EF"
+          }
+          if (d[1].current < d[1].prev) {
+            return "#C80036"
+          }
+        })
+
   planseries.forEach(planserie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")
@@ -748,14 +790,14 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
   })
 
   innerChart.append("text")
-        .text("plan -->")
+        .text("plan->")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", x(plandata[plandata.length-1].date) + x.bandwidth()/6)
-        .attr("y", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30)
+        .attr("y", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 20)
         .attr("fill", "#FA7070")
         .attr("font-size", 14)
-        .attr("transform", `rotate(90, ${x(plandata[plandata.length-1].date) + x.bandwidth()/6}, ${y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30})`)
+        .attr("transform", `rotate(90, ${x(plandata[plandata.length-1].date) + x.bandwidth()/6}, ${y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 20})`)
 
   // end cột plan
 

@@ -833,8 +833,8 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 		log.Println(err)
 	}
 	for i := 0; i < len(assemblyPlanData); i++ {
-		if len(assemblyPlanData[i].Plans) >= 2 {
-			assemblyPlanData[i].Change = assemblyPlanData[i].Plan - assemblyPlanData[i].Plans[1]
+		if len(assemblyPlanData[i].Plans) >= 2 && assemblyPlanData[i].Plans[1] != 0 {
+			assemblyPlanData[i].Change = assemblyPlanData[i].Plans[1] - assemblyPlanData[i].Plan
 		} else {
 			assemblyPlanData[i].Change = 0
 		}
@@ -1032,7 +1032,7 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -1042,13 +1042,22 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	defer cur.Close(context.Background())
 	var woodfinishPlanData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Plantype string  `bson:"plantype" json:"plantype"`
-		Plan     float64 `bson:"plan" json:"plan"`
+		Date     string    `bson:"date" json:"date"`
+		Plantype string    `bson:"plantype" json:"plantype"`
+		Plan     float64   `bson:"plan" json:"plan"`
+		Plans    []float64 `bson:"plans" json:"plans"`
+		Change   float64   `json:"change"`
 	}
 
 	if err := cur.All(context.Background(), &woodfinishPlanData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(woodfinishPlanData); i++ {
+		if len(woodfinishPlanData[i].Plans) >= 2 && woodfinishPlanData[i].Plans[1] != 0 {
+			woodfinishPlanData[i].Change = woodfinishPlanData[i].Plans[1] - woodfinishPlanData[i].Plan
+		} else {
+			woodfinishPlanData[i].Change = 0
+		}
 	}
 
 	// get inventory
