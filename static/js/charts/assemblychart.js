@@ -582,7 +582,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 12)
+    .attr("font-size", 11)
   .selectAll()
   .data(series[series.length-1])
   .join("text")
@@ -593,7 +593,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
-    .text(d => `Σ${d3.format(",.0f")(d[1])}` )
+    .text(d => `${d3.format(",.0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -727,12 +727,8 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
           flag = !flag;
           change(flag);
         })
-      .append("title")
-        .text(d => d[1] - d[0])
 
-    const diffs = d3.rollups(plandata, D => {console.log(D); return {
-      "current": D[0].plan + D[1].plan, "prev": D[0].plan + D[1].plan + D[0].change + D[1].change
-    }} ,d => d.date)
+    const diffs = d3.rollups(plandata, D => { return {"current": D[0].plan + D[1].plan, "prev": D[0].plan + D[1].plan + D[0].change + D[1].change}} ,d => d.date)
     innerChart
       .selectAll()
       .data(diffs)
@@ -771,7 +767,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
             return "#C80036"
           }
         })
-
+  
   planseries.forEach(planserie => {
     innerChart.append("g")
         .attr("font-family", "sans-serif")

@@ -782,7 +782,8 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
     (d3.index(plandata, d => d.date, d => d.plantype))
 
   const x = d3.scaleBand()
-    .domain(data.map(d => d.date))
+    // .domain(data.map(d => d.date))
+    .domain(d3.union(data.map(d=> d.date), plandata.map(d => d.date)))
     .range([0, innerWidth])
     .padding(0.1);
 
@@ -831,7 +832,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
-    .attr("font-size", 12)
+    .attr("font-size", 11)
   .selectAll()
   .data(series[series.length-1])
   .join("text")
@@ -842,7 +843,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
-    .text(d => `Σ${d3.format(",.0f")(d[1])}` )
+    .text(d => `${d3.format(",.0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -958,7 +959,6 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
   setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 5000)
 
   // cột plan
-  console.log(plandata)
   innerChart
     .selectAll()
     .data(planseries)
@@ -977,24 +977,64 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
           flag = !flag;
           change(flag);
         })
-      .append("title")
-        .text(d => d[1] - d[0])
 
-  planseries.forEach(planserie => {
-    innerChart.append("g")
-        .attr("font-family", "sans-serif")
-        .attr("font-size", 12)
+    const diffs = d3.rollups(plandata, D => { return {"current": D[0].plan + D[1].plan, "prev": D[0].plan + D[1].plan + D[0].change + D[1].change}} ,d => d.date)
+    innerChart
       .selectAll()
-      .data(planserie)
+      .data(diffs)
+      .join("rect")
+          .attr("x", d => x(d[0]))
+          .attr("y", d => d[1].current >= d[1].prev ? y(d[1].current) : y(d[1].prev))
+          .attr("height", d => y(0) - y(Math.abs(d[1].current-d[1].prev)))
+          .attr("width", x.bandwidth()/3)
+          .attr("fill", "url(#diffpattern)")
+          .attr("fill-opacity", 0.3)
+        .append("title")
+          .text(d => Math.abs(d[1].current-d[1].prev))
+    
+    innerChart
+      .selectAll()
+      .data(diffs)
       .join("text")
-        .text(d => `${d3.format(",.0f")(d[1]-d[0])}`)
+        .text(d => {
+          if (d[1].current > d[1].prev) {
+            return "︽"
+          }
+          if (d[1].current < d[1].prev) {
+            return "︾"
+          }
+        })
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.data[0]) + x.bandwidth()/6)
-        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
-        .attr("dy", "0.1em")
-        .attr("fill", "#102C57")
-        .attr("transform", d => `rotate(-90, ${x(d.data[0]) + x.bandwidth()/6}, ${y(d[1]) - (y(d[1]) - y(d[0]))/2})`)
+        .attr("x", d => x(d[0]) + x.bandwidth()/6)
+        .attr("y", d => d[1].current >= d[1].prev ? y(d[1].current) + 10 : y(d[1].prev) + 10)
+        .attr("font-weight", 900)
+        .attr("fill", d => {
+          if (d[1].current > d[1].prev) {
+            return "#3572EF"
+          }
+          if (d[1].current < d[1].prev) {
+            return "#C80036"
+          }
+        })
+
+
+    planseries.forEach(planserie => {
+      console.log(planserie)
+      innerChart.append("g")
+          .attr("font-family", "sans-serif")
+          .attr("font-size", 12)
+        .selectAll()
+        .data(planserie)
+        .join("text")
+          .text(d => `${d3.format(",.0f")(d[1]-d[0])}`)
+          .attr("text-anchor", "middle")
+          .attr("alignment-baseline", "middle")
+          .attr("x", d => x(d.data[0]) + x.bandwidth()/6)
+          .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
+          .attr("dy", "0.1em")
+          .attr("fill", "#102C57")
+          .attr("transform", d => `rotate(-90, ${x(d.data[0]) + x.bandwidth()/6}, ${y(d[1]) - (y(d[1]) - y(d[0]))/2})`)
   })
 
   innerChart.append("text")
