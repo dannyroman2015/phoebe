@@ -422,6 +422,8 @@
     <div class="fade-in" id="whitewoodchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
   </div>
 <script>
+  document.getElementById("whitewoodplandate").valueAsDate = new Date();
+  document.getElementById("whitewoodmoneydate").valueAsDate = new Date();
   document.getElementById("whitewoodToDate").valueAsDate = new Date();
   document.getElementById("whitewoodFromDate").valueAsDate = new Date(Date.now() - 11*86400000);
 
