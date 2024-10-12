@@ -924,7 +924,8 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -1030,7 +1031,8 @@ func (s *Server) d_loadwoodfinish(w http.ResponseWriter, r *http.Request, ps htt
 	cur, err = s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
 		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -1196,7 +1198,8 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	cur, err = s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
 		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -6640,15 +6643,11 @@ func (s *Server) swo_addplanvalue(w http.ResponseWriter, r *http.Request, ps htt
 	woodfinishbrandplanvalue, _ := strconv.ParseFloat(r.FormValue("woodfinishbrandplanvalue"), 64)
 	woodfinishrhplanvalue, _ := strconv.ParseFloat(r.FormValue("woodfinishrhplanvalue"), 64)
 
-	_, err = s.mgdb.Collection("woodfinish").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(woodfinishdate)}, {"plantype", "brand"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "brand", "plan": woodfinishbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("woodfinish").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "brand", "plan": woodfinishbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = s.mgdb.Collection("woodfinish").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(woodfinishdate)}, {"plantype", "rh"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "rh", "plan": woodfinishrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("woodfinish").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(woodfinishdate), "plantype": "rh", "plan": woodfinishrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
@@ -6931,15 +6930,11 @@ func (s *Server) swwo_addplanvalue(w http.ResponseWriter, r *http.Request, ps ht
 	brandplanvalue, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandplanvalue"), 64)
 	rhplanvalue, _ := strconv.ParseFloat(r.FormValue("whitewoodrhplanvalue"), 64)
 
-	_, err = s.mgdb.Collection("whitewood").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": brandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = s.mgdb.Collection("whitewood").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": rhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
@@ -7208,15 +7203,11 @@ func (s *Server) spo_addplanvalue(w http.ResponseWriter, r *http.Request, ps htt
 	packbrandplanvalue, _ := strconv.ParseFloat(r.FormValue("packbrandplanvalue"), 64)
 	packrhplanvalue, _ := strconv.ParseFloat(r.FormValue("packrhplanvalue"), 64)
 
-	_, err = s.mgdb.Collection("pack").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "brand"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": packbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("pack").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "brand", "plan": packbrandplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
-	_, err = s.mgdb.Collection("pack").UpdateOne(context.Background(), bson.D{{"type", "plan"}, {"date", primitive.NewDateTimeFromTime(date)}, {"plantype", "rh"}}, bson.M{
-		"$set": bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": packrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())},
-	}, options.Update().SetUpsert(true))
+	_, err = s.mgdb.Collection("pack").InsertOne(context.Background(), bson.M{"type": "plan", "date": primitive.NewDateTimeFromTime(date), "plantype": "rh", "plan": packrhplanvalue, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now())})
 	if err != nil {
 		log.Println(err)
 	}
