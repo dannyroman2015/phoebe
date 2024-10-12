@@ -902,7 +902,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // router.GET("/dashboard/loadwhitewood", s.d_loadwhitewood)
 func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
@@ -923,9 +923,9 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -935,13 +935,22 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 	}
 	defer cur.Close(context.Background())
 	var whitewoodPlanData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Plantype string  `bson:"plantype" json:"plantype"`
-		Plan     float64 `bson:"plan" json:"plan"`
+		Date     string    `bson:"date" json:"date"`
+		Plantype string    `bson:"plantype" json:"plantype"`
+		Plan     float64   `bson:"plan" json:"plan"`
+		Plans    []float64 `bson:"plans" json:"plans"`
+		Change   float64   `json:"change"`
 	}
 
 	if err := cur.All(context.Background(), &whitewoodPlanData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(whitewoodPlanData); i++ {
+		if len(whitewoodPlanData[i].Plans) >= 2 && whitewoodPlanData[i].Plans[1] != 0 {
+			whitewoodPlanData[i].Change = whitewoodPlanData[i].Plans[1] - whitewoodPlanData[i].Plan
+		} else {
+			whitewoodPlanData[i].Change = 0
+		}
 	}
 
 	// get inventory
@@ -1208,7 +1217,7 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 		// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -1218,13 +1227,22 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 	}
 	defer cur.Close(context.Background())
 	var packPlanData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Plantype string  `bson:"plantype" json:"plantype"`
-		Plan     float64 `bson:"plan" json:"plan"`
+		Date     string    `bson:"date" json:"date"`
+		Plantype string    `bson:"plantype" json:"plantype"`
+		Plan     float64   `bson:"plan" json:"plan"`
+		Plans    []float64 `bson:"plans" json:"plans"`
+		Change   float64   `json:"change"`
 	}
 
 	if err := cur.All(context.Background(), &packPlanData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(packPlanData); i++ {
+		if len(packPlanData[i].Plans) >= 2 && packPlanData[i].Plans[1] != 0 {
+			packPlanData[i].Change = packPlanData[i].Plans[1] - packPlanData[i].Plan
+		} else {
+			packPlanData[i].Change = 0
+		}
 	}
 
 	// get inventory

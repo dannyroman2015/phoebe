@@ -1017,10 +1017,8 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
             return "#C80036"
           }
         })
-
-
+        
     planseries.forEach(planserie => {
-      console.log(planserie)
       innerChart.append("g")
           .attr("font-family", "sans-serif")
           .attr("font-size", 12)
