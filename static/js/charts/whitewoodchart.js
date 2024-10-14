@@ -228,7 +228,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
 
   //draw target lines
   if (target != undefined) { 
-    const dates = data.map(d => d.date)
+    const dates = Array.from(d3.union(plandata.map(d => d.date), data.map(d => d.date))) 
     target = target.filter(t => dates.includes(t.date))
 
     innerChart

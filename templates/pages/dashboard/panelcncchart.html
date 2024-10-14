@@ -51,7 +51,7 @@
           popoverPositionCalculate();
         });
         $watch('popoverOpen', function(value){
-          if(value){ popoverPositionCalculate(); document.getElementById('panelcnccharttype').focus();  }
+          if(value){ popoverPositionCalculate(); }
         });
       "
       class="relative">
@@ -130,8 +130,8 @@
 
 <script>
   document.getElementById("panelcncToDate").valueAsDate = new Date();
-  document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 20*86400000);
-
+  document.getElementById("panelcncFromDate").valueAsDate = new Date(Date.now() - 19*86400000);
+ 
   if ({{.panelcncTarget}} == undefined) {
     panelcncchart.append(drawPanelcncChart({{.panelChartData}}))
   } else {

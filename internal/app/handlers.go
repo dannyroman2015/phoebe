@@ -672,7 +672,7 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, 1))}}}}}},
 		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%b", "date": "$_id"}}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
 		{{"$unset", "_id"}},
 	}
 	cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
@@ -704,6 +704,7 @@ func (s *Server) d_loadpanelcnc(w http.ResponseWriter, r *http.Request, ps httpr
 	if err = cur.All(context.Background(), &panelcncTarget); err != nil {
 		log.Println(err)
 	}
+
 	// get time of latest update
 	sr := s.mgdb.Collection("panelcnc").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
 	if sr.Err() != nil {
@@ -1581,7 +1582,7 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
 			{{"$sort", bson.D{{"_id", 1}}}},
-			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%b", "date": "$_id"}}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
 			{{"$unset", "_id"}},
 		}
 		cur, err := s.mgdb.Collection("panelcnc").Aggregate(context.Background(), pipeline)
@@ -1614,9 +1615,23 @@ func (s *Server) dpc_getchart(w http.ResponseWriter, r *http.Request, ps httprou
 			log.Println(err)
 		}
 
+		// get time of latest update
+		sr := s.mgdb.Collection("panelcnc").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var LastReport struct {
+			Createdat time.Time `bson:"createdat" json:"createdat"`
+		}
+		if err := sr.Decode(&LastReport); err != nil {
+			log.Println(err)
+		}
+		panelcncUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/panelcnc_totalchart.html")).Execute(w, map[string]interface{}{
 			"panelChartData": panelChartData,
 			"panelcncTarget": panelcncTarget,
+			"panelcncUpTime": panelcncUpTime,
 		})
 
 	case "efficiency":

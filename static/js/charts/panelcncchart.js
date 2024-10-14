@@ -246,6 +246,7 @@ const drawPanelcncChart = (data) => {
 }
 
 const drawPanelcncChart2 = (data, target) => {
+  console.log(target)
   if (data == undefined) return;
   const width = 900;
   const height = 350;
@@ -285,7 +286,7 @@ const drawPanelcncChart2 = (data, target) => {
       .attr("y", d => y(d.qty))
       .attr("width", d => x.bandwidth())
       .attr("height", d => y(0) - y(d.qty))
-    .append("title") //tooltip
+    .append("title")
       .text(d => d.qty)
 
   innerChart.append("g")
@@ -302,7 +303,6 @@ const drawPanelcncChart2 = (data, target) => {
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-weight", 600)
-      .attr("hidden", x.bandwidth() < 50 ? true : null)
 
   innerChart.append("g")
     .attr("class", "x-axis")
@@ -314,6 +314,8 @@ const drawPanelcncChart2 = (data, target) => {
   //draw target lines
   const dates = data.map(d => d.date)
   target = target.filter(t => dates.includes(t.date))
+  console.log(target)
+  console.log(data)
 innerChart
 .selectAll()
 .data(target)
