@@ -8894,25 +8894,36 @@ func (s *Server) tge_settarget(w http.ResponseWriter, r *http.Request, ps httpro
 		intWeekDays = append(intWeekDays, t)
 	}
 
-	var bdoc []interface{}
+	// var bdoc []interface{}
 	for tmpdate := targetstart; tmpdate.Before(targetend.AddDate(0, 0, 1)); tmpdate = tmpdate.AddDate(0, 0, 1) {
 		if slices.Contains(intWeekDays, int(tmpdate.Weekday())) {
-			b := bson.M{
-				"name": targetname, "date": primitive.NewDateTimeFromTime(tmpdate), "value": target,
+			// b := bson.M{
+			// 	"name": targetname, "date": primitive.NewDateTimeFromTime(tmpdate), "value": target,
+			// }
+			// bdoc = append(bdoc, b)
+			_, err := s.mgdb.Collection("target").UpdateOne(context.Background(), bson.M{"name": targetname, "date": primitive.NewDateTimeFromTime(tmpdate)}, bson.M{
+				"$set": bson.M{"value": target},
+			}, options.Update().SetUpsert(true))
+			if err != nil {
+				log.Println(err)
+				template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
+					"showErrDialog": true,
+					"msgDialog":     "Cập nhật thất bại, vui lòng nhập lại.",
+				})
+				return
 			}
-			bdoc = append(bdoc, b)
 		}
 	}
 
-	_, err := s.mgdb.Collection("target").InsertMany(context.Background(), bdoc, options.InsertMany())
-	if err != nil {
-		log.Println(err)
-		template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
-			"showErrDialog": true,
-			"msgDialog":     "Cập nhật thất bại, vui lòng nhập lại.",
-		})
-		return
-	}
+	// _, err := s.mgdb.Collection("target").InsertMany(context.Background(), bdoc, options.InsertMany())
+	// if err != nil {
+	// 	log.Println(err)
+	// 	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
+	// 		"showErrDialog": true,
+	// 		"msgDialog":     "Cập nhật thất bại, vui lòng nhập lại.",
+	// 	})
+	// 	return
+	// }
 
 	template.Must(template.ParseFiles("templates/pages/target/entry/sectiontarget.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
