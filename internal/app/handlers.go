@@ -227,7 +227,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	//get target data for leftchart
-	sr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "target"})
+	sr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "target"}, options.FindOne().SetSort(bson.M{"startdate": -1}))
 	if sr.Err() != nil {
 		log.Println(sr.Err())
 	}
@@ -245,10 +245,11 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err := sr.Decode(&targetactualData); err != nil {
 		log.Println(err)
 	}
+	targetactualData.StartDateStr = targetactualData.StartDate.Format("02/01/2006")
+	targetactualData.EndDateStr = targetactualData.EnddDate.Format("02/01/2006")
 
-	monthstart, _ := time.Parse("2006-01-02", "2024-10-01")
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(monthstart)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
 		{{"$group", bson.M{"_id": "$prodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
 		{{"$set", bson.M{"prodtype": "$_id"}}},
@@ -3504,6 +3505,35 @@ func (s *Server) sco_reportfilter(w http.ResponseWriter, r *http.Request, ps htt
 		"reports":         reports,
 		"numberOfReports": numberOfReports,
 	})
+}
+
+// ///////////////////////////////////////////////////////////////////////////////
+// router.POST("/sections/cutting/overview/createdemand", s.sco_createdemand)
+// ///////////////////////////////////////////////////////////////////////////////
+func (s *Server) sco_createdemand(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	startdate, _ := time.Parse("2006-01-02", r.FormValue("cutingdemanstartdate"))
+	enddate, _ := time.Parse("2006-01-02", r.FormValue("cutingdemanenddate"))
+	brandtarget, _ := strconv.ParseFloat(r.FormValue("cuttingbranddemand"), 64)
+	rhtarget, _ := strconv.ParseFloat(r.FormValue("cuttingrhdemand"), 64)
+
+	if r.FormValue("cuttingdemandname") == "" || r.FormValue("cutingdemanstartdate") == "" || r.FormValue("cutingdemanenddate") == "" || r.FormValue("cuttingbranddemand") == "" || r.FormValue("cuttingrhdemand") == "" {
+		w.Write([]byte("thiếu thông tin để tạo demand"))
+		return
+	}
+
+	_, err := s.mgdb.Collection("cutting").UpdateOne(context.Background(), bson.M{"type": "target", "name": r.FormValue("cuttingdemandname")}, bson.M{
+		"$set": bson.M{"type": "target", "name": r.FormValue("cuttingdemandname"), "startdate": primitive.NewDateTimeFromTime(startdate), "enddate": primitive.NewDateTimeFromTime(enddate),
+			"detail": bson.A{bson.M{"type": "brand", "target": brandtarget}, bson.M{"type": "rh", "target": rhtarget}}},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
+	// 	"reports":         reports,
+	// 	"numberOfReports": numberOfReports,
+	// })
 }
 
 // //////////////////////////////////////////////////////////
@@ -6812,16 +6842,6 @@ func (s *Server) swa_deletereport(w http.ResponseWriter, r *http.Request, ps htt
 
 // router.POST("/sections/whitewood/overview/addmoney", s.swo_addmoney)
 func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// authurlsToken, err := r.Cookie("authurls")
-	// 	if err != nil {
-	// 		log.Println(err)
-	// 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	// 		return
-	// 	}
-	// 	if !strings.Contains(authurlsToken.Value, r.URL.Path) {
-	// 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	// 		return
-	// 	}
 	usernameTk, _ := r.Cookie("username")
 	date, _ := time.Parse("2006-01-02", r.FormValue("whitewoodmoneydate"))
 	brandmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandmoney"), 64)
@@ -6846,7 +6866,7 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
@@ -6867,8 +6887,9 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 		{{"$unset", "_id"}},
@@ -6878,13 +6899,22 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 	defer cur.Close(context.Background())
 	var whitewoodPlanData []struct {
-		Date     string  `bson:"date" json:"date"`
-		Plantype string  `bson:"plantype" json:"plantype"`
-		Plan     float64 `bson:"plan" json:"plan"`
+		Date     string    `bson:"date" json:"date"`
+		Plantype string    `bson:"plantype" json:"plantype"`
+		Plan     float64   `bson:"plan" json:"plan"`
+		Plans    []float64 `bson:"plans" json:"plans"`
+		Change   float64   `json:"change"`
 	}
 
 	if err := cur.All(context.Background(), &whitewoodPlanData); err != nil {
 		log.Println(err)
+	}
+	for i := 0; i < len(whitewoodPlanData); i++ {
+		if len(whitewoodPlanData[i].Plans) >= 2 && whitewoodPlanData[i].Plans[1] != 0 {
+			whitewoodPlanData[i].Change = whitewoodPlanData[i].Plans[1] - whitewoodPlanData[i].Plan
+		} else {
+			whitewoodPlanData[i].Change = 0
+		}
 	}
 
 	// get inventory

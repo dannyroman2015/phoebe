@@ -218,7 +218,8 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    // .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    .range(["#E4E0E1", "#FFBB70", "#A0D9DE"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -259,9 +260,9 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
     .attr("y", d => y(d[1]) - 10)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
-    .attr("font-size", "15px")
+    .attr("font-size", "12px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".1f")(d[1])}`)
+    .text(d => `${d3.format(".1f")(d[1])}`)
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -276,7 +277,7 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")
-        .attr("font-size", "14px")
+        .attr("font-size", "12px")
         .text(d => {
           if (d[1] - d[0] >= 1.5) { return d3.format(".1f")(d[1]-d[0])}
         })
@@ -358,7 +359,19 @@ const y1 = d3.scaleLinear()
   .nice()
 
 svg.append("text")
-  .text(`Tổng sản lượng (m³) theo Target - Actual`)
+  .text(`${target_actual.name}`)
+  .attr("text-anchor", "middle")
+  .attr("alignment-baseline", "middle")
+  .attr("x", 65)
+  .attr("y", 5)
+  .attr("dy", "0.35em")
+  .attr("fill", "#75485E")
+  .attr("font-weight", 300)
+  .attr("font-size", 14)
+
+
+svg.append("text")
+  .text(`Demand (m³) từ ${target_actual.startdate} tới ngày ${target_actual.enddate}`)
   .attr("text-anchor", "start")
   .attr("alignment-baseline", "start")
   .attr("x", 5)

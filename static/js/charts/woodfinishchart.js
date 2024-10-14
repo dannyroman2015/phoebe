@@ -988,7 +988,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
           .attr("height", d => y(0) - y(Math.abs(d[1].current-d[1].prev)))
           .attr("width", x.bandwidth()/3)
           .attr("fill", "url(#diffpattern)")
-          .attr("fill-opacity", 0.3)
+          .attr("fill-opacity", 0.6)
         .append("title")
           .text(d => Math.abs(d[1].current-d[1].prev))
     

@@ -29,6 +29,27 @@ func withAuth(h httprouter.Handle) httprouter.Handle {
 	}
 }
 
+// ////////////////////////////////////////////////////////////////////////////
+//
+//	withAuth2 - middleware check authentication by look at "authrls" cookie
+//
+// ////////////////////////////////////////////////////////////////////////////
+func withAuth2(h httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		authurlsToken, err := r.Cookie("authurls")
+		if err != nil {
+			log.Println(err)
+			w.Write([]byte("Not log in yet"))
+			return
+		}
+		if !strings.Contains(authurlsToken.Value, r.URL.Path) {
+			w.Write([]byte("không có thẩm quyền"))
+			return
+		}
+		h(w, r, ps)
+	}
+}
+
 // wrap a handler or middleware that return a handler
 func wrapper(handler http.Handler) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
