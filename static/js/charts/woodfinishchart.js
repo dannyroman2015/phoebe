@@ -925,7 +925,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12) 
 
   svg.append("text")
-      .text("Xưởng 1")
+      .text("Xưởng 7")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
