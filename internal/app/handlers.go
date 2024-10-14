@@ -1694,8 +1694,10 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// get plan data
 		cur, err = s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
+			{{"$sort", bson.M{"createdat": -1}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 			{{"$unset", "_id"}},
@@ -1705,13 +1707,22 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var assemblyPlanData []struct {
-			Date     string  `bson:"date" json:"date"`
-			Plantype string  `bson:"plantype" json:"plantype"`
-			Plan     float64 `bson:"plan" json:"plan"`
+			Date     string    `bson:"date" json:"date"`
+			Plantype string    `bson:"plantype" json:"plantype"`
+			Plan     float64   `bson:"plan" json:"plan"`
+			Plans    []float64 `bson:"plans" json:"plans"`
+			Change   float64   `json:"change"`
 		}
 
 		if err := cur.All(context.Background(), &assemblyPlanData); err != nil {
 			log.Println(err)
+		}
+		for i := 0; i < len(assemblyPlanData); i++ {
+			if len(assemblyPlanData[i].Plans) >= 2 && assemblyPlanData[i].Plans[1] != 0 {
+				assemblyPlanData[i].Change = assemblyPlanData[i].Plans[1] - assemblyPlanData[i].Plan
+			} else {
+				assemblyPlanData[i].Change = 0
+			}
 		}
 
 		// get inventory
@@ -1736,7 +1747,8 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			// {{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})
@@ -1751,11 +1763,24 @@ func (s *Server) da_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 
+		// get time of latest update
+		sr := s.mgdb.Collection("assembly").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var LastReport struct {
+			Createdat time.Time `bson:"createdat" json:"createdat"`
+		}
+		if err := sr.Decode(&LastReport); err != nil {
+			log.Println(err)
+		}
+		assemblyUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
 		template.Must(template.ParseFiles("templates/pages/dashboard/assembly_generalchart.html")).Execute(w, map[string]interface{}{
 			"assemblyData":          assemblyData,
 			"assemblyPlanData":      assemblyPlanData,
 			"assemblyInventoryData": assemblyInventoryData,
 			"assemblyTarget":        assemblyTarget,
+			"assemblyUpTime":        assemblyUpTime,
 		})
 
 	case "detail":
@@ -1898,7 +1923,7 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := cur.All(context.Background(), &woodfinishChartData); err != nil {
 			log.Println(err)
 		}
-		// get target of assembly
+		// get target of wood finish
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
@@ -1967,8 +1992,10 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// get plan data
 		cur, err = s.mgdb.Collection("woodfinish").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
+			{{"$sort", bson.M{"createdat": -1}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 			{{"$unset", "_id"}},
@@ -1978,13 +2005,22 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var woodfinishPlanData []struct {
-			Date     string  `bson:"date" json:"date"`
-			Plantype string  `bson:"plantype" json:"plantype"`
-			Plan     float64 `bson:"plan" json:"plan"`
+			Date     string    `bson:"date" json:"date"`
+			Plantype string    `bson:"plantype" json:"plantype"`
+			Plan     float64   `bson:"plan" json:"plan"`
+			Plans    []float64 `bson:"plans" json:"plans"`
+			Change   float64   `json:"change"`
 		}
 
 		if err := cur.All(context.Background(), &woodfinishPlanData); err != nil {
 			log.Println(err)
+		}
+		for i := 0; i < len(woodfinishPlanData); i++ {
+			if len(woodfinishPlanData[i].Plans) >= 2 && woodfinishPlanData[i].Plans[1] != 0 {
+				woodfinishPlanData[i].Change = woodfinishPlanData[i].Plans[1] - woodfinishPlanData[i].Plan
+			} else {
+				woodfinishPlanData[i].Change = 0
+			}
 		}
 
 		// get inventory
@@ -2009,7 +2045,8 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			// {{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "woodfinish total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})
@@ -2883,7 +2920,7 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	case "valuetarget":
 		cur, err := s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "factory": "$factory", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.factory", 1}, {"_id.prodtype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
@@ -2903,8 +2940,10 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// get plan data
 		cur, err = s.mgdb.Collection("pack").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$sum": "$plan"}}}},
+			// {{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
+			{{"$sort", bson.M{"createdat": -1}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
 			{{"$unset", "_id"}},
@@ -2914,13 +2953,22 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var packPlanData []struct {
-			Date     string  `bson:"date" json:"date"`
-			Plantype string  `bson:"plantype" json:"plantype"`
-			Plan     float64 `bson:"plan" json:"plan"`
+			Date     string    `bson:"date" json:"date"`
+			Plantype string    `bson:"plantype" json:"plantype"`
+			Plan     float64   `bson:"plan" json:"plan"`
+			Plans    []float64 `bson:"plans" json:"plans"`
+			Change   float64   `json:"change"`
 		}
 
 		if err := cur.All(context.Background(), &packPlanData); err != nil {
 			log.Println(err)
+		}
+		for i := 0; i < len(packPlanData); i++ {
+			if len(packPlanData[i].Plans) >= 2 && packPlanData[i].Plans[1] != 0 {
+				packPlanData[i].Change = packPlanData[i].Plans[1] - packPlanData[i].Plan
+			} else {
+				packPlanData[i].Change = 0
+			}
 		}
 
 		// get inventory
@@ -2946,7 +2994,8 @@ func (s *Server) dp_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// get target
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			// {{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})

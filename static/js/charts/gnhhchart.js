@@ -245,9 +245,11 @@ const drawGNHHChart2 = (data) => {
       document.getElementById("timelinecreate").click();
       document.getElementById("timelinecreate").focus();
     })
-
+  
   node.append("title")
-      .text(d => d.ancestors().reverse().map(d => d.data.itemcode).join("/"));
+      .text(d => d.data.itemname)
+      // .text(d => d.ancestors().reverse().map(d => d.data.itemcode).join("/"))
+
 
   svg.append("text")
     .attr("dy", "0.32em")
