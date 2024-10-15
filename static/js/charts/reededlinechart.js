@@ -150,9 +150,6 @@ const drawReededlineChart = (data, wood25data) => {
         .attr("stroke", "#75485E")
         .attr("stroke-width", 1);
 
-  // wood25 cutting
-  console.log(data)
-  console.log(wood25data)
   // draw wood25 cutting
   innerChart.append("path")
     .attr("fill", "none")
@@ -200,12 +197,12 @@ const drawReededlineChart1 = (data, wood25data, target) => {
   const y = d3.scaleLinear()
     // .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
     .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
-    .rangeRound([innerHeight, 0])
+    .rangeRound([innerHeight, innerHeight/3])
     .nice()
 
   const y1 = d3.scaleLinear()
-    .domain(0, d3.max(wood25data, d => d.qty))
-    .rangeRound([innerHeight, 0])
+    .domain([0, d3.max(wood25data, d => d.qty)])
+    .rangeRound([innerHeight/4, 0])
     .nice()
 
   const color = d3.scaleOrdinal()
@@ -274,15 +271,29 @@ const drawReededlineChart1 = (data, wood25data, target) => {
         )
   })
 
-  console.log(wood25data)
   // draw wood25 cutting
   innerChart.append("path")
     .attr("fill", "none")
-    .attr("stroke", "red")
+    .attr("stroke", "#75485E")
     .attr("stroke-width", 1.5)
     .attr("d", d => d3.line()
         .x(d => x(d.date) + x.bandwidth()/2)
-        .y(d => y1(d.qty)).curve(d3.curveCatmullRom)(wood25data));
+        .y(d => y1(d.qty)).curve(d3.curveStep)(wood25data));
+
+  innerChart.append("g")
+      .attr("font-family", "san-serif")
+      .attr("font-size", 14)
+      .attr("font-weight", 600)
+    .selectAll()
+    .data(wood25data)
+    .join("text")
+      .text(d => d3.format(",.3s")(d.qty))
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "start")
+      .attr("x", d => x(d.date) + x.bandwidth()/2)
+      .attr("y", d => y1(d.qty))
+      .attr("dy", "-0.1em")
+      .attr("fill", "#75485E")
 
   //draw target lines
   const dates = data.map(d => d.date)
@@ -325,14 +336,26 @@ innerChart.append("g")
    // end target line
 
   svg.append("text")
-      .text("(m²)")
-      .attr("text-anchor", "start")
-      .attr("alignment-baseline", "middle")
-      .attr("x", 0)
-      .attr("y", 5)
-      .attr("dy", "0.35em")
-      .attr("fill", "#75485E")
-      .attr("font-size", "16px")
+    .text("Gỗ (m3) cắt cho Reeded")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 5)
+    .attr("y", height/3-margin.bottom+30)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "12px")
+    .attr("transform", `rotate(-90, 5, ${height/3-margin.bottom+30})`)
+
+  svg.append("text")
+    .text("Sản lượng Reeded (m²)")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 5)
+    .attr("y", height-margin.bottom)
+    .attr("dy", "0.35em")
+    .attr("fill", "#75485E")
+    .attr("font-size", "14px")
+    .attr("transform", `rotate(-90, 5, ${height-margin.bottom})`)
 
   const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
   innerChart.append("text")

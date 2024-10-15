@@ -351,8 +351,6 @@ svg.append("text")
       .attr("font-weight", 600)
 
 // bieu dồ nhỏ trái
-console.log(target_actual)
-console.log(data)
 const y1 = d3.scaleLinear()
   .domain([0,  d3.max(target_actual.detail.map(d => d.target))])
   .rangeRound([innerHeight, 0])

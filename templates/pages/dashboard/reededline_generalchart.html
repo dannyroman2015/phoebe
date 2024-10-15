@@ -2,8 +2,8 @@
 
 <script>
   if ({{.reededlineTarget}} == undefined) {
-    reededlinechart.append(drawReededlineChart({{.reededlinedata}}))
+    reededlinechart.append(drawReededlineChart({{.reededlinedata}}, {{.wood25data}}))
   } else {
-    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.reededlineTarget}}))
+    reededlinechart.append(drawReededlineChart1({{.reededlinedata}}, {{.wood25data}}, {{.reededlineTarget}}))
   }
 </script>

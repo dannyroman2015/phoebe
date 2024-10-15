@@ -2433,7 +2433,7 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		cur, err := s.mgdb.Collection("reededline").Aggregate(context.Background(), mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "tone": "$tone"}, "qty": bson.M{"$sum": "$qty"}}}},
-			{{"$sort", bson.M{"_id.date": 1, "_id.tone": 1}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.tone", 1}}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "tone": "$_id.tone"}}},
 			{{"$unset", "_id"}},
 		})
@@ -2450,9 +2450,28 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 
+		// get data of Gỗ 25 of cutting
+		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"thickness": 25}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var wood25data []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &wood25data); err != nil {
+			log.Println(err)
+		}
+
 		// get target of reededline
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "reededline total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "reededline total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})
@@ -2467,9 +2486,24 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			log.Println(err)
 		}
 
+		// get time of latest update
+		sr := s.mgdb.Collection("reededline").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var LastReport struct {
+			Createdat time.Time `bson:"createdat" json:"createdat"`
+		}
+		if err := sr.Decode(&LastReport); err != nil {
+			log.Println(err)
+		}
+		reededlineUpTime := LastReport.Createdat.Add(7 * time.Hour).Format("15:04")
+
 		template.Must(template.ParseFiles("templates/pages/dashboard/reededline_generalchart.html")).Execute(w, map[string]interface{}{
 			"reededlinedata":   reededlinedata,
+			"wood25data":       wood25data,
 			"reededlineTarget": reededlineTarget,
+			"reededlineUpTime": reededlineUpTime,
 		})
 
 	case "efficiency":
@@ -12536,6 +12570,48 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"mo": "MO-222"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	type PP struct {
+		Id          string  `bson:"_id" json:"id"`
+		Mo          string  `bson:"mo" json:"mo"`
+		Itemcode    string  `bson:"itemcode" json:"itemcode"`
+		ItemName    string  `bson:"itemname" json:"itemname"`
+		Parent      string  `bson:"parent" json:"parent"`
+		Qty         float64 `bson:"qty" json:"qty"`
+		Unit        string  `bson:"unit" json:"unit"`
+		Done        float64 `bson:"done" json:"done"`
+		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert       bool    `bson:"alert" json:"alert"`
+		Children    []PP    `bson:"children" json:"children"`
+	}
+
+	var gnhhdata []PP
+
+	if err := cur.All(context.Background(), &gnhhdata); err != nil {
+		log.Println(err)
+	}
+	var data = struct {
+		Itemcode string `bson:"itemcode" json:"itemcode"`
+		Children []PP   `bson:"children" json:"children"`
+	}{
+		Itemcode: "MO-222",
+		Children: gnhhdata,
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/treechart.html")).Execute(w, map[string]interface{}{
+		"gnhhdata": data,
+	})
+}
+
+// router.POST("/gnhh/overview/productfilter", s.go_productfilter)
+func (s *Server) go_productfilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": "MO-222"}, bson.M{"done": bson.M{"$eq": "$qty"}}}}}},
 	})
 	if err != nil {
 		log.Println(err)
