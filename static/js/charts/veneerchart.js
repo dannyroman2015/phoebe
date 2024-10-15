@@ -240,6 +240,7 @@ const drawVeneerChart1 = (data, target) => {
           else if (d[1] - d[0] >= 50 && d.key == "straight") { return `⏌${d3.format(",.3s")(d[1]-d[0])}` }
           else if (d[1] - d[0] >= 50 && d.key == "curve") { return `⌒${d3.format(",.3s")(d[1]-d[0])}` }
           else if (d[1] - d[0] >= 50 && d.key == "reeded") { return `≊${d3.format(",.3s")(d[1]-d[0])}` }
+          else if (d[1] - d[0] >= 50 && d.key == "okoumebacker") { return `${d3.format(",.3s")(d[1]-d[0])}` }
           else { if (d[1] - d[0] >= 50 && d.key == "reeded") {return d3.format(",.3s")(d[1]-d[0])} }
         })
   })
@@ -285,11 +286,22 @@ innerChart.append("g")
    // end target line
 
   svg.append("text")
+   .text("Okoume+Backer")
+   .attr("text-anchor", "start")
+   .attr("alignment-baseline", "middle")
+   .attr("x", 0)
+   .attr("y", 5)
+   .attr("dy", "0.35em")
+   .attr("fill", color("okoumebacker"))
+   .attr("font-weight", 600)
+   .attr("font-size", 16)
+
+  svg.append("text")
       .text("(m²)")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 5)
+      .attr("y", 110)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", 16)
