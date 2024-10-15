@@ -254,6 +254,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
         .attr("font-size", "12px")
         .attr("x", innerWidth + 10)
         .attr("y", d => y(d.value))
+        .attr("fill", "currentColor")
 
     innerChart.append("text")
         .text("Target")

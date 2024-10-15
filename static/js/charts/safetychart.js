@@ -30,12 +30,12 @@ const drawSafetyChart = (data) => {
   innerChart.append("g")
     .call(d3.axisBottom(x).ticks(width / 80).tickSizeInner(0))
     .call(g => g.select(".domain").remove())
-    .call(g => g.selectAll(".tick line").clone(true).attr("y2", height).attr("opacity", 0.1))
+    .call(g => g.selectAll(".tick line").clone(true).attr("y2", height).attr("opacity", 0.3))
 
   innerChart.append("g")
     .call(d3.axisLeft(y))
     .call(g => g.select(".domain").remove())
-    .call(g => g.selectAll(".tick line").clone(true).attr("x2", innerWidth).attr("transform", `translate(0, ${ y.bandwidth()/2})`).attr("opacity", 0.1))
+    .call(g => g.selectAll(".tick line").clone(true).attr("x2", innerWidth).attr("transform", `translate(0, ${ y.bandwidth()/2})`).attr("opacity", 0.3))
 
   innerChart.append("g")
       .attr("stroke", "black")
