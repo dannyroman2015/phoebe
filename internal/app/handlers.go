@@ -11467,6 +11467,12 @@ func (s *Server) co_filtercolor(w http.ResponseWriter, r *http.Request, ps httpr
 	if r.FormValue("brand") != "" {
 		filters = append(filters, bson.M{"brand": r.FormValue("brand")})
 	}
+	switch r.FormValue("isinspected") {
+	case "yes":
+		filters = append(filters, bson.M{"inspections": bson.M{"$exists": true}})
+	case "no":
+		filters = append(filters, bson.M{"inspections": bson.M{"$exists": false}})
+	}
 
 	var cur *mongo.Cursor
 	var err interface{}
