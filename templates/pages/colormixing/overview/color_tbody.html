@@ -32,7 +32,19 @@
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{(index .Inspections 0).Date}}</p>
       </div>
     </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{(index .Inspections 0).Result}}</p>
+      </div>
+    </td>
     {{else}}
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Chưa kiểm</p>
+      </div>
+    </td>
+
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">Chưa kiểm</p>
@@ -54,6 +66,12 @@
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Brand}}</p>
+      </div>
+    </td>
+
+    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
+      <div>
+        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Prepared}}</p>
       </div>
     </td>
 
@@ -85,13 +103,7 @@
       <div>
         <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Hardness}}</p>
       </div>
-    </td>
-
-    <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
-      <div>
-        <p class="text-sm font-normal text-gray-600 dark:text-gray-400">{{.Prepared}}</p>
-      </div>
-    </td>
+    </td>          
 
     <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 whitespace-nowrap">
       <div>
