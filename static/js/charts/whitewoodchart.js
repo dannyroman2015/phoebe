@@ -5,7 +5,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
   const margin = {top: 20, right: 20, bottom: 20, left: 80};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
-  console.log(data)
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
@@ -29,7 +29,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["#DFC6A2", "#A5A0DE", "#A0D9DE"])
+    .range(["#DFC6A2", "#A5A0DE", "#D1D1D1"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -69,7 +69,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
-    .attr("y", d => y(d[1]) - 15)
+    .attr("y", d => y(d[1]) - 10)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
@@ -110,9 +110,20 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 30)
+      .attr("y", 25)
       .attr("dy", "0.35em")
       .attr("fill", "#DFC6A2")
+      .attr("font-weight", 600)
+      .attr("font-size", 12)
+
+  svg.append("text")
+      .text("White")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 45)
+      .attr("dy", "0.35em")
+      .attr("fill", color("white"))
       .attr("font-weight", 600)
       .attr("font-size", 12)
       
@@ -121,7 +132,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 105)
+      .attr("y", 65)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", 12)
@@ -215,14 +226,24 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
   })
 
   innerChart.append("text")
-        .text("plan -->")
+        .text("plan")
         .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "middle")
-        .attr("x", x(plandata[plandata.length-1].date) + x.bandwidth()/6)
-        .attr("y", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30)
+        .attr("alignment-baseline", "start")
+        .attr("x", x(plandata[plandata.length-1].date))
+        .attr("y", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) + 40)
+        .attr("dy", "-0.2em")
         .attr("fill", "#FA7070")
         .attr("font-size", 14)
-        .attr("transform", `rotate(90, ${x(plandata[plandata.length-1].date) + x.bandwidth()/6}, ${y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) - 30})`)
+        .attr("transform", `rotate(-80, ${x(plandata[plandata.length-1].date)}, ${y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) + 40})`)
+
+    innerChart.append("line")
+      .attr("x1", x(plandata[plandata.length-1].date))
+      .attr("y1", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan))
+      .attr("x2", x(plandata[plandata.length-1].date) - 5)
+      .attr("y2", y(plandata[plandata.length-1].plan + plandata[plandata.length-2].plan) + 28)
+      .attr("stroke", "#75485E")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.5)
 
   // end cột plan
 

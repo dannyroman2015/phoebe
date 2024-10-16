@@ -977,7 +977,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -6944,6 +6944,7 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 	date, _ := time.Parse("2006-01-02", r.FormValue("whitewoodmoneydate"))
 	brandmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodbrandmoney"), 64)
 	rhmoney, _ := strconv.ParseFloat(r.FormValue("whitewoodrhmoney"), 64)
+	whitemoney, _ := strconv.ParseFloat(r.FormValue("whitewoodwhitemoney"), 64)
 
 	if r.FormValue("whitewoodbrandmoney") != "" {
 		_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
@@ -6957,6 +6958,15 @@ func (s *Server) swo_addmoney(w http.ResponseWriter, r *http.Request, ps httprou
 	if r.FormValue("whitewoodrhmoney") != "" {
 		_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
 			"date": primitive.NewDateTimeFromTime(date), "prodtype": "rh", "value": rhmoney, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	if r.FormValue("whitewoodwhitemoney") != "" {
+		_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
+			"date": primitive.NewDateTimeFromTime(date), "prodtype": "white", "value": whitemoney, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
 		})
 		if err != nil {
 			log.Println(err)
