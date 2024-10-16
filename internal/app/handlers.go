@@ -2150,8 +2150,9 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 	switch pickedChart {
 	case "general":
+		// get data for cutting chart
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
 			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
@@ -2175,7 +2176,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 
 		//get target data for leftchart
-		sr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "target"})
+		sr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "target"}, options.FindOne().SetSort(bson.M{"startdate": -1}))
 		if sr.Err() != nil {
 			log.Println(sr.Err())
 		}
@@ -2193,10 +2194,11 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err := sr.Decode(&targetactualData); err != nil {
 			log.Println(err)
 		}
+		targetactualData.StartDateStr = targetactualData.StartDate.Format("02/01/2006")
+		targetactualData.EndDateStr = targetactualData.EnddDate.Format("02/01/2006")
 
-		monthstart, _ := time.Parse("2006-01-02", "2024-10-01")
 		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(monthstart)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
 			{{"$group", bson.M{"_id": "$prodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.D{{"_id", 1}}}},
 			{{"$set", bson.M{"prodtype": "$_id"}}},
@@ -2218,7 +2220,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		//get target line data of cutting
 		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+			{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$sort", bson.M{"date": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		})
