@@ -1309,16 +1309,71 @@ func (s *Server) d_loadpack(w http.ResponseWriter, r *http.Request, ps httproute
 
 // router.GET("/dashboard/loadslicing", s.d_loadslicing)
 func (s *Server) d_loadslicing(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("slicing").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
-		{{"$unset", "_id"}},
+	// cur, err := s.mgdb.Collection("slicing").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+	// 	{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "qty": bson.M{"$sum": "$qty"}}}},
+	// 	{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+	// 	{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.prodtype"}}},
+	// 	{{"$unset", "_id"}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// var slicingData []struct {
+	// 	Date     string  `bson:"date" json:"date"`
+	// 	Prodtype string  `bson:"prodtype" json:"prodtype"`
+	// 	Qty      float64 `bson:"qty" json:"qty"`
+	// }
+	// if err := cur.All(context.Background(), &slicingData); err != nil {
+	// 	log.Println(err)
+	// }
+	// // get target of slicing
+	// cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"name": "slicing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+	// 	{{"$sort", bson.M{"date": 1}}},
+	// 	{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// var slicingTarget []struct {
+	// 	Date  string  `bson:"date" json:"date"`
+	// 	Value float64 `bson:"value" json:"value"`
+	// }
+	// if err = cur.All(context.Background(), &slicingTarget); err != nil {
+	// 	log.Println(err)
+	// }
+	// // get last update time of slicing
+	// slicingSr := s.mgdb.Collection("slicing").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
+	// if slicingSr.Err() != nil {
+	// 	log.Println(slicingSr.Err())
+	// }
+	// var slicingLastReport struct {
+	// 	CreatedDate time.Time `bson:"createdat" json:"createdat"`
+	// }
+	// if err := slicingSr.Decode(&slicingLastReport); err != nil {
+	// 	log.Println(err)
+	// }
+
+	// slicingUpTime := slicingLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
+
+	// template.Must(template.ParseFiles("templates/pages/dashboard/slicing.html")).Execute(w, map[string]interface{}{
+	// 	"slicingData":   slicingData,
+	// 	"slicingTarget": slicingTarget,
+	// 	"slicingUpTime": slicingUpTime,
+	// })
+
+	cur, err := s.mgdb.Collection("output").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"section": "1.Slice"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -25))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "type": "$type"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id.date": 1, "_id.type": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "prodtype": "$_id.type"}}},
+		{{"$unset", bson.A{"_id.date", "_id.type"}}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
+	defer cur.Close(context.Background())
 	var slicingData []struct {
 		Date     string  `bson:"date" json:"date"`
 		Prodtype string  `bson:"prodtype" json:"prodtype"`
@@ -1327,39 +1382,11 @@ func (s *Server) d_loadslicing(w http.ResponseWriter, r *http.Request, ps httpro
 	if err := cur.All(context.Background(), &slicingData); err != nil {
 		log.Println(err)
 	}
-	// get target of slicing
-	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "slicing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$sort", bson.M{"date": 1}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-	var slicingTarget []struct {
-		Date  string  `bson:"date" json:"date"`
-		Value float64 `bson:"value" json:"value"`
-	}
-	if err = cur.All(context.Background(), &slicingTarget); err != nil {
-		log.Println(err)
-	}
-	// get last update time of slicing
-	slicingSr := s.mgdb.Collection("slicing").FindOne(context.Background(), bson.M{}, options.FindOne().SetSort(bson.M{"createdat": -1}))
-	if slicingSr.Err() != nil {
-		log.Println(slicingSr.Err())
-	}
-	var slicingLastReport struct {
-		CreatedDate time.Time `bson:"createdat" json:"createdat"`
-	}
-	if err := slicingSr.Decode(&slicingLastReport); err != nil {
-		log.Println(err)
-	}
 
-	slicingUpTime := slicingLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
 	template.Must(template.ParseFiles("templates/pages/dashboard/slicing.html")).Execute(w, map[string]interface{}{
-		"slicingData":   slicingData,
-		"slicingTarget": slicingTarget,
-		"slicingUpTime": slicingUpTime,
+		"slicingData": slicingData,
+		// "slicingTarget": slicingTarget,
+		// "slicingUpTime": slicingUpTime,
 	})
 }
 
@@ -10678,7 +10705,9 @@ func (s *Server) ca_updatepanel(w http.ResponseWriter, r *http.Request, ps httpr
 	id, _ := primitive.ObjectIDFromHex(ps.ByName("id"))
 
 	result := s.mgdb.Collection("colorpanel").FindOneAndUpdate(context.Background(), bson.M{"_id": id}, bson.M{"$set": bson.M{
-		"user": r.FormValue("user"),
+		"user": r.FormValue("user"), "panelno": r.FormValue("panelno"), "finishcode": r.FormValue("finsihcode"), "finishname": r.FormValue("finishname"),
+		"substrate": r.FormValue("substrate"), "collection": r.FormValue("collection"), "brand": r.FormValue("brand"), "finishsystem": r.FormValue("finishsystem"),
+		"texture": r.FormValue("texture"),
 	}})
 	if result.Err() != nil {
 		log.Println(result.Err())
@@ -10708,6 +10737,14 @@ func (s *Server) ca_updatepanel(w http.ResponseWriter, r *http.Request, ps httpr
 		log.Println(err)
 	}
 	colorpanelData.User = r.FormValue("user")
+	colorpanelData.PanelNo = r.FormValue("panelno")
+	colorpanelData.FinishCode = r.FormValue("finishcode")
+	colorpanelData.FinishName = r.FormValue("finishname")
+	colorpanelData.Substrate = r.FormValue("substrate")
+	colorpanelData.Collection = r.FormValue("collection")
+	colorpanelData.Brand = r.FormValue("brand")
+	colorpanelData.FinishSystem = r.FormValue("finishsystem")
+	colorpanelData.Texture = r.FormValue("texture")
 
 	template.Must(template.ParseFiles("templates/pages/colormixing/admin/panelupdated_tr.html")).Execute(w, map[string]interface{}{
 		"colorpanelData": colorpanelData,

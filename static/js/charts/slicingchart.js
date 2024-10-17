@@ -17,8 +17,8 @@ const drawSlicingVTChart = (data, target) => {
     .padding(0.1);
 
   const y = d3.scaleLinear()
-    // .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
-    .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), target == undefined ? 0 : d3.max(target, d => d.value)])])
+    .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
+    // .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), target == undefined ? 0 : d3.max(target, d => d.value)])])
     .rangeRound([innerHeight, 0])
     .nice()
 
@@ -49,11 +49,12 @@ const drawSlicingVTChart = (data, target) => {
       .append("title")
         .text(d => d[1]-d[0])
 
+  const dateTotal = new Set(data.map(d => d.date)).size
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
     .call(g => g.selectAll(".domain").remove())
-    .call(g => g.selectAll("text").attr("font-size", "12px"))
+    .call(g => g.selectAll("text").text((d, i) => (i == 0 || i == dateTotal-1 || d.slice(0, 2) == "01") ? d : d.slice(0, 2)).attr("font-size", "12px"))
 
   innerChart.append("g")
     .attr("font-family", "sans-serif")
@@ -64,12 +65,10 @@ const drawSlicingVTChart = (data, target) => {
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
     .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-    .attr("y", d => y(d[1]) - 10)
-    .attr("dy", "0.35em")
+    .attr("y", d => y(d[1]) - 5)
     .attr("fill", "#75485E")
-    .attr("font-size", "14px")
     .attr("font-weight", 600)
-    .text(d => `Σ ${d3.format(".3s")(d[1])}` )
+    .text(d => `${d3.format(",.0f")(d[1])}` )
 
   series.forEach(serie => {
     innerChart.append("g")
@@ -81,12 +80,10 @@ const drawSlicingVTChart = (data, target) => {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 - 4)
-        .attr("dy", "0.35em")
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("fill", "#75485E")
-        .attr("font-size", "14px")
         .text(d => {
-          if (d[1] - d[0] >= 30) { return d3.format(".3s")(d[1]-d[0])}
+          if (d[1] - d[0] >= 30) { return d3.format(",.0f")(d[1]-d[0])}
         })
   })
 
@@ -184,11 +181,11 @@ const maxOne = series[1].find(d => d[1] == d3.max(series[1], d => d[1]))
   .attr("transform", `rotate(-90, 10, ${height-margin.bottom})`)
     .append("tspan")
       .text("Fir")
-      .attr("fill", color("Fir"))
+      .attr("fill", color("fir"))
       .attr("font-weight", 600)
     .append("tspan")
       .text(", Reeded")
-      .attr("fill", color("Reeded"))
+      .attr("fill", color("reeded"))
       .attr("font-weight", 600)
     .append("tspan")
       .text(" với ")
