@@ -191,7 +191,21 @@ const drawCuttingChart1 = (data) => {
   return svg.node();
 }
 
-const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
+const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target) => {
+  // console.log(data)
+  // console.log(returndata)
+
+  // const aaa = data.map(d => {
+  //   d.return = 0;
+  //   returndata.forEach(rd => {
+  //     if (rd.date == d.date && rd.is25 == d.is25) {
+  //       d.return = rd.qty;
+  //     }
+  //   });
+  //   return d;
+  // })
+  // console.log(aaa)
+
   if (target == undefined) {
     target = [{"date": "", "value": 0}]
   }
@@ -205,6 +219,11 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
     .keys(d3.union(data.map(d => d.is25)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.is25))
+
+  const returnseries = d3.stack()
+    .keys(d3.union(returndata.map(d => d.is25)))
+    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
+    (d3.index(returndata, d => d.date, d => d.is25))
 
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
@@ -240,7 +259,56 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
       .attr("x", d => x(d.data[0]))
       .attr("y", d => y(d[1]))
       .attr("height", d => y(d[0]) - y(d[1]))
-      .attr("width", x.bandwidth())
+      .attr("width", x.bandwidth()/2)
+
+  innerChart
+      .selectAll()
+      .data(returnseries)
+      .join("g")
+        .attr("fill", d => color(d.key))
+        .attr("fill-opacity", 1)
+      .selectAll("rect")
+      .data(D => D.map(d => (d.key = D.key, d)))
+      .join("rect")
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth()/2)
+      .append("title")
+        .text(d => d[1] - d[0])
+
+  innerChart.append("g")
+    .selectAll()
+    .data(returnseries[returnseries.length-1])
+    .join("text")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
+      .attr("y", d => y(d[1]) - 10)
+      .attr("dy", "0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", "12px")
+      .attr("font-weight", 600)
+      .text(d => `${d3.format(".1f")(d[1])}`)
+
+  returnseries.forEach(serie => {
+    innerChart.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
+      .selectAll()
+      .data(serie)
+      .join("text")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
+        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
+        // .attr("dy", "0.35em")
+        .attr("fill", "#75485E")
+        .attr("font-size", "12px")
+        .text(d => {
+          if (d[1] - d[0] >= 1) { return d3.format(".1f")(d[1]-d[0])}
+        })
+  })
 
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
@@ -256,7 +324,7 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
   .join("text")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+    .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
     .attr("y", d => y(d[1]) - 10)
     .attr("dy", "0.35em")
     .attr("fill", "#75485E")
@@ -273,7 +341,7 @@ const drawCuttingChart2 = (data, target_actual, prodtypedata, target) => {
       .join("text")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
         .attr("dy", "0.35em")
         .attr("fill", "#75485E")

@@ -203,13 +203,14 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 		{{"$unset", "_id"}},
 	}
+
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline)
 	if err != nil {
 		log.Println(err)
@@ -221,7 +222,31 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		Is25 bool    `bson:"is25" json:"is25"`
 		Qty  float64 `bson:"qty" json:"qty"`
 	}
+
 	if err = cur.All(context.Background(), &cuttingData); err != nil {
+		log.Println(err)
+		return
+	}
+
+	//get wood return
+	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var cuttingReturnData []struct {
+		Date string  `bson:"date" json:"date"`
+		Is25 bool    `bson:"is25" json:"is25"`
+		Qty  float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &cuttingReturnData); err != nil {
 		log.Println(err)
 		return
 	}
@@ -377,6 +402,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"templates/shared/navbar.html",
 	)).Execute(w, map[string]interface{}{
 		"cuttingData":         cuttingData,
+		"cuttingReturnData":   cuttingReturnData,
 		"targetactualData":    targetactualData,
 		"cuttingProdtypeData": cuttingProdtypeData,
 		"cuttingTarget":       cuttingTarget,
@@ -385,6 +411,57 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		"laminationTarget":    laminationTarget,
 		"laminationUpTime":    laminationUpTime,
 		"packingData":         packchartData,
+	})
+}
+
+// //////////////////////////////////////////////////////////
+// router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadrawwood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// get data of raw wood input
+	cur, err := s.mgdb.Collection("rawwood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "import"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}}}}},
+		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var rawwoodImportData []struct {
+		Date string  `bson:"date" json:"date"`
+		Qty  float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &rawwoodImportData); err != nil {
+		log.Println(err)
+	}
+
+	// get data of selection
+	cur, err = s.mgdb.Collection("rawwood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "selection"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "woodtone": "$woodtone"}, "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.woodtone", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "woodtone": "$_id.woodtone"}}},
+		{{"$unset", bson.A{"_id.date", "_id.woodtone"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var rawwoodSelectionData []struct {
+		Date     string  `bson:"date" json:"date"`
+		Woodtone string  `bson:"woodtone" json:"woodtone"`
+		Qty      float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &rawwoodSelectionData); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/rawwood.html")).Execute(w, map[string]interface{}{
+		"rawwoodImportData":    rawwoodImportData,
+		"rawwoodSelectionData": rawwoodSelectionData,
 	})
 }
 
@@ -4759,6 +4836,52 @@ func (s *Server) sc_sendentry(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	http.Redirect(w, r, "/sections/cutting/entry", http.StatusSeeOther)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+//
+//	router.GET("/sections/cutting/entry/return", s.sce_return)
+//
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sce_return(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/return.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// router.POST("/sections/cutting/entry/sendreturn", s.sce_sendreturn)
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sce_sendreturn(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	returndate, _ := time.Parse("2006-01-02", r.FormValue("returndate"))
+	wrnotecode := r.FormValue("wrnotecode")
+	returnqty, _ := strconv.ParseFloat(r.FormValue("returnqty"), 64)
+	returntype := false
+	if r.FormValue("returntype") == "true" {
+		returntype = true
+	}
+
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+
+	if r.FormValue("returnqty") == "" || r.FormValue("returntype") == "" {
+		w.Write([]byte("Thiếu thông tin nhập liệu"))
+		return
+	}
+
+	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
+		"type": "return", "wrnote": wrnotecode, "qtycbm": returnqty, "reporter": usernameToken.Value,
+		"date": primitive.NewDateTimeFromTime(returndate), "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		"is25": returntype,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	http.Redirect(w, r, "/sections/cutting/entry/return", http.StatusSeeOther)
 }
 
 // ///////////////////////////////////////////////////////////////////////

@@ -82,7 +82,6 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
       .selectAll()
       .data(serie)
       .join("text")
-        .attr("class", d => d.key.substring(0,2))
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
         .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
