@@ -120,6 +120,8 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/sendentry", s.sc_sendentry)
 	router.GET("/sections/cutting/entry/return", s.sce_return)
 	router.POST("/sections/cutting/entry/sendreturn", s.sce_sendreturn)
+	router.GET("/sections/cutting/entry/fine", s.sce_fine)
+	router.POST("/sections/cutting/entry/sendfine", s.sce_sendfine)
 
 	router.GET("/sections/cutting/woodrecoveryentry", withAuth(s.sc_woodrecoveryentry))
 	router.GET("/sections/cutting/entry/wr_loadform", s.sce_wr_loadform)

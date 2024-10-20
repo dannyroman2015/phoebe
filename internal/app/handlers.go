@@ -203,7 +203,7 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get data for cutting chart
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
@@ -230,8 +230,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	//get wood return
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
+		{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
@@ -247,6 +246,27 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		Qty  float64 `bson:"qty" json:"qty"`
 	}
 	if err := cur.All(context.Background(), &cuttingReturnData); err != nil {
+		log.Println(err)
+		return
+	}
+
+	//get fine wood
+	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "fine", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var cuttingFineData []struct {
+		Date string  `bson:"date" json:"date"`
+		Qty  float64 `bson:"qty" json:"qty"`
+	}
+	if err := cur.All(context.Background(), &cuttingFineData); err != nil {
 		log.Println(err)
 		return
 	}
@@ -296,7 +316,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	//get target line data of cutting
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -403,6 +423,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	)).Execute(w, map[string]interface{}{
 		"cuttingData":         cuttingData,
 		"cuttingReturnData":   cuttingReturnData,
+		"cuttingFineData":     cuttingFineData,
 		"targetactualData":    targetactualData,
 		"cuttingProdtypeData": cuttingProdtypeData,
 		"cuttingTarget":       cuttingTarget,
@@ -4882,6 +4903,45 @@ func (s *Server) sce_sendreturn(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	http.Redirect(w, r, "/sections/cutting/entry/return", http.StatusSeeOther)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+//
+//	router.GET("/sections/cutting/entry/fine", s.sce_fine)
+//
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sce_fine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/entry/fine.html", "templates/shared/navbar.html")).Execute(w, nil)
+}
+
+// ///////////////////////////////////////////////////////////////////////
+// router.POST("/sections/cutting/entry/sendfine", s.sce_sendfine)
+// ///////////////////////////////////////////////////////////////////////
+func (s *Server) sce_sendfine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	date, _ := time.Parse("2006-01-02", r.FormValue("finedate"))
+	qty, _ := strconv.ParseFloat(r.FormValue("fineqty"), 64)
+
+	usernameToken, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return
+	}
+
+	if r.FormValue("fineqty") == "" {
+		w.Write([]byte("Thiếu thông tin nhập liệu"))
+		return
+	}
+
+	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
+		"type": "fine", "qtycbm": qty, "reporter": usernameToken.Value,
+		"date": primitive.NewDateTimeFromTime(date), "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	http.Redirect(w, r, "/sections/cutting/entry/fine", http.StatusSeeOther)
 }
 
 // ///////////////////////////////////////////////////////////////////////

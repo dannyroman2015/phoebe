@@ -191,21 +191,20 @@ const drawCuttingChart1 = (data) => {
   return svg.node();
 }
 
-const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target) => {
-  // console.log(data)
-  // console.log(returndata)
-
-  // const aaa = data.map(d => {
-  //   d.return = 0;
-  //   returndata.forEach(rd => {
-  //     if (rd.date == d.date && rd.is25 == d.is25) {
-  //       d.return = rd.qty;
-  //     }
-  //   });
-  //   return d;
-  // })
-  // console.log(aaa)
-
+const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypedata, target) => {
+  if (returndata != undefined) {
+    data = data.map(d => {
+      d.return = 0;
+      returndata.forEach(rd => {
+        if (rd.date == d.date && rd.is25 == d.is25) {
+          d.qty = d.qty - rd.qty;
+          d.return = rd.qty;
+        }
+      });
+      return d;
+    })
+  }
+  
   if (target == undefined) {
     target = [{"date": "", "value": 0}]
   }
@@ -225,8 +224,10 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
     .range([0, innerWidth])
     .padding(0.1);
 
+  const maxReturn = (returndata != undefined) ? d3.max(d3.rollup(returndata, D => d3.sum(D, d => d.qty) ,d => d.date), d => d[1]) + 2 : 0;
+ 
   const y = d3.scaleLinear()
-    .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
+    .domain([-maxReturn,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
     .rangeRound([innerHeight, 0])
     .nice()
 
@@ -258,10 +259,16 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
 
   if (returndata != undefined) {
     const returnseries = d3.stack()
-    .keys(d3.union(returndata.map(d => d.is25)))
-    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
-    (d3.index(returndata, d => d.date, d => d.is25))
-  innerChart
+      .keys(d3.union(returndata.map(d => d.is25)))
+      .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
+      (d3.index(returndata, d => d.date, d => d.is25))
+    
+    const y1 = d3.scaleLinear()
+      .domain([0, maxReturn])
+      .rangeRound([y(0), innerHeight])
+      .nice() 
+      
+    innerChart
       .selectAll()
       .data(returnseries)
       .join("g")
@@ -270,29 +277,29 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
       .selectAll("rect")
       .data(D => D.map(d => (d.key = D.key, d)))
       .join("rect")
-        .attr("x", d => x(d.data[0]) + x.bandwidth()/2)
-        .attr("y", d => y(d[1]))
-        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("x", d => x(d.data[0]))
+        .attr("y", d => y1(d[0]))
+        .attr("height", d => y1(d[1]-d[0]) - y(0))
         .attr("width", x.bandwidth()/2)
       .append("title")
         .text(d => d[1] - d[0])
 
-  innerChart.append("g")
-    .selectAll()
-    .data(returnseries[returnseries.length-1])
-    .join("text")
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "middle")
-      .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
-      .attr("y", d => y(d[1]) - 10)
-      .attr("dy", "0.35em")
-      .attr("fill", "#75485E")
-      .attr("font-size", "12px")
-      .attr("font-weight", 600)
-      .text(d => `${d3.format(".1f")(d[1])}`)
+    // innerChart.append("g")
+    //   .selectAll()
+    //   .data(returnseries[returnseries.length-1])
+    //   .join("text")
+    //     .attr("text-anchor", "middle")
+    //     .attr("alignment-baseline", "middle")
+    //     .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
+    //     .attr("y", d => y1(d[0] + (d[1]-d[0])) + 6)
+    //     .attr("dy", "0.35em")
+    //     .attr("fill", "#75485E")
+    //     .attr("font-size", "12px")
+    //     .attr("font-weight", 600)
+    //     .text(d => `${d3.format(".1f")(d[1])}`)
 
-  returnseries.forEach(serie => {
-    innerChart.append("g")
+    returnseries.forEach(serie => {
+      innerChart.append("g")
         .attr("font-family", "sans-serif")
         .attr("font-size", 12)
       .selectAll()
@@ -300,15 +307,67 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
       .join("text")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
-        .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
-        // .attr("dy", "0.35em")
+        .attr("x", d => x(d.data[0]) + x.bandwidth()/4)
+        .attr("y", d => y1(d[0] + (d[1]-d[0])/2))
         .attr("fill", "#75485E")
+        .attr("dy", "0.15em")
         .attr("font-size", "12px")
         .text(d => {
           if (d[1] - d[0] >= 1) { return d3.format(".1f")(d[1]-d[0])}
         })
-  })
+    })
+
+    innerChart.append("line")
+      .attr("x1", 0)
+      .attr("y1", y(0))
+      .attr("x2", innerWidth)
+      .attr("y2", y(0))
+      .attr("stroke", "black")
+    innerChart.append("line")
+      .attr("x1", innerWidth)
+      .attr("y1", y(0))
+      .attr("x2", innerWidth)
+      .attr("y2", innerHeight)
+      .attr("stroke", "black")
+    svg.append("text")
+      .text("Nhập lại kho")
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", width-10)
+      .attr("y", innerHeight - 5)
+      .attr("dy", "0.35em")
+      .attr("fill", "#75485E")
+      .attr("font-size", "12px")
+      .attr("font-weight", 600)
+      .attr("transform", `rotate(90, ${width-10}, ${innerHeight - 5})`)
+  }
+
+  if (finedata != undefined) {
+    innerChart
+      .selectAll()
+      .data(finedata)
+      .join("rect")
+        .attr("x", d => x(d.date) + x.bandwidth()/2)
+        .attr("y", d => y(d.qty))
+        .attr("height", d => y(0) - y(d.qty))
+        .attr("width", x.bandwidth()/2)
+        .attr("fill", "#AFD198")
+      .append("title")
+        .text(d => d.qty)
+
+    innerChart.append("g")
+      .selectAll()
+      .data(finedata)
+      .join("text")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.date) + 3*x.bandwidth()/4)
+        .attr("y", d => y(d.qty))
+        .attr("dy", "-0.35em")
+        .attr("fill", "#75485E")
+        .attr("font-size", "12px")
+        .attr("font-weight", 600)
+        .text(d => `${d3.format(".1f")(d.qty)}`)
   }
   
   innerChart.append("g")
@@ -400,7 +459,7 @@ svg.append("text")
   .attr("dy", "0.35em")
   .attr("fill", "#75485E")
   .attr("font-weight", 300)
-  .attr("font-size", 14)
+  .attr("font-size", 12)
   .attr("transform", `rotate(-90, 140, ${height-margin.bottom})`)
     .append("tspan")
       .text("Gỗ 25mm")
@@ -409,6 +468,10 @@ svg.append("text")
     .append("tspan")
       .text(", Gỗ Còn Lại")
       .attr("fill", color(false))
+      .attr("font-weight", 600)
+    .append("tspan")
+      .text(", Gỗ tinh")
+      .attr("fill", "#AFD198")
       .attr("font-weight", 600)
     .append("tspan")
       .text(" cùng ")

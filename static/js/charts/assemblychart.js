@@ -664,7 +664,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
   svg.append("text")
-      .text("Brand")
+      .text("White")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
