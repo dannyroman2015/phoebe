@@ -220,11 +220,6 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.is25))
 
-  const returnseries = d3.stack()
-    .keys(d3.union(returndata.map(d => d.is25)))
-    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
-    (d3.index(returndata, d => d.date, d => d.is25))
-
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, innerWidth])
@@ -261,6 +256,11 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth()/2)
 
+  if (returndata != undefined) {
+    const returnseries = d3.stack()
+    .keys(d3.union(returndata.map(d => d.is25)))
+    .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
+    (d3.index(returndata, d => d.date, d => d.is25))
   innerChart
       .selectAll()
       .data(returnseries)
@@ -309,7 +309,8 @@ const drawCuttingChart2 = (data, returndata, target_actual, prodtypedata, target
           if (d[1] - d[0] >= 1) { return d3.format(".1f")(d[1]-d[0])}
         })
   })
-
+  }
+  
   innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x).tickSizeOuter(0))
