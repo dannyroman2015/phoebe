@@ -218,14 +218,14 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
     .keys(d3.union(data.map(d => d.is25)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.is25))
-
+ 
   const x = d3.scaleBand()
-    .domain(data.map(d => d.date))
+    .domain(d3.sort(d3.union(data.map(d => d.date), target.map(d => d.date))))
     .range([0, innerWidth])
     .padding(0.1);
 
   const maxReturn = (returndata != undefined) ? d3.max(d3.rollup(returndata, D => d3.sum(D, d => d.qty) ,d => d.date), d => d[1]) + 2 : 0;
- 
+
   const y = d3.scaleLinear()
     .domain([-maxReturn,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
     .rangeRound([innerHeight, 0])
@@ -412,8 +412,8 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
   })
 
  //draw target lines
- const dates = data.map(d => d.date)
- target = target.filter(t => dates.includes(t.date))
+//  const dates = data.map(d => d.date)
+//  target = target.filter(t => dates.includes(t.date))
  innerChart
  .selectAll()
  .data(target)

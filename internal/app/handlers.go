@@ -2284,6 +2284,7 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
 			{{"$unset", "_id"}},
 		}
+
 		cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), pipeline)
 		if err != nil {
 			log.Println(err)
@@ -2295,7 +2296,51 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 			Is25 bool    `bson:"is25" json:"is25"`
 			Qty  float64 `bson:"qty" json:"qty"`
 		}
+
 		if err = cur.All(context.Background(), &cuttingData); err != nil {
+			log.Println(err)
+			return
+		}
+
+		//get wood return
+		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		var cuttingReturnData []struct {
+			Date string  `bson:"date" json:"date"`
+			Is25 bool    `bson:"is25" json:"is25"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &cuttingReturnData); err != nil {
+			log.Println(err)
+			return
+		}
+
+		//get fine wood
+		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"type": "fine", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.D{{"_id", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		var cuttingFineData []struct {
+			Date string  `bson:"date" json:"date"`
+			Qty  float64 `bson:"qty" json:"qty"`
+		}
+		if err := cur.All(context.Background(), &cuttingFineData); err != nil {
 			log.Println(err)
 			return
 		}
@@ -2359,25 +2404,14 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		if err = cur.All(context.Background(), &cuttingTarget); err != nil {
 			log.Println(err)
 		}
-		// get last update time of cutting
-		cuttingSr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "report"}, options.FindOne().SetSort(bson.M{"createddate": -1}))
-		if cuttingSr.Err() != nil {
-			log.Println(cuttingSr.Err())
-		}
-		var cuttingLastReport struct {
-			CreatedDate time.Time `bson:"createddate" json:"createddate"`
-		}
-		if err := cuttingSr.Decode(&cuttingLastReport); err != nil {
-			log.Println(err)
-		}
-		cuttingUpTime := cuttingLastReport.CreatedDate.Add(7 * time.Hour).Format("15:04")
 
 		template.Must(template.ParseFiles("templates/pages/dashboard/cutting_generalchart.html")).Execute(w, map[string]interface{}{
 			"cuttingData":         cuttingData,
+			"cuttingReturnData":   cuttingReturnData,
+			"cuttingFineData":     cuttingFineData,
 			"targetactualData":    targetactualData,
 			"cuttingProdtypeData": cuttingProdtypeData,
 			"cuttingTarget":       cuttingTarget,
-			"cuttingUpTime":       cuttingUpTime,
 		})
 
 	case "woodtype":
