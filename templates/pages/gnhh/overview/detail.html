@@ -1,0 +1,251 @@
+<div class="fade-in col-span-full lg:col-span-2 relative p-2 space-y-4 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+  <div class="flex items-center justify-between">
+    <a id="title"
+      href="Javascript:void(0);" class="mb-1 font-bold hover:underline">
+      Detail
+    </a>
+
+    <div class="relative flex items-center md:mt-0 p-0">
+      <span class="absolute">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mx-3 text-gray-400 dark:text-gray-600">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+      </span>
+      <input hx-post="/gnhh/overview/searchdetail" hx-trigger="input changed delay:500ms, search" hx-target="#detail-container" hx-swap="outerHTML settle:200ms"
+        id="detailsearch" name="detailsearch" type="text" placeholder="Search" class="block w-60 py-1.5 pr-5 text-gray-700 bg-white border border-gray-200 rounded-lg placeholder-gray-400/70 pl-11 rtl:pr-11 rtl:pl-5 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40">
+    </div>
+
+    <div x-data="{
+      popoverOpen: false,
+      popoverArrow: true,
+      popoverPosition: 'bottom',
+      popoverHeight: 0,
+      popoverOffset: 8,
+      popoverHeightCalculate() {
+        this.$refs.popover.classList.add('invisible'); 
+        this.popoverOpen=true; 
+        let that=this;
+        $nextTick(function(){ 
+          that.popoverHeight = that.$refs.popover.offsetHeight;
+          that.popoverOpen=false; 
+          that.$refs.popover.classList.remove('invisible');
+          that.$refs.popoverInner.setAttribute('x-transition', '');
+          that.popoverPositionCalculate();
+        });
+      },
+      popoverPositionCalculate(){
+        if(window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)){
+          this.popoverPosition = 'top';
+        } else {
+          this.popoverPosition = 'bottom';
+        }
+      }
+      }"
+      x-init="
+        that = this;
+        window.addEventListener('resize', function(){
+          popoverPositionCalculate();
+        });
+        $watch('popoverOpen', function(value){
+          if(value){ popoverPositionCalculate(); }
+        });
+      "
+      class="relative flex items-center">
+  
+      <button x-ref="popoverButton" @click="popoverOpen=!popoverOpen" class="flex items-center justify-center w-8 h-8 bg-white border rounded-full shadow-sm cursor-pointer hover:bg-neutral-100 focus-visible:ring-gray-400 focus-visible:ring-2 focus-visible:outline-none active:bg-white border-neutral-200/70">
+        <svg class="w-4 h-4" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 3C4.67157 3 4 3.67157 4 4.5C4 5.32843 4.67157 6 5.5 6C6.32843 6 7 5.32843 7 4.5C7 3.67157 6.32843 3 5.5 3ZM3 5C3.01671 5 3.03323 4.99918 3.04952 4.99758C3.28022 6.1399 4.28967 7 5.5 7C6.71033 7 7.71978 6.1399 7.95048 4.99758C7.96677 4.99918 7.98329 5 8 5H13.5C13.7761 5 14 4.77614 14 4.5C14 4.22386 13.7761 4 13.5 4H8C7.98329 4 7.96677 4.00082 7.95048 4.00242C7.71978 2.86009 6.71033 2 5.5 2C4.28967 2 3.28022 2.86009 3.04952 4.00242C3.03323 4.00082 3.01671 4 3 4H1.5C1.22386 4 1 4.22386 1 4.5C1 4.77614 1.22386 5 1.5 5H3ZM11.9505 10.9976C11.7198 12.1399 10.7103 13 9.5 13C8.28967 13 7.28022 12.1399 7.04952 10.9976C7.03323 10.9992 7.01671 11 7 11H1.5C1.22386 11 1 10.7761 1 10.5C1 10.2239 1.22386 10 1.5 10H7C7.01671 10 7.03323 10.0008 7.04952 10.0024C7.28022 8.8601 8.28967 8 9.5 8C10.7103 8 11.7198 8.8601 11.9505 10.0024C11.9668 10.0008 11.9833 10 12 10H13.5C13.7761 10 14 10.2239 14 10.5C14 10.7761 13.7761 11 13.5 11H12C11.9833 11 11.9668 10.9992 11.9505 10.9976ZM8 10.5C8 9.67157 8.67157 9 9.5 9C10.3284 9 11 9.67157 11 10.5C11 11.3284 10.3284 12 9.5 12C8.67157 12 8 11.3284 8 10.5Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+      </button>
+
+      <div x-ref="popover"
+          x-show="popoverOpen"
+          x-init="setTimeout(function(){ popoverHeightCalculate(); }, 100);"
+          x-trap.inert="popoverOpen"
+          @click.away="popoverOpen=false;"
+          @keydown.escape.window="popoverOpen=false"
+          :class="{ 'top-0 mt-12' : popoverPosition == 'bottom', 'bottom-0 mb-1' : popoverPosition == 'top' }"
+          class="absolute z-20 w-[300px] max-w-lg -translate-x-full -translate-y-6" x-cloak>
+        <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white border rounded-md shadow-sm border-neutral-200/70">
+          <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
+          <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
+          <div class="grid gap-4">
+            <div class="space-y-2">
+              <h4 class="font-medium leading-none">Options</h4>
+              <p class="text-sm text-muted-foreground"></p>
+            </div>
+
+            <form>
+              <!-- <div class="grid gap-2">
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="summarymonth" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Month
+                  </label>
+                  <input hx-post="/production/overview/summarydatefilter" hx-trigger="change" hx-target="#summary-tbody" hx-swap="outerHTML settle:200ms"
+                    id="summarymonth" name="summarymonth" type="number" min="1" step="1" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
+              </div> -->
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- update done qty -->
+  <!-- <div x-data="{ 
+    activeAccordion: '', 
+    setActiveAccordion(id) { 
+        this.activeAccordion = (this.activeAccordion == id) ? '' : id 
+    } 
+  }" class="relative w-full mx-auto p-2 text-sm">
+    
+    <div x-data="{ id: $id('accordion') }" :class="{ 'border-neutral-200/60 text-neutral-800' : activeAccordion==id, 'border-transparent text-black hover:text-neutral-800' : activeAccordion!=id }" 
+          class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
+      <button id="timelinecreate" @click="setActiveAccordion(id)" class="flex items-center justify-center space-x-6 w-full px-5 py-2 font-semibold text-center text-blue-400 select-none">
+        <span>Create New</span>
+        
+        <div :class="{ 'rotate-90': activeAccordion==id }" class="relative flex items-center justify-center w-2.5 h-2.5 duration-300 ease-out">
+          <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
+          <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
+        </div>  
+        
+      </button>
+
+      <div x-show="activeAccordion==id" x-collapse x-cloak>
+          <form class="p-5 pt-0" action="/gnhh/overview/updatetimeline" method="post">
+            <div class="text-center">
+              <label for="codepath" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
+                <input type="text" id="codepath" name="codepath" placeholder="Code Path"
+                        class="peer h-8 w-full text-center border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"/>
+
+                <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                  Code Path
+                </span>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-3 sm:space-x-4 space-y-2">
+
+              <div class="col-span-full sm:col-span-2"> 
+                <select name="timelinetype" id="timelinetype" 
+                        class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
+                  <option value="">Select</option>
+                  <option value="Lãnh đủ vật tư">Lãnh đủ vật tư</option>
+                  <option value="Hoàn thành toàn bộ">Hoàn thành</option>
+                  <option value="Làm được">Làm được</option>
+                  <option value="Giao hàng">Giao hàng</option>
+                  <option value="Xác nhận Nhận hàng">Xác nhận Nhận hàng</option>
+                  <option value="Cảnh báo">Cảnh báo</option>
+                  <option value="Tắt cảnh báo">Tắt cảnh báo</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+
+              <div class="col-span-full sm:col-span-1">
+                <label for="qty" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
+                  <input type="number" id="qty" name="qty" placeholder="qty" step="any"
+                          class="peer h-8 w-full text-center border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"/>
+  
+                  <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                    Quantity
+                  </span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-3 sm:space-x-4 space-y-6 sm:space-y-0 mt-3">
+              <div class="col-span-full sm:col-span-2">
+                <label for="note" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
+                  <input type="text" id="note" name="note" placeholder="Note"
+                          class="peer h-8 w-full text-center border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"/>
+  
+                  <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                    Note
+                  </span>
+                </label>
+              </div>
+
+              <div class="col-span-full sm:col-span-1 text-center">
+                <button type="submit"
+                        class="inline-block rounded border border-current px-6 py-3 text-sm font-medium text-indigo-600 transition hover:rotate-2 hover:scale-110 focus:outline-none focus:ring active:text-indigo-500">
+                  Update
+                </button>
+              </div>
+            </div>
+            
+          </form>
+      </div>
+    </div>
+    
+  </div> -->
+  <!-- end update done qty -->
+
+  <!-- Timeline -->
+  <!-- <div class="fade-in" id="timeline-container">
+    {{range .timelinedata}}
+    <div class="flex gap-x-3">
+
+      <div class="w-10 sm:w-20 text-end">
+        <span class="text-xs text-gray-500 dark:text-neutral-400">{{.CreatedAt}}</span>
+      </div>
+
+      <div class="relative last:after:hidden after:absolute after:top-7 after:bottom-0 after:start-3.5 after:w-px after:-translate-x-[0.5px] after:bg-gray-200 dark:after:bg-neutral-700">
+        <div class="relative z-10 size-7 flex justify-center items-center">
+          <div class="size-2 rounded-full bg-gray-400 dark:bg-neutral-600"></div>
+        </div>
+      </div>
+
+      <div class="grow pt-0.5 pb-8">
+        <h3 class="flex gap-x-1.5 font-semibold text-gray-800 dark:text-white">
+          {{if eq .Title "Lãnh đủ vật tư"}}
+            <svg fill="#000000" height="20px" width="20px" version="1.1" id="wood" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 256 256" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M214.1,101.3V55.2h-72.8L52.1,90.6v35l-47,22.7v55.6h182.5l63.4-53.2v-49.2H214.1z M133.1,99.3v39h-8.4 c0-1.1-0.1-2.3-0.2-3.4c-1-13.5-6.3-25.5-15-35.6H133.1z M60.3,99.3h37.9c10.8,9.4,16.9,21.9,18,36.3c0.1,0.9,0.1,1.8,0.1,2.7H99.3 c0-0.5,0-0.9,0-1.4c-0.8-9.9-5.3-19-12.9-25.4c-7.4-6.3-16.4-9.5-25.9-9v-3.1H60.3z M60.3,110.5c7.7-0.5,14.8,2.1,20.6,7.1 c5.9,5,9.5,12.1,10,19.9c0,0.2,0,0.5,0,0.7h-9.3c-0.4-5.2-3-9.9-6.9-13.3c-4-3.4-9-5-14.2-4.6c-0.2,0-0.1,0-0.2,0L60.3,110.5 L60.3,110.5z M60.3,128.5c0.4-0.1,0.5-0.1,0.8-0.1c3.1-0.2,5.9,0.7,8.3,2.7c2.2,1.8,3.5,4.3,3.9,7.2h-13V128.5z M13.2,195.6v-9.3 c0.6-0.1,1.2-0.3,1.8-0.3c3-0.2,5.9,0.7,8.3,2.7c2.2,1.8,3.6,4.1,3.9,7H13.2z M35.7,195.6c-0.4-5.2-3.1-9.7-7.1-13.1s-9-5-14.2-4.6 c-0.4,0-0.8,0.1-1.2,0.2v-9.5c0.1,0,0.3-0.1,0.5-0.1c16-1.2,30,10.8,31.3,26.8c0,0.2,0,0.3,0,0.5C45,195.6,35.7,195.6,35.7,195.6z M53.2,195.6c0-0.5,0-0.7-0.1-1.1c-1.6-20.4-19.5-35.9-39.9-34.4v-3.4h38.5c10.8,9.4,17.3,22.1,18.5,36.5c0.1,0.9,0.1,1.6,0.1,2.5 H53.2z M78.4,192.4c-1-13.5-6.3-25.8-15-35.8H86v39h-7.4C78.5,194.5,78.5,193.6,78.4,192.4z M106.5,195.6v-9.4 c0.5-0.1,0.7-0.2,1.3-0.2c3-0.2,5.9,0.7,8.3,2.7c2.2,1.8,3.4,4.1,3.8,7L106.5,195.6L106.5,195.6z M128,195.6 c-0.4-5.2-2.7-9.7-6.7-13.1s-9-5-14.2-4.6c-0.3,0-0.3,0-0.7,0v-9.9c16-1.2,29.9,11.2,31.2,27.2c0,0.2,0,0.3,0,0.5 C137.7,195.6,128,195.6,128,195.6z M145.9,195.6c0-0.5,0-0.7-0.1-1.1c-1.5-20.4-19.1-36.1-39.4-34.7v-3.1h37.9 c10.8,9.4,17.4,22.1,18.6,36.5c0.1,0.9-0.1,1.6-0.1,2.5H145.9z M179.2,195.6H171c0-1.1,0.1-2.1,0-3.2c-1-13.5-6.7-25.8-15.4-35.8 h23.6V195.6z"></path> </g></svg>
+          {{else if eq .Title "Hoàn thành toàn bộ"}}
+            <svg width="20px" height="20px" viewBox="0 0 64 64" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><defs><style>.cls-1{fill:#0074ff;}.cls-2{fill:#ffb300;}</style></defs><title></title><path class="cls-1" d="M28.75,55.5a23.5,23.5,0,1,1,14-42.38,2,2,0,0,1-2.38,3.21A19.51,19.51,0,1,0,48.25,32,19.65,19.65,0,0,0,48,28.93a2,2,0,1,1,4-.62A23.85,23.85,0,0,1,52.25,32,23.52,23.52,0,0,1,28.75,55.5Z"></path><path class="cls-2" d="M31.25,39.5a2,2,0,0,1-1.41-.59l-9.5-9.5a2,2,0,0,1,2.82-2.82l8.09,8.08L55.34,10.59a2,2,0,0,1,2.82,2.82l-25.5,25.5A2,2,0,0,1,31.25,39.5Z"></path></g></svg>
+          {{else if eq .Title "Làm được"}}
+            <svg fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" xml:space="preserve" width="20px" height="20px"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .st0{fill:none;} </style> <path d="M11.7,2c-0.1,0-0.1,0-0.2,0c0,0,0,0-0.1,0v0c-0.2,0-0.3,0-0.5,0l0.2,2c0.4,0,0.9,0,1.3,0c4,0.3,7.3,3.5,7.5,7.6 c0.2,4.4-3.2,8.2-7.6,8.4c0,0-0.1,0-0.2,0c-0.3,0-0.7,0-1,0L11,22c0.4,0,0.8,0,1.3,0c0.1,0,0.3,0,0.4,0v0c5.4-0.4,9.5-5,9.3-10.4 c-0.2-5.1-4.3-9.1-9.3-9.5v0c0,0,0,0,0,0c-0.2,0-0.3,0-0.5,0C12,2,11.9,2,11.7,2z M8.2,2.7C7.7,3,7.2,3.2,6.7,3.5l1.1,1.7 C8.1,5,8.5,4.8,8.9,4.6L8.2,2.7z M4.5,5.4c-0.4,0.4-0.7,0.9-1,1.3l1.7,1C5.4,7.4,5.7,7.1,6,6.7L4.5,5.4z M15.4,8.4l-4.6,5.2 l-2.7-2.1L7,13.2l4.2,3.2l5.8-6.6L15.4,8.4z M2.4,9c-0.2,0.5-0.3,1.1-0.3,1.6l2,0.3c0.1-0.4,0.1-0.9,0.3-1.3L2.4,9z M4.1,13l-2,0.2 c0,0.1,0,0.2,0,0.3c0.1,0.4,0.2,0.9,0.3,1.3l1.9-0.6c-0.1-0.3-0.2-0.7-0.2-1.1L4.1,13z M5.2,16.2l-1.7,1.1c0.3,0.5,0.6,0.9,1,1.3 L6,17.3C5.7,16.9,5.4,16.6,5.2,16.2z M7.8,18.8l-1.1,1.7c0.5,0.3,1,0.5,1.5,0.8l0.8-1.8C8.5,19.2,8.1,19,7.8,18.8z"></path> <rect class="st0" width="24" height="24"></rect> </g></svg>
+          {{else if eq .Title "Giao hàng"}}
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 48 48"><path d="M 35.476562 5.9785156 A 1.50015 1.50015 0 0 0 34 7.5 L 34 37.5 A 1.50015 1.50015 0 0 0 35.5 39 L 44.5 39 A 1.50015 1.50015 0 1 0 44.5 36 L 37 36 L 37 7.5 A 1.50015 1.50015 0 0 0 35.476562 5.9785156 z M 8 6 A 4 4 0 0 0 4 10 L 4 32.535156 A 6 6 0 1 0 13.908203 38 L 20.091797 38 A 6 6 0 0 0 32 37 A 6 6 0 0 0 30 32.537109 L 30 23.859375 A 6 6 0 0 0 28.939453 20.460938 L 20.189453 7.7304688 A 4 4 0 0 0 16.900391 6 L 8 6 z M 8 9 L 16.900391 9 A 1 1 0 0 1 17.720703 9.4296875 L 26.470703 22.160156 A 3 3 0 0 1 27 23.859375 L 27 25 L 19.550781 25 A 1.49 1.49 0 0 1 18.619141 24.669922 L 15 21.769531 A 3.5 3.5 0 0 0 12.800781 21 L 7 21 L 7 10 A 1 1 0 0 1 8 9 z M 8 34 A 3 3 0 1 1 5 37 A 3 3 0 0 1 8 34 z M 26 34 A 3 3 0 1 1 23 37 A 3 3 0 0 1 26 34 z"></path></svg>
+          {{else if eq .Title "Xác nhận Nhận hàng"}}
+            <svg fill="#000000" width="20px" height="20px" viewBox="0 0 14 14" role="img" focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="m 1.0324444,11.139308 c 0.0179,-0.1218 0.061,-0.2215 0.0958,-0.2215 0.0348,0 0.0633,-0.064 0.0633,-0.1428 0,-0.079 0.0321,-0.1428 0.0714,-0.1428 0.0393,0 0.0714,-0.064 0.0714,-0.1427 0,-0.079 0.0321,-0.1428 0.0714,-0.1428 0.0393,0 0.0714,-0.047 0.0714,-0.1045 0,-0.058 0.08,-0.2479001 0.17776,-0.4230001 0.12606,-0.2258 0.16557,-0.3794 0.13583,-0.528 -0.0254,-0.1269 0.002,-0.2942 0.0687,-0.4236 0.0608,-0.1177 0.18066,-0.4193 0.26627,-0.6702 0.0856,-0.251 0.17774,-0.4885 0.20472,-0.5277 0.027,-0.039 0.0925,-0.216 0.14571,-0.3927 0.0532,-0.1766 0.1232,-0.3517 0.15563,-0.389 0.0324,-0.037 0.059,-0.1417 0.059,-0.232 0,-0.09 0.0321,-0.1642 0.0714,-0.1642 0.0393,0 0.0714,-0.094 0.0714,-0.21 0,-0.1154 0.0321,-0.2298 0.0714,-0.254 0.0393,-0.024 0.073,-0.099 0.0749,-0.1649 0.002,-0.066 0.16547,-0.2492 0.36338,-0.4062 0.1979,-0.1571 0.43577,-0.3579 0.5286,-0.4462 0.0928,-0.088 0.1866,-0.1606 0.20838,-0.1606 0.0218,0 0.13637,-0.093 0.25466,-0.2056 0.11829,-0.113 0.3509,-0.2977 0.51691,-0.4104 0.16601,-0.1128 0.31254,-0.2291 0.32563,-0.2585 0.0131,-0.029 0.0683,-0.053 0.12276,-0.053 0.0544,0 0.21335,-0.064 0.35316,-0.1428 0.26925,-0.1512 0.60679,-0.1909 0.60679,-0.071 0,0.039 0.0421,0.071 0.0936,0.071 0.0515,0 0.15589,0.058 0.23201,0.1285 0.24872,0.231 0.37942,0.24 0.55068,0.038 0.30396,-0.3586 1.0957,-1.1308 1.25041,-1.2194 0.18638,-0.1068 0.51461,-0.1182 0.51461,-0.018 0,0.039 0.043,0.071 0.0956,0.071 0.12754,0 0.26131,0.3072 0.26131,0.6002 0,0.2369 -0.24982,0.6817 -0.50955,0.9073 -0.0731,0.063 -0.13294,0.139 -0.13294,0.1677 0,0.029 -0.0964,0.1422 -0.21416,0.2523 -0.23429,0.2188 -0.26247,0.3229 -0.12217,0.4512 0.18171,0.1662 0.89017,0.5482 1.01669,0.5482 0.0577,0 0.10491,0.029 0.10491,0.063 0,0.035 0.20949,0.1202 0.46554,0.1895 0.4572796,0.1237 0.4683696,0.1234 0.6246396,-0.018 0.1522,-0.1379 0.20395,-0.1411 1.19421,-0.074 0.56932,0.038 1.0438,0.078 1.05441,0.087 0.0106,0.01 0.0719,0.2706 0.13625,0.5806 0.22137,1.0669 0.1397,2.7256 -0.19548,3.9704001 l -0.0726,0.2698 -1.10376,0 -1.10375,0 0,-0.2142 c 0,-0.1178 -0.0321,-0.2142 -0.0714,-0.2142 -0.0393,0 -0.0714,-0.068 -0.0714,-0.1504 0,-0.1163 -0.0283,-0.1381 -0.12493,-0.096 -0.0687,0.03 -0.2373696,0.067 -0.3747896,0.083 -0.13742,0.016 -0.31799,0.063 -0.40128,0.1034 -0.15948,0.078 -0.59017,0.053 -1.4191,-0.084 -0.56756,-0.093 -0.48797,-0.091 -1.12627,-0.028 -0.26608,0.026 -0.50088,0.076 -0.52177,0.1096 -0.0539,0.087 -1.79571,0.078 -1.84994,-0.01 -0.0243,-0.039 -0.15276,-0.071 -0.28555,-0.071 -0.13279,0 -0.26128,-0.032 -0.28555,-0.071 -0.0243,-0.039 -0.15836,-0.071 -0.29798,-0.071 -0.20152,0 -0.30517,0.055 -0.50271,0.2677 -0.13687,0.1473 -0.29749,0.34 -0.35693,0.4284 -0.0594,0.088 -0.16674,0.1606 -0.23843,0.1606 -0.0717,0 -0.15021,0.032 -0.17447,0.071 -0.0243,0.039 -0.10154,0.071 -0.17172,0.071 -0.0702,0 -0.22087,0.046 -0.33487,0.1034 -0.11401,0.057 -0.33873,0.1244 -0.49939,0.1501 l -0.29211,0.047 0.0325,-0.2215 z m 0.83725,-0.2929 c 0.0243,-0.039 0.10648,-0.071 0.18268,-0.071 0.0762,0 0.13857,-0.032 0.13857,-0.071 0,-0.039 0.0482,-0.071 0.10708,-0.071 0.0589,0 0.10708,-0.048 0.10708,-0.1065 0,-0.1314 -0.28157,-0.4646 -0.39263,-0.4646 -0.11106,0 -0.39263,0.3332 -0.39263,0.4646 0,0.059 -0.0321,0.1065 -0.0714,0.1065 -0.0393,0 -0.0714,0.064 -0.0714,0.1428 0,0.1038 0.0476,0.1428 0.17426,0.1428 0.0958,0 0.19411,-0.032 0.21837,-0.071 z m 9.7914796,-0.4796 c 0.56959,-0.044 0.51279,0.02 0.6796,-0.7697001 0.10998,-0.5207 0.15529,-2.1091 0.0628,-2.2016 -0.0416,-0.042 -0.0756,-0.1661 -0.0756,-0.2766 0,-0.1106 -0.0399,-0.329 -0.0888,-0.4855 l -0.0888,-0.2844 -0.54608,0 c -0.62148,0 -0.64971,0.026 -0.55725,0.5046 0.11336,0.5873 0.075,1.9136 -0.0772,2.6663 -0.15299,0.7568001 -0.13618,1.0112001 0.0617,0.9332001 0.0652,-0.026 0.34848,-0.064 0.62959,-0.086 z M 6.1529444,9.9283079 c 0.15705,-0.042 0.48897,-0.1306 0.73759,-0.1971 0.4275,-0.1144 0.48566,-0.1141 1.07082,0.01 0.34032,0.07 0.81151,0.1273 1.04709,0.1279 0.50257,0.001 1.3830896,-0.1952 1.5309896,-0.3415 0.10718,-0.1061 0.23238,-0.8318 0.23976,-1.3898 0.005,-0.3722 -0.0687,-0.9074 -0.18342,-1.3327 -0.0786,-0.2915 -0.0876,-0.2983 -0.44116,-0.3348 -0.5742096,-0.059 -0.8963196,-0.1281 -0.8963196,-0.1915 0,-0.032 -0.0723,-0.082 -0.16062,-0.1096 -0.0883,-0.028 -0.36468,-0.1746 -0.61409,-0.326 -0.24941,-0.1514 -0.48231,-0.2753 -0.51756,-0.2753 -0.0352,0 -0.0641,-0.032 -0.0641,-0.071 0,-0.1875 -0.27918,-0.03 -0.65538,0.3706 -0.37178,0.3956 -0.41543,0.474 -0.41543,0.7454 0,0.1668 -0.0321,0.3232 -0.0714,0.3474 -0.0393,0.024 -0.0714,0.1069 -0.0714,0.1837 0,0.1551 -0.11414,0.3784 -0.30339,0.5936 -0.0687,0.078 -0.12493,0.1681 -0.12493,0.1999 0,0.1 0.34485,0.063 0.75135,-0.079 0.38822,-0.1364 0.39085,-0.1364 0.39085,0 0,0.078 -0.0993,0.2321 -0.22063,0.3429 l -0.22062,0.2015 -1.10194,0 c -0.7526,0 -1.12849,0.023 -1.18571,0.08 -0.0461,0.046 -0.17371,0.084 -0.28365,0.084 -0.10994,0 -0.19989,0.032 -0.19989,0.071 0,0.039 -0.0642,0.071 -0.14277,0.071 -0.0785,0 -0.14278,0.027 -0.14278,0.059 0,0.033 -0.0779,0.101 -0.17302,0.152 -0.18219,0.098 -0.28332,0.3465 -0.21403,0.5271 0.0461,0.1201 0.52553,0.3324 0.75054,0.3324 0.0805,0 0.19232,-0.046 0.24841,-0.1019 0.1151,-0.1151 0.14054,-0.6833 0.0306,-0.6833 -0.0393,0 -0.0714,-0.064 -0.0714,-0.1428 0,-0.1852 0.0407,-0.18 0.25311,0.033 0.12743,0.1274 0.17522,0.2528 0.17522,0.4598 0,0.1565 -0.0321,0.3044 -0.0714,0.3287 -0.13127,0.081 -0.0734,0.2215 0.12493,0.3028 0.22116,0.091 0.76798,0.071 1.19574,-0.043 z m -3.49888,-1.0793 c 0.20573,-0.3259 0.22956,-0.6039 0.0658,-0.7677 -0.0966,-0.097 -0.12355,-0.099 -0.1804,-0.013 -0.0368,0.055 -0.0861,0.1892 -0.10953,0.2971 -0.0235,0.108 -0.0656,0.1964 -0.0937,0.1964 -0.0642,0 -0.2167,0.3289 -0.2167,0.4673 0,0.063 0.0699,0.1038 0.17757,0.1038 0.12939,0 0.22625,-0.077 0.35694,-0.2842 z m 0.48514,0.048 c 0.26307,-0.271 0.4081,-0.5016 0.4081,-0.6489 0,-0.056 0.0241,-0.1128 0.0535,-0.1259 0.0294,-0.013 0.13385,-0.1992 0.23201,-0.4135 0.0982,-0.2144 0.31499,-0.5268 0.48186,-0.6942 0.16687,-0.1674 0.3034,-0.321 0.3034,-0.3412 0,-0.068 0.24679,-0.3411 1.08866,-1.2037 0.46134,-0.4727 0.8388,-0.888 0.8388,-0.9229 0,-0.1533 -0.39705,-0.4103 -0.63371,-0.4103 -0.16776,0 -0.63626,0.2586 -0.80241,0.443 -0.0635,0.071 -0.14859,0.1281 -0.18909,0.1281 -0.0405,0 -0.23766,0.1606 -0.43816,0.3569 -0.20049,0.1963 -0.3832,0.3569 -0.40602,0.3569 -0.0846,0 -0.78643,0.7789 -0.8785,0.9749 -0.0525,0.1117 -0.12374,0.2588 -0.15842,0.327 -0.0347,0.068 -0.0631,0.1726 -0.0631,0.232 0,0.059 -0.0321,0.1081 -0.0714,0.1081 -0.0393,0 -0.0714,0.094 -0.0714,0.2082 0,0.1145 -0.0388,0.2211 -0.0862,0.2369 -0.0576,0.019 -0.0357,0.083 0.0658,0.1919 0.22734,0.2441 0.34549,0.5655 0.24483,0.6662 -0.0449,0.045 -0.0817,0.1537 -0.0817,0.2417 0,0.088 -0.0321,0.1798 -0.0714,0.2041 -0.0732,0.045 -0.10182,0.3212 -0.0333,0.3212 0.0209,0 0.1414,-0.1064 0.2677,-0.2365 z m 2.72831,-1.0663 c 0.13638,-0.088 0.24836,-0.2008 0.24885,-0.2499 4.8e-4,-0.049 0.033,-0.089 0.0723,-0.089 0.0393,0 0.0714,-0.064 0.0714,-0.1428 0,-0.079 0.0321,-0.1427 0.0714,-0.1427 0.0393,0 0.0714,-0.08 0.0714,-0.1785 0,-0.2216 -0.0932,-0.2288 -0.23214,-0.018 -0.0582,0.088 -0.26617,0.3284 -0.4622,0.5335 -0.19602,0.2051 -0.3395,0.3899 -0.31884,0.4105 0.0753,0.075 0.23533,0.034 0.4779,-0.123 z"></path></g></svg>
+          {{else if eq .Title "Cảnh báo"}}
+            <svg width="20px" height="20px" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="1.024"></g><g id="SVGRepo_iconCarrier"> <path d="m173.63 154.53c-1.43-13 22.93-54.17 2.06-81.84-2.16-3 .84-9.3 2.85-13.55 4.88-10.28 3.84-18.68-5.91-23.7s-17.28-.4-23 8c-2.7 4-7.08 10-10.18 9.69-34.3-2.19-55.24 40.6-66.81 46.47-13.68 6.94-45 11.57-50.29 30.59-6.89 24.58 14.9 49.08 59.54 73.38s77 29.26 93.7 10c12.95-14.87-.27-43.73-1.96-59.04z" fill="#191919"></path> <path d="m147 233.36a74 74 0 0 1 -8.73-.54c-16.63-2-36.32-9.26-60.2-22.26s-40.69-25.56-51.42-38.49c-12.08-14.54-16.12-29.37-12-44.07 5.05-18 26.21-25.34 41.67-30.67a113.86 113.86 0 0 0 12.68-4.9c2-1 6.73-6.57 10.52-11 12.66-14.87 31.57-37.13 58.72-36.43a40.54 40.54 0 0 0 4.76-6.09c8.88-13 21-16.88 33.26-10.58 6.22 3.2 19.59 12.94 9.48 34.25a44 44 0 0 0 -2.71 6.64c15.75 22.42 7.48 50.7 2 69.53-1.65 5.63-3.7 12.63-3.44 14.9a115.69 115.69 0 0 0 2.86 13.35c4.21 16.79 9.45 37.69-2.81 51.78-8.41 9.71-20.04 14.58-34.64 14.58zm-10-172.36c-19.09 0-34.14 17.7-45.23 30.75-5.91 7-10.58 12.45-15.48 14.93a123.26 123.26 0 0 1 -14.72 5.75c-12.78 4.41-28.69 9.91-31.48 19.87-5.47 19.51 13.26 41.11 55.67 64.2s70.58 27 83.83 11.81c6.78-7.8 2.67-24.2-.64-37.39a124.48 124.48 0 0 1 -3.25-15.52c-.6-5.46 1.42-12.39 4-21.15 5-17.11 11.86-40.54-.36-56.75l-.09-.12c-4.94-6.83-.7-15.76 2.1-21.67 4.56-9.61.57-11.66-2.34-13.16-2.51-1.29-6.71-3.45-12.72 5.36-4.55 6.68-10 13.75-17.38 13.16-.67-.07-1.31-.07-1.91-.07z" fill="#191919"></path> <g> <path d="m173.63 154.53c-1.43-13 22.93-54.17 2.06-81.84-2.16-3 .84-9.3 2.85-13.55 4.88-10.28 3.84-18.68-5.91-23.7s-17.28-.4-23 8c-2.7 4-7.08 10-10.18 9.69-34.3-2.19-55.24 40.6-66.81 46.47-13.68 6.94-45 11.57-50.29 30.59-6.89 24.58 14.9 49.08 59.54 73.38s77 29.26 93.7 10c12.95-14.87-.27-43.73-1.96-59.04z" fill="#e83a2a"></path> <path d="m82.44 151.11c3.18.21 43.63 22.36 46.41 24.56s-4.38 11.41-16.7 12.32-29.94-6.44-33.48-12.51.59-24.58 3.77-24.37z" fill="#d32920"></path> <path d="m126.58 174.48c-1.94.11-15.11 13.77-29 6.55-19.24-10-11.67-26.74-13-29s-38.22-15.44-42.44-8.42c-3.87 6.45 17.21 29.31 47.75 45.12 31.09 16.09 59.41 21.78 63.1 15.22 4.37-7.86-24.48-29.58-26.41-29.47z" fill="#ffffff"></path> </g> <g> <path d="m19.84 78.69c4.09-15.58 20.88-30.66 36-34.47 3.76-.94 1.05-9.93-3.19-9-16.58 3.7-34.39 17.59-42.57 39.63-2.08 5.5 8.99 6.79 9.76 3.84z" fill="#191919"></path> </g> <g> <path d="m46.74 76.74c6.74-9.86 15.69-12.12 24.19-13 3.76-.38 3.76-10-.17-9.69-10.38.83-22.53 2.86-32.42 16.51-3.34 4.57 6.48 9 8.4 6.18z" fill="#191919"></path> </g> <g> <path d="m221.59 117.38c12.58 10.69 19 32.89 15.84 48.58-.8 3.89 8.33 6.8 9.34 2.46 4-17-1-41.5-17.68-58.84-4.17-4.33-9.88 5.78-7.5 7.8z" fill="#191919"></path> </g> <g> <path d="m211.87 144.34c5.49 10.94 3.07 20.08-.38 28.14-1.52 3.56 7.18 7.85 8.85 4.18 4.74-10.43 8.36-21.25.84-37.33-2.44-5.24-10.87 1.89-9.31 5.01z" fill="#191919"></path> </g> </g></svg>
+          {{else if eq .Title "Tắt cảnh báo"}}
+            <svg width="20px" height="20px" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M3.28033 2.21967C2.98744 1.92678 2.51257 1.92677 2.21967 2.21967C1.92678 2.51256 1.92677 2.98743 2.21967 3.28033L6.47717 7.5379C5.8524 8.72131 5.4987 10.07 5.4987 11.5013L5.49794 16.112L4.08177 19.7561L4.04049 19.8804C3.86764 20.5057 4.19311 21.1728 4.81078 21.413C4.9587 21.4705 5.11602 21.5 5.27473 21.5L10.4984 21.499L10.5037 21.6932C10.6034 23.5376 12.1306 25.0025 13.9999 25.0025C15.9337 25.0025 17.5014 23.4349 17.5014 21.5011L20.4395 21.5005L24.7194 25.7805C25.0123 26.0734 25.4872 26.0734 25.7801 25.7805C26.073 25.4876 26.073 25.0127 25.7801 24.7198L3.28033 2.21967ZM18.9381 19.999H5.59594L6.9477 16.5252L6.9759 16.4369C6.99101 16.377 6.9987 16.3154 6.9987 16.2534V11.5013L7.00276 11.2606C7.03395 10.3372 7.24395 9.45914 7.59923 8.65998L18.9381 19.999ZM15.9959 21.6504C15.9195 22.686 15.0551 23.5025 13.9999 23.5025C12.8946 23.5025 11.9985 22.6064 11.9985 21.5011L16.0004 21.499L15.9959 21.6504Z" fill="#212121"></path> <path d="M8.33987 5.15805L9.40259 6.22079C10.6325 5.14906 12.2404 4.50001 13.9999 4.50001C17.8666 4.50001 21.0012 7.63457 21.0012 11.5013V16.2534L21.0069 16.3457C21.0145 16.4069 21.0296 16.467 21.052 16.5246L21.9051 18.7235L23.9007 20.7191C23.9657 20.5657 24.0016 20.3971 24.0016 20.22L23.9919 20.0624C23.9789 19.958 23.9531 19.8555 23.915 19.757L22.5009 16.113L22.5012 11.5013L22.4974 11.2461C22.3625 6.669 18.6097 3.00001 13.9999 3.00001C11.8262 3.00001 9.84301 3.81586 8.33987 5.15805Z" fill="#212121"></path> </g></svg>
+          {{else}}
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>  
+          {{end}}
+          {{if eq .Qty 0.0}} 
+            {{.Title}} {{.Code}}
+          {{else}}
+          {{.Title}} {{.Code}} (Số lượng: {{.Qty}})
+          {{end}}
+        </h3>
+        <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
+          {{.Note}}
+        </p>
+        <p class="mt-1 -ms-1 p-1 text-xs text-gray-500 dark:text-neutral-400">
+          {{.Reporter}}
+        </p>
+      </div>
+
+    </div>
+    {{end}}
+  </div> -->
+  <!-- End Timeline -->
+
+  <div class="fade-in" id="detail-container">
+    {{range .data}}
+      <p>{{.Code}} ----- {{.Qty}}</p>
+    {{end}}
+  </div>
+</div>
+
+<style>
+  .fade-in.htmx.added {
+    opacity: 0;
+  }
+  .fade-in {
+    opacity: 1;
+    transition: opacity 1s ease-out;
+  }
+</style>

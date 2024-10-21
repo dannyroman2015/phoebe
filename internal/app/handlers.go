@@ -11907,6 +11907,31 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 	})
 }
 
+// router.GET("/gnhh/overview/loaddetail", s.go_loaddetail)
+func (s *Server) go_loaddetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"mo": "MO-223", "level": 0}}},
+		{{"$group", bson.M{"_id": "$itemcode", "qty": bson.M{"$sum": "$qty"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"itemcode": "$_id"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var data []struct {
+		Code string  `bson:"itemcode"`
+		Qty  float64 `bson:"qty"`
+	}
+	if err := cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/detail.html")).Execute(w, map[string]interface{}{
+		"data": data,
+	})
+}
+
 // router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
 func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	authurlsToken, err := r.Cookie("authurls")
@@ -12888,6 +12913,35 @@ func (s *Server) go_productfilter(w http.ResponseWriter, r *http.Request, ps htt
 	})
 }
 
+// router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
+func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	searchRegex := ".*" + r.FormValue("detailsearch") + ".*"
+
+	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{
+			bson.M{"mo": "MO-223"},
+			bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}},
+		}}}},
+		{{"$sort", bson.M{"parent": 1}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var data []struct {
+		Code    string  `bson:"parent"`
+		Product string  `bson:"productcode"`
+		Qty     float64 `bson:"qty"`
+		Unit    string  `bson:"unit"`
+	}
+	if err := cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/parent_list.html")).Execute(w, map[string]interface{}{
+		"data": data,
+	})
+}
+
 // router.GET("/gnhh/entry/import", s.ge_import)
 func (s *Server) ge_import(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	template.Must(template.ParseFiles("templates/pages/gnhh/entry/import.html", "templates/shared/navbar.html")).Execute(w, nil)
@@ -12961,13 +13015,35 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 	var level2Index int
 	var level3Index int
 	var level4Index int
-	// var level5Index int
+	// // var level5Index int
 	var bdoc []interface{}
 	rows.Next()
 	for rows.Next() {
 		row, _ := rows.Columns()
 		qty, _ := strconv.ParseFloat(row[7], 64)
 		level, _ := strconv.Atoi(row[2])
+
+		// insert every row to a collection
+		// b := bson.M{
+		// 	"mo":          mo,
+		// 	"level":       level,
+		// 	"itemcode":    row[1],
+		// 	"productcode": row[2],
+		// 	"name":        row[3],
+		// 	"parent":      row[4],
+		// 	"category":    row[5],
+		// 	"type":        row[6],
+		// 	"qty":         qty,
+		// 	"unit":        row[8],
+		// }
+		// bdoc = append(bdoc, b)
+		// _, err := s.mgdb.Collection("totalbom").InsertOne(context.Background(), bson.M{
+		// 	"mo": mo, "level": level, "itemcode": row[1], "productcode": row[2], "name": row[3], "parentcode": row[4], "category": row[5], "type": row[6], "qty": qty, "unit": row[8],
+		// })
+		// if err != nil {
+		// 	log.Println(err)
+		// }
+		// end
 
 		var p = P{
 			Mo:          mo,
@@ -13026,6 +13102,10 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 
 	}
+	// _, err = s.mgdb.Collection("totalbom").InsertMany(context.Background(), bdoc)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
 	products = append(products, product)
 
