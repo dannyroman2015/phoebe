@@ -202,12 +202,19 @@ func (s *Server) admin(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // //////////////////////////////////////////////////////////
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// get data for cutting chart
+	// pipeline := mongo.Pipeline{
+	// 	{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+	// 	{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
+	// 	{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+	// 	{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
+	// 	{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
+	// 	{{"$unset", "_id"}},
+	// }
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
-		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
+		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25reeded": "$is25reeded"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25reeded", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25reeded"}}},
 		{{"$unset", "_id"}},
 	}
 
@@ -230,7 +237,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	//get wood return
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"type": "return", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
@@ -252,7 +259,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	//get fine wood
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "fine", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"type": "fine", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -294,8 +301,9 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	targetactualData.EndDateStr = targetactualData.EnddDate.Format("02/01/2006")
 
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
-		{{"$group", bson.M{"_id": "$prodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "fine"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
+		{{"$set", bson.M{"is25reeded": bson.M{"$ifNull": bson.A{"$is25reeded", false}}}}},
+		{{"$group", bson.M{"_id": "$is25reeded", "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
 		{{"$set", bson.M{"prodtype": "$_id"}}},
 		{{"$unset", "_id"}},
@@ -306,17 +314,36 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 	defer cur.Close(context.Background())
 	var cuttingProdtypeData []struct {
-		Prodtype string  `bson:"prodtype" json:"prodtype"`
+		Prodtype bool    `bson:"prodtype" json:"prodtype"`
 		Qty      float64 `bson:"qty" json:"qty"`
 	}
+
 	if err = cur.All(context.Background(), &cuttingProdtypeData); err != nil {
 		log.Println(err)
 		return
 	}
 
+	if len(cuttingProdtypeData) == 1 {
+		if cuttingProdtypeData[0].Prodtype {
+			cuttingProdtypeData = append(cuttingProdtypeData, struct {
+				Prodtype bool    `bson:"prodtype" json:"prodtype"`
+				Qty      float64 `bson:"qty" json:"qty"`
+			}{
+				Prodtype: false, Qty: 0,
+			})
+		} else {
+			cuttingProdtypeData = append(cuttingProdtypeData, struct {
+				Prodtype bool    `bson:"prodtype" json:"prodtype"`
+				Qty      float64 `bson:"qty" json:"qty"`
+			}{
+				Prodtype: true, Qty: 0,
+			})
+		}
+	}
+
 	//get target line data of cutting
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "cutting total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -3772,17 +3799,17 @@ func (s *Server) sco_reportfilter(w http.ResponseWriter, r *http.Request, ps htt
 func (s *Server) sco_createdemand(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	startdate, _ := time.Parse("2006-01-02", r.FormValue("cutingdemanstartdate"))
 	enddate, _ := time.Parse("2006-01-02", r.FormValue("cutingdemanenddate"))
-	brandtarget, _ := strconv.ParseFloat(r.FormValue("cuttingbranddemand"), 64)
-	rhtarget, _ := strconv.ParseFloat(r.FormValue("cuttingrhdemand"), 64)
+	reeded25target, _ := strconv.ParseFloat(r.FormValue("cutting25reededdemand"), 64)
+	otherstarget, _ := strconv.ParseFloat(r.FormValue("cuttingothersdemand"), 64)
 
-	if r.FormValue("cuttingdemandname") == "" || r.FormValue("cutingdemanstartdate") == "" || r.FormValue("cutingdemanenddate") == "" || r.FormValue("cuttingbranddemand") == "" || r.FormValue("cuttingrhdemand") == "" {
+	if r.FormValue("cuttingdemandname") == "" || r.FormValue("cutingdemanstartdate") == "" || r.FormValue("cutingdemanenddate") == "" || r.FormValue("cutting25reededdemand") == "" || r.FormValue("cuttingothersdemand") == "" {
 		w.Write([]byte("thiếu thông tin để tạo demand"))
 		return
 	}
 
 	_, err := s.mgdb.Collection("cutting").UpdateOne(context.Background(), bson.M{"type": "target", "name": r.FormValue("cuttingdemandname")}, bson.M{
 		"$set": bson.M{"type": "target", "name": r.FormValue("cuttingdemandname"), "startdate": primitive.NewDateTimeFromTime(startdate), "enddate": primitive.NewDateTimeFromTime(enddate),
-			"detail": bson.A{bson.M{"type": "brand", "target": brandtarget}, bson.M{"type": "rh", "target": rhtarget}}},
+			"detail": bson.A{bson.M{"type": "25 Reeded", "target": reeded25target}, bson.M{"type": "Còn lại", "target": otherstarget}}},
 	}, options.Update().SetUpsert(true))
 	if err != nil {
 		log.Println(err)
@@ -4954,7 +4981,10 @@ func (s *Server) sce_fine(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (s *Server) sce_sendfine(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	date, _ := time.Parse("2006-01-02", r.FormValue("finedate"))
 	qty, _ := strconv.ParseFloat(r.FormValue("fineqty"), 64)
-
+	is25reeded := false
+	if r.FormValue("finetype") == "woo25" {
+		is25reeded = true
+	}
 	usernameToken, err := r.Cookie("username")
 	if err != nil {
 		log.Println(err)
@@ -4962,13 +4992,13 @@ func (s *Server) sce_sendfine(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 
-	if r.FormValue("fineqty") == "" {
+	if r.FormValue("fineqty") == "" || r.FormValue("finetype") == "" {
 		w.Write([]byte("Thiếu thông tin nhập liệu"))
 		return
 	}
 
 	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
-		"type": "fine", "qtycbm": qty, "reporter": usernameToken.Value,
+		"type": "fine", "qtycbm": qty, "reporter": usernameToken.Value, "is25reeded": is25reeded,
 		"date": primitive.NewDateTimeFromTime(date), "createdat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {

@@ -22,6 +22,22 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
               <div>
+                <label for="wood25" tabindex="0"
+                      class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+                  <input class="sr-only" value="true" id="wood25" type="radio" tabindex="-1" name="finetype" />
+                  <span class="text-sm">Gỗ 25 cho Reeded</span>
+                </label>
+              </div>
+
+              <div>
+                <label for="others" tabindex="0"
+                      class="block w-full cursor-pointer rounded-lg border border-gray-200 p-3 text-gray-600 hover:border-black has-[:checked]:border-black has-[:checked]:bg-black has-[:checked]:text-white">
+                  <input class="sr-only" value="false" id="others" type="radio" tabindex="-1" name="finetype" />
+                  <span class="text-sm">Gỗ còn lại</span>
+                </label>
+              </div>
+
+              <div>
                 <label for="finedate" class="relative block rounded-md border border-gray-200 shadow-sm focus-within:border-blue-600 focus-within:ring-1 focus-within:ring-blue-600">
                   <input type="date" id="finedate" name="finedate" placeholder="Ngày"
                     class="p-3 peer border-none bg-transparent placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 "/>
