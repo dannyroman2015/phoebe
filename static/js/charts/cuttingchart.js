@@ -257,6 +257,34 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth()/2)
 
+  if (finedata != undefined) {
+    innerChart
+      .selectAll()
+      .data(finedata)
+      .join("rect")
+        .attr("x", d => x(d.date) + x.bandwidth()/2)
+        .attr("y", d => y(d.qty))
+        .attr("height", d => y(0) - y(d.qty))
+        .attr("width", x.bandwidth()/2)
+        .attr("fill", "#AFD198")
+      .append("title")
+        .text(d => d.qty)
+
+    innerChart.append("g")
+      .selectAll()
+      .data(finedata)
+      .join("text")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.date) + 3*x.bandwidth()/4)
+        .attr("y", d => y(d.qty))
+        .attr("dy", "-0.35em")
+        .attr("fill", "#75485E")
+        .attr("font-size", "12px")
+        .attr("font-weight", 600)
+        .text(d => `${d3.format(".1f")(d.qty)}`)
+  }
+
   if (returndata != undefined) {
     const returnseries = d3.stack()
       .keys(d3.union(returndata.map(d => d.is25)))
@@ -340,34 +368,6 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
       .attr("font-size", "12px")
       .attr("font-weight", 600)
       .attr("transform", `rotate(90, ${width-10}, ${innerHeight - 5})`)
-  }
-
-  if (finedata != undefined) {
-    innerChart
-      .selectAll()
-      .data(finedata)
-      .join("rect")
-        .attr("x", d => x(d.date) + x.bandwidth()/2)
-        .attr("y", d => y(d.qty))
-        .attr("height", d => y(0) - y(d.qty))
-        .attr("width", x.bandwidth()/2)
-        .attr("fill", "#AFD198")
-      .append("title")
-        .text(d => d.qty)
-
-    innerChart.append("g")
-      .selectAll()
-      .data(finedata)
-      .join("text")
-        .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.date) + 3*x.bandwidth()/4)
-        .attr("y", d => y(d.qty))
-        .attr("dy", "-0.35em")
-        .attr("fill", "#75485E")
-        .attr("font-size", "12px")
-        .attr("font-weight", 600)
-        .text(d => `${d3.format(".1f")(d.qty)}`)
   }
   
   innerChart.append("g")
