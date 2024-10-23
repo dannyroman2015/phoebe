@@ -275,6 +275,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/whitewood/overview/addmoney", withAuth2(s.swo_addmoney))
 	router.POST("/sections/whitewood/overview/addplanvalue", s.swwo_addplanvalue)
 	router.POST("/sections/whitewood/overview/updateinventory", s.swwo_updateinventory)
+	router.POST("/sections/whitewood/overview/addnammoney", s.swo_addnammoney)
 	// end White Wood/////////////////////////////////////////////////////////////
 
 	// Pack ////////////////////////////////////////////////////////

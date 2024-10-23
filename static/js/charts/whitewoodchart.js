@@ -50,7 +50,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
         .attr("x", d => x(d.data[0]) + x.bandwidth()/3)
         .attr("y", d => y(d[1]))
         .attr("height", d => y(d[0]) - y(d[1]))
-        .attr("width", 2*x.bandwidth()/3)
+        .attr("width", x.bandwidth()/2)
       .append("title")
         .text(d => d[1] - d[0])
 
@@ -68,9 +68,9 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
   .join("text")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
+    .attr("x", d => x(d.data[0]) + 7*x.bandwidth()/12)
     .attr("y", d => y(d[1]) - 10)
-    .attr("dy", "0.35em")
+    .attr("dy", "0.35em") 
     .attr("fill", "#75485E")
     .attr("font-weight", 600)
     .text(d => `${d3.format(",.0f")(d[1])}` )
@@ -84,7 +84,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
       .join("text")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.data[0]) + 2*x.bandwidth()/3)
+        .attr("x", d => x(d.data[0]) + 7*x.bandwidth()/12)
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("dy", "0.1em")
         .attr("fill", "#75485E")
@@ -247,17 +247,31 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
   // end cột plan
 
   // cột của anh Nam
-  // if (namdata != undefined) {
-  //   innerChart 
-  //     .selectAll()
-  //     .data(namdata)
-  //     .join("rect")
-  //       .attr("x", d => x(d.date) + x.bandwidth())
-  //       .attr("y", d => y(d.value))
-  //       .attr("width", x.bandwidth()/6)
-  //       .attr("height", d => innerHeight - y(d.value))
-  //       .attr("fill", "red")
-  // }
+  if (namdata != undefined) {
+    innerChart 
+      .selectAll()
+      .data(namdata)
+      .join("rect")
+        .attr("x", d => x(d.date) + 5*x.bandwidth()/6)
+        .attr("y", d => y(d.value))
+        .attr("width", x.bandwidth()/6)
+        .attr("height", d => innerHeight - y(d.value))
+        .attr("fill", "#FAEED1")
+
+    innerChart 
+      .selectAll()
+      .data(namdata)
+      .join("text")
+        .text(d => d.value)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("x", d => x(d.date) + 11*x.bandwidth()/12)
+        .attr("y", d => y(d.value/2))
+        .attr("fill", "#75485E")
+        .attr("font-size", 12)
+        .attr("transform", d => `rotate(-90, ${x(d.date) + 11*x.bandwidth()/12}, ${y(d.value/2)})`)
+
+  }
   // end cột của anh Nam
 
   //draw target lines
