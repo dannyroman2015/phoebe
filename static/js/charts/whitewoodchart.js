@@ -1,4 +1,4 @@
-const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
+const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) => {
   if (data == undefined) return;
   const width = 900;
   const height = 350;
@@ -245,6 +245,20 @@ const drawWhiteWhoodVTPChart = (data, plandata, inventorydata, target) => {
       .attr("stroke-opacity", 0.5)
 
   // end cột plan
+
+  // cột của anh Nam
+  // if (namdata != undefined) {
+  //   innerChart 
+  //     .selectAll()
+  //     .data(namdata)
+  //     .join("rect")
+  //       .attr("x", d => x(d.date))
+  //       .attr("y", d => y(d.value))
+  //       .attr("width", x.bandwidth()/6)
+  //       .attr("height", d => innerHeight - y(d.value))
+  //       .attr("fill", "red")
+  // }
+  // end cột của anh Nam
 
   //draw target lines
   if (target != undefined) { 

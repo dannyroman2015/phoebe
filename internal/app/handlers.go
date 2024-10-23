@@ -1080,6 +1080,25 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 		}
 	}
 
+	// get Nam's data
+	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "nam", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
+		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.D{{"_id", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var NamData []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &NamData); err != nil {
+		log.Println(err)
+	}
+
 	// get inventory
 	cur, err = s.mgdb.Collection("whitewood").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
 	if err != nil {
@@ -1133,6 +1152,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 	template.Must(template.ParseFiles("templates/pages/dashboard/whitewood.html")).Execute(w, map[string]interface{}{
 		"whitewoodData":          whitewoodData,
 		"whitewoodPlanData":      whitewoodPlanData,
+		"namData":                NamData,
 		"whitewoodInventoryData": whitewoodInventoryData,
 		"whitewoodTarget":        whitewoodTarget,
 		"whitewoodUpTime":        whitewoodUpTime,
@@ -2305,10 +2325,9 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		// get data for cutting chart
 		pipeline := mongo.Pipeline{
 			{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
-			{{"$addFields", bson.M{"is25": bson.M{"$eq": bson.A{"$thickness", 25}}}}},
-			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25": "$is25"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
-			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25", 1}}}},
-			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25"}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25reeded": "$is25reeded"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25reeded", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25reeded"}}},
 			{{"$unset", "_id"}},
 		}
 
@@ -2395,8 +2414,9 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		targetactualData.EndDateStr = targetactualData.EnddDate.Format("02/01/2006")
 
 		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
-			{{"$group", bson.M{"_id": "$prodtype", "qty": bson.M{"$sum": "$qtycbm"}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "fine"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(targetactualData.StartDate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(targetactualData.EnddDate)}}}}}},
+			{{"$set", bson.M{"is25reeded": bson.M{"$ifNull": bson.A{"$is25reeded", false}}}}},
+			{{"$group", bson.M{"_id": "$is25reeded", "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.D{{"_id", 1}}}},
 			{{"$set", bson.M{"prodtype": "$_id"}}},
 			{{"$unset", "_id"}},
@@ -2407,12 +2427,31 @@ func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 		defer cur.Close(context.Background())
 		var cuttingProdtypeData []struct {
-			Prodtype string  `bson:"prodtype" json:"prodtype"`
+			Prodtype bool    `bson:"prodtype" json:"prodtype"`
 			Qty      float64 `bson:"qty" json:"qty"`
 		}
+
 		if err = cur.All(context.Background(), &cuttingProdtypeData); err != nil {
 			log.Println(err)
 			return
+		}
+
+		if len(cuttingProdtypeData) == 1 {
+			if cuttingProdtypeData[0].Prodtype {
+				cuttingProdtypeData = append(cuttingProdtypeData, struct {
+					Prodtype bool    `bson:"prodtype" json:"prodtype"`
+					Qty      float64 `bson:"qty" json:"qty"`
+				}{
+					Prodtype: false, Qty: 0,
+				})
+			} else {
+				cuttingProdtypeData = append(cuttingProdtypeData, struct {
+					Prodtype bool    `bson:"prodtype" json:"prodtype"`
+					Qty      float64 `bson:"qty" json:"qty"`
+				}{
+					Prodtype: true, Qty: 0,
+				})
+			}
 		}
 
 		//get target line data of cutting
@@ -4982,7 +5021,7 @@ func (s *Server) sce_sendfine(w http.ResponseWriter, r *http.Request, ps httprou
 	date, _ := time.Parse("2006-01-02", r.FormValue("finedate"))
 	qty, _ := strconv.ParseFloat(r.FormValue("fineqty"), 64)
 	is25reeded := false
-	if r.FormValue("finetype") == "woo25" {
+	if r.FormValue("finetype") == "true" {
 		is25reeded = true
 	}
 	usernameToken, err := r.Cookie("username")
