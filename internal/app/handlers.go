@@ -8936,16 +8936,17 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 		pastdays = 1
 	}
 	// cái náy dùng được, để sau này dùng
-	// start := time.Now()
-	// end := time.Date(2024, time.Now().Month()+1, 1, 0, 0, 0, 0, time.Local)
-	// for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-	// 	if d.Weekday() != time.Sunday {
-	// 		estdays++
-	// 	}
-	// }
+	var estdays int
+	start := time.Now()
+	end := time.Date(2024, time.Now().Month()+1, 1, 0, 0, 0, 0, time.Local)
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		if d.Weekday() != time.Sunday {
+			estdays++
+		}
+	}
 
 	// dùng tạm estdays tính tay này
-	estdays := 23 - pastdays
+	// estdays := 24 - pastdays
 
 	p := message.NewPrinter(language.English)
 	template.Must(template.ParseFiles("templates/pages/production/overview/summary.html")).Execute(w, map[string]interface{}{
