@@ -12154,7 +12154,7 @@ func (s *Server) g_overview(w http.ResponseWriter, r *http.Request, ps httproute
 // router.GET("/gnhh/overview/loadchart", s.go_loadchart)
 func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"mo": "MO-222"}}},
+		{{"$match", bson.M{"mo": "MO-223"}}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -12184,7 +12184,7 @@ func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprou
 		Itemcode string `bson:"itemcode" json:"itemcode"`
 		Children []PP   `bson:"children" json:"children"`
 	}{
-		Itemcode: "MO-222",
+		Itemcode: "MO-223",
 		Children: gnhhdata,
 	}
 
@@ -13239,27 +13239,35 @@ func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps http
 	searchRegex := ".*" + r.FormValue("detailsearch") + ".*"
 
 	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{
-			bson.M{"mo": "MO-223"},
-			bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}},
-		}}}},
-		{{"$sort", bson.M{"parent": 1}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": "MO-223"}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty"}}}}},
+		{{"$limit", 1}},
 	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
-	var data []struct {
-		Code    string  `bson:"parent"`
-		Product string  `bson:"productcode"`
-		Qty     float64 `bson:"qty"`
+	type P struct {
+		Code    string  `bson:"_id"`
+		Name    string  `bson:"name"`
+		Qty     float64 `bson:"totalqty"`
 		Unit    string  `bson:"unit"`
+		Parents []struct {
+			Code string  `bson:"code"`
+			Qty  float64 `bson:"qty"`
+		} `bson:"parents"`
 	}
+	var data []P
 	if err := cur.All(context.Background(), &data); err != nil {
 		log.Println(err)
 	}
-	template.Must(template.ParseFiles("templates/pages/gnhh/overview/parent_list.html")).Execute(w, map[string]interface{}{
-		"data": data,
+	var fdata P
+	if len(data) != 0 {
+		fdata = data[0]
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/item_info.html")).Execute(w, map[string]interface{}{
+		"data": fdata,
 	})
 }
 
@@ -13287,36 +13295,6 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 
 	rows, _ := f.Rows("Output")
 
-	///////////
-	// var bdoc []interface{}
-	// rows.Next()
-
-	// for rows.Next() {
-	// 	row, _ := rows.Columns()
-	// 	qty, _ := strconv.ParseFloat(row[7], 64)
-	// 	level, _ := strconv.Atoi(row[2])
-	// 	var parent string
-	// 	if level == 0 {
-	// 		parent = "MO-222"
-	// 	} else {
-	// 		parent = row[4]
-	// 	}
-	// 	b := bson.M{
-	// 		"mo":          "MO-222",
-	// 		"itemcode":    row[0],
-	// 		"itemname":    row[1],
-	// 		"itemlevel":   level,
-	// 		"productcode": row[3],
-	// 		"parent":      parent,
-	// 		"category":    row[5],
-	// 		"itemtype":    row[6],
-	// 		"qty":         qty,
-	// 		"unit":        row[8],
-	// 	}
-	// 	bdoc = append(bdoc, b)
-	// }
-	////////////
-
 	type P struct {
 		Mo          string
 		Itemcode    string
@@ -13338,26 +13316,28 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 	var level4Index int
 	// // var level5Index int
 	var bdoc []interface{}
+	var rcord []interface{}
 	rows.Next()
 	for rows.Next() {
 		row, _ := rows.Columns()
 		qty, _ := strconv.ParseFloat(row[7], 64)
-		level, _ := strconv.Atoi(row[2])
+		// level, _ := strconv.Atoi(row[2])
+		level, _ := strconv.Atoi(row[0])
 
 		// insert every row to a collection
-		// b := bson.M{
-		// 	"mo":          mo,
-		// 	"level":       level,
-		// 	"itemcode":    row[1],
-		// 	"productcode": row[2],
-		// 	"name":        row[3],
-		// 	"parent":      row[4],
-		// 	"category":    row[5],
-		// 	"type":        row[6],
-		// 	"qty":         qty,
-		// 	"unit":        row[8],
-		// }
-		// bdoc = append(bdoc, b)
+		b := bson.M{
+			"mo":          mo,
+			"level":       level,
+			"itemcode":    row[1],
+			"productcode": row[2],
+			"name":        row[3],
+			"parent":      row[4],
+			"category":    row[5],
+			"type":        row[6],
+			"qty":         qty,
+			"unit":        row[8],
+		}
+		rcord = append(rcord, b)
 		// _, err := s.mgdb.Collection("totalbom").InsertOne(context.Background(), bson.M{
 		// 	"mo": mo, "level": level, "itemcode": row[1], "productcode": row[2], "name": row[3], "parentcode": row[4], "category": row[5], "type": row[6], "qty": qty, "unit": row[8],
 		// })
@@ -13368,10 +13348,10 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 
 		var p = P{
 			Mo:          mo,
-			Itemcode:    row[0],
-			Itemname:    row[1],
+			Itemcode:    row[1],
+			Itemname:    row[3],
 			Itemlevel:   level,
-			Productcode: row[3],
+			Productcode: row[2],
 			Parent:      row[4],
 			Category:    row[5],
 			Itemtype:    row[6],
@@ -13379,7 +13359,7 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 			Unit:        row[8],
 		}
 
-		switch row[2] {
+		switch row[0] {
 		case "0":
 			if product.Itemcode != "" {
 				products = append(products, product)
@@ -13423,10 +13403,10 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 		}
 
 	}
-	// _, err = s.mgdb.Collection("totalbom").InsertMany(context.Background(), bdoc)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	_, err = s.mgdb.Collection("totalbom").InsertMany(context.Background(), rcord)
+	if err != nil {
+		log.Println(err)
+	}
 
 	products = append(products, product)
 

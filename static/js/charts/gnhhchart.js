@@ -243,6 +243,9 @@ const drawGNHHChart2 = (data) => {
       document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
       document.getElementById("timelinecreate").click();
+      document.getElementById("detailsearch").value = d.data.itemcode;
+      document.getElementById("detailsearch").dispatchEvent(new Event('input', {bubble: true}));
+      document.getElementById("detailsearch").click();
       document.getElementById("timelinecreate").focus();
     })
   
