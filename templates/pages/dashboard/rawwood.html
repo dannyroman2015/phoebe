@@ -145,8 +145,8 @@
         </template>
       </div> -->
 
-      <!-- add money -->
-      <!-- <div x-data="{
+      <!-- add selection -->
+      <div x-data="{
         popoverOpen: false,
         popoverArrow: true,
         popoverPosition: 'bottom',
@@ -205,28 +205,23 @@
   
               <form>
                 <div class="flex items-center justify-between pb-3">
-                  <h3 class="text-lg font-semibold">Cập nhật tiền</h3>
+                  <h3 class="text-lg font-semibold">Nhập liệu lựa gỗ</h3>
                 </div>
 
                 <div class="relative w-auto pb-8">
                   <div class="p-2 overflow-y-auto">
-                    <label for="whitewoodmoneydate" class="block text-sm font-medium mb-2 dark:text-white">Ngày</label>
-                    <input type="date" id="whitewoodmoneydate" name="whitewoodmoneydate" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                    <label for="selectiondate" class="block text-sm font-medium mb-2 dark:text-white">Ngày</label>
+                    <input type="date" id="selectiondate" name="selectiondate" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
                   </div>
 
                   <div class="p-2 overflow-y-auto">
-                    <label for="whitewoodbrandmoney" class="block text-sm font-medium mb-2 dark:text-white">Tiền của hàng Brand</label>
-                    <input type="number" min="0" step="0.1" id="whitewoodbrandmoney" name="whitewoodbrandmoney" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                    <label for="brightqty" class="block text-sm font-medium mb-2 dark:text-white">Số cbm màu Sáng</label>
+                    <input type="number" min="0" step="0.001" id="brightqty" name="brightqty" placeholder="Vd: 2.3" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
                   </div>
                   
                   <div class="p-2 overflow-y-auto">
-                    <label for="whitewoodrhmoney" class="block text-sm font-medium mb-2 dark:text-white">Tiền của hàng RH</label>
-                    <input type="number" min="0" step="0.1" id="whitewoodrhmoney" name="whitewoodrhmoney" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
-                  </div>
-
-                  <div class="p-2 overflow-y-auto">
-                    <label for="whitewoodwhitemoney" class="block text-sm font-medium mb-2 dark:text-white">Tiền của hàng White</label>
-                    <input type="number" min="0" step="0.1" id="whitewoodwhitemoney" name="whitewoodwhitemoney" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                    <label for="darkqty" class="block text-sm font-medium mb-2 dark:text-white">Số cbm màu Tối</label>
+                    <input type="number" min="0" step="0.001" id="darkqty" name="darkqty" placeholder="Vd: 2.3" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
                   </div>
                   
                 </div>
@@ -234,7 +229,7 @@
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
                     <button @click="modalOpen=false" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors border rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-100 focus:ring-offset-2">
                       Huy</button>
-                    <button hx-post="/sections/whitewood/overview/addmoney" hx-target="#whitewood-container" hx-swap="innerHTML settle:200ms"
+                    <button hx-post="/sections/rawwood/entry/selection" hx-target="#rawwood-container" hx-swap="innerHTML settle:200ms"
                             @click="modalOpen=false;" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium text-white transition-colors border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 bg-neutral-950 hover:bg-neutral-900">
                       Ok</button>
                 </div>
@@ -243,7 +238,107 @@
             </div>
           </div>
         </div>
-      </div> -->
+      </div>
+
+      <!-- add money -->
+      <div x-data="{
+        popoverOpen: false,
+        popoverArrow: true,
+        popoverPosition: 'bottom',
+        popoverHeight: 0,
+        popoverOffset: 8,
+        popoverHeightCalculate() {
+          this.$refs.popover.classList.add('invisible'); 
+          this.popoverOpen=true; 
+          let that=this;
+          $nextTick(function(){ 
+            that.popoverHeight = that.$refs.popover.offsetHeight;
+            that.popoverOpen=false; 
+            that.$refs.popover.classList.remove('invisible');
+            that.$refs.popoverInner.setAttribute('x-transition', '');
+            that.popoverPositionCalculate();
+          });
+        },
+        popoverPositionCalculate(){
+          if(window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)){
+            this.popoverPosition = 'top';
+          } else {
+            this.popoverPosition = 'bottom';
+          }
+        }
+        }"
+        x-init="
+          that = this;
+          window.addEventListener('resize', function(){
+            popoverPositionCalculate();
+          });
+          $watch('popoverOpen', function(value){
+            if(value){ popoverPositionCalculate(); }
+          });
+        "
+        class="relative">
+    
+        <button x-ref="popoverButton" @click="popoverOpen=!popoverOpen" class="flex items-center justify-center w-8 h-8 bg-white border rounded-full shadow-sm cursor-pointer hover:bg-neutral-100 focus-visible:ring-gray-400 focus-visible:ring-2 focus-visible:outline-none active:bg-white border-neutral-200/70">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+          </svg>
+          
+        </button>
+  
+        <div x-ref="popover"
+            x-show="popoverOpen"
+            x-init="setTimeout(function(){ popoverHeightCalculate(); }, 100);"
+            x-trap.inert="popoverOpen"
+            @click.away="popoverOpen=false;"
+            @keydown.escape.window="popoverOpen=false"
+            :class="{ 'top-0 mt-12' : popoverPosition == 'bottom', 'bottom-0 mb-1' : popoverPosition == 'top' }"
+            class="absolute z-20 w-[300px] max-w-lg -translate-x-full -translate-y-6" x-cloak>
+          <div x-ref="popoverInner" x-show="popoverOpen" class="w-full p-4 bg-white border rounded-md shadow-sm border-neutral-200/70">
+            <div x-show="popoverArrow && popoverPosition == 'bottom'" class="absolute top-0 inline-block w-5 mt-px overflow-hidden -translate-x-2 -translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-bottom-left transform rotate-45 bg-white border-t border-l rounded-sm"></div></div>
+            <div x-show="popoverArrow  && popoverPosition == 'top'" class="absolute bottom-0 inline-block w-5 mb-px overflow-hidden -translate-x-2 translate-y-2.5 left-1/2"><div class="w-2.5 h-2.5 origin-top-left transform -rotate-45 bg-white border-b border-l rounded-sm"></div></div>
+            <div class="grid gap-4">
+  
+              <form>
+                <div class="flex items-center justify-between pb-3">
+                  <h3 class="text-lg font-semibold">Nhập gỗ đầu vào</h3>
+                </div>
+
+                <div class="relative w-auto pb-8">
+                  <div class="p-2 overflow-y-auto">
+                    <label for="iqcdate" class="block text-sm font-medium mb-2 dark:text-white">Ngày</label>
+                    <input type="date" id="iqcdate" name="iqcdate" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                  </div>
+
+                  <div class="p-2 overflow-y-auto">
+                    <label for="iqcqty" class="block text-sm font-medium mb-2 dark:text-white">Số cbm gỗ</label>
+                    <input type="number" min="0" step="0.001" id="iqcqty" name="iqcqty" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                  </div>
+                  
+                  <!-- <div class="p-2 overflow-y-auto">
+                    <label for="whitewoodrhmoney" class="block text-sm font-medium mb-2 dark:text-white">Tiền của hàng RH</label>
+                    <input type="number" min="0" step="0.1" id="whitewoodrhmoney" name="whitewoodrhmoney" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                  </div>
+
+                  <div class="p-2 overflow-y-auto">
+                    <label for="whitewoodwhitemoney" class="block text-sm font-medium mb-2 dark:text-white">Tiền của hàng White</label>
+                    <input type="number" min="0" step="0.1" id="whitewoodwhitemoney" name="whitewoodwhitemoney" placeholder="Vd: 125000" class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+                  </div> -->
+                  
+                </div>
+
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
+                    <button @click="modalOpen=false" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors border rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-100 focus:ring-offset-2">
+                      Huy</button>
+                    <button hx-post="/sections/rawwood/entry/entry" hx-target="#rawwood-container" hx-swap="innerHTML settle:200ms"
+                            @click="modalOpen=false;" type="button" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium text-white transition-colors border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:ring-offset-2 bg-neutral-950 hover:bg-neutral-900">
+                      Ok</button>
+                </div>
+              </form>
+  
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- menu popover -->
       <div x-data="{

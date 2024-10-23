@@ -3564,6 +3564,73 @@ func (s *Server) sendRequest(w http.ResponseWriter, r *http.Request, ps httprout
 	w.Write([]byte("Successful!!! Request sent to admin. Please wait for the response"))
 }
 
+// router.POST("/sections/rawwood/entry/entry", s.sre_entry)
+func (s *Server) sre_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameTk, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Phải đăng nhập"))
+		return
+	}
+	date, _ := time.Parse("2006-01-02", r.FormValue("iqcdate"))
+	qty, _ := strconv.ParseFloat(r.FormValue("iqcqty"), 64)
+
+	_, err = s.mgdb.Collection("rawwood").InsertOne(context.Background(), bson.M{
+		"type": "import", "date": primitive.NewDateTimeFromTime(date), "qty": qty, "unit": "cbm", "reporter": usernameTk.Value,
+		"createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Thất bại"))
+		return
+	}
+	w.Write([]byte("Thành công"))
+}
+
+// router.POST("/sections/rawwood/entry/selection", s.sre_selection)
+func (s *Server) sre_selection(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameTk, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Phải đăng nhập"))
+		return
+	}
+	date, _ := time.Parse("2006-01-02", r.FormValue("selectiondate"))
+	brightqty, _ := strconv.ParseFloat(r.FormValue("brightqty"), 64)
+	darkqty, _ := strconv.ParseFloat(r.FormValue("darkqty"), 64)
+
+	if r.FormValue("brightqty") != "" {
+		_, err = s.mgdb.Collection("rawwood").InsertOne(context.Background(), bson.M{
+			"type": "selection", "date": primitive.NewDateTimeFromTime(date), "qty": brightqty, "unit": "cbm", "reporter": usernameTk.Value,
+			"woodtone": "light", "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+			w.Write([]byte("Thất bại"))
+			return
+		}
+	}
+
+	if r.FormValue("darkqty") != "" {
+		_, err = s.mgdb.Collection("rawwood").InsertOne(context.Background(), bson.M{
+			"type": "selection", "date": primitive.NewDateTimeFromTime(date), "qty": darkqty, "unit": "cbm", "reporter": usernameTk.Value,
+			"woodtone": "dark", "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+			w.Write([]byte("Thất bại"))
+			return
+		}
+	}
+
+	if r.FormValue("darkqty") == "" && r.FormValue("darkqty") == "" {
+		w.Write([]byte("Thất bại"))
+		return
+	}
+
+	w.Write([]byte("Thành công"))
+}
+
 // ///////////////////////////////////////////////////////////////////////////////
 // /sections/cutting/overview - get page overview of Cutting
 // ///////////////////////////////////////////////////////////////////////////////

@@ -33,7 +33,18 @@ const drawRawwoodChart = (importdata, selectiondata) => {
       .attr("y", d => y(d.qty))
       .attr("width", x.bandwidth()/2)
       .attr("height", d => innerHeight - y(d.qty))
-      .attr("fill", "red")
+      .attr("fill", "#DFC6A2")
+
+  innerChart
+    .selectAll()
+    .data(importdata)
+    .join("text")
+      .text(d => d.qty)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", d => x(d.date) + x.bandwidth()/4)
+      .attr("y", d => y(d.qty/2))
+      .attr("fill", "black")
 
 
   // selectionData area
@@ -44,7 +55,7 @@ const drawRawwoodChart = (importdata, selectiondata) => {
 
   const color = d3.scaleOrdinal()
     .domain(selectSeries.map(d => d.key))
-    .range(["#DFC6A2", "#A5A0DE", "#D1D1D1"])
+    .range(["#FAEED1", "#A0937D", "#DFC6A2"])
     .unknown("#ccc");
 
   innerChart

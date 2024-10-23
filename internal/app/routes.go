@@ -102,6 +102,11 @@ func (s *Server) routes() http.Handler {
 	router.GET("/6s/admin", s.s6_admin)
 	// end 6S //////////////////////////////////////////////////////////////
 
+	// Rawwood ////////////////////////////////////////////////////////
+	router.POST("/sections/rawwood/entry/entry", s.sre_entry)
+	router.POST("/sections/rawwood/entry/selection", s.sre_selection)
+	// End Rawwood ////////////////////////////////////////////////////////
+
 	// Cuttting ////////////////////////////////////////////////////////
 	router.GET("/sections/cutting/overview", s.sc_overview)
 	router.GET("/sections/cutting/overview/loadwoodremain", s.sco_loadwoodremain)
