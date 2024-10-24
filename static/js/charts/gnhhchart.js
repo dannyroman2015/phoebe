@@ -246,8 +246,8 @@ const drawGNHHChart2 = (data) => {
       document.getElementById("detailsearch").click();
       document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
-      document.getElementById("timelinecreate").click();
-      document.getElementById("timelinecreate").focus();
+      // document.getElementById("timelinecreate").click();
+      // document.getElementById("timelinecreate").focus();
     })
   
   node.append("title")

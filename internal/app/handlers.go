@@ -13418,7 +13418,7 @@ func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps http
 
 	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": "MO-223"}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
-		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty"}}}}},
+		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty", "unit": "$unit", "productcode": "$productcode"}}}}},
 		{{"$limit", 1}},
 	})
 	if err != nil {
@@ -13431,8 +13431,10 @@ func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps http
 		Qty     float64 `bson:"totalqty"`
 		Unit    string  `bson:"unit"`
 		Parents []struct {
-			Code string  `bson:"code"`
-			Qty  float64 `bson:"qty"`
+			Code        string  `bson:"code"`
+			Qty         float64 `bson:"qty"`
+			Unit        string  `bson:"unit"`
+			ProductCode string  `bson:"productcode"`
 		} `bson:"parents"`
 	}
 	var data []P

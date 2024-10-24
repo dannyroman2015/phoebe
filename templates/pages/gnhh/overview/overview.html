@@ -23,11 +23,11 @@
         <div class="relative">
           <div class="relative z-10 grid gap-3 grid-cols-6">
 
-            <div hx-get="/gnhh/overview/loadtimeline" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>   
-            
             <div hx-get="/gnhh/overview/loadchart" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>      
-            
+
             <div hx-get="/gnhh/overview/loaddetail" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>  
+
+            <div hx-get="/gnhh/overview/loadtimeline" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>   
 
           </div>
         </div>
