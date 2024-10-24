@@ -273,7 +273,7 @@ func (s *Server) routes() http.Handler {
 
 	// White Wood ////////////////////////////////////////////////////////
 	router.POST("/sections/whitewood/overview/addmoney", withAuth2(s.swo_addmoney))
-	router.POST("/sections/whitewood/overview/addplanvalue", s.swwo_addplanvalue)
+	router.POST("/sections/whitewood/overview/addplanvalue", withAuth2(s.swwo_addplanvalue))
 	router.POST("/sections/whitewood/overview/updateinventory", s.swwo_updateinventory)
 	router.POST("/sections/whitewood/overview/addnammoney", s.swo_addnammoney)
 	// end White Wood/////////////////////////////////////////////////////////////
@@ -478,6 +478,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
 	router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
 	router.GET("/gnhh/overview/loadtree", s.go_loadtree)
+	router.POST("/gnhh/overview/mofilter", s.go_mofilter)
 	router.POST("/gnhh/overview/productfilter", s.go_productfilter)
 	router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
 

@@ -12153,43 +12153,50 @@ func (s *Server) g_overview(w http.ResponseWriter, r *http.Request, ps httproute
 
 // router.GET("/gnhh/overview/loadchart", s.go_loadchart)
 func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"mo": "MO-223"}}},
-	})
+	// cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"mo": "MO-223"}}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// defer cur.Close(context.Background())
+
+	// type PP struct {
+	// 	Id          string  `bson:"_id" json:"id"`
+	// 	Mo          string  `bson:"mo" json:"mo"`
+	// 	Itemcode    string  `bson:"itemcode" json:"itemcode"`
+	// 	ItemName    string  `bson:"itemname" json:"itemname"`
+	// 	Parent      string  `bson:"parent" json:"parent"`
+	// 	Qty         float64 `bson:"qty" json:"qty"`
+	// 	Unit        string  `bson:"unit" json:"unit"`
+	// 	Done        float64 `bson:"done" json:"done"`
+	// 	DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+	// 	Alert       bool    `bson:"alert" json:"alert"`
+	// 	Children    []PP    `bson:"children" json:"children"`
+	// }
+
+	// var gnhhdata []PP
+
+	// if err := cur.All(context.Background(), &gnhhdata); err != nil {
+	// 	log.Println(err)
+	// }
+	// var data = struct {
+	// 	Itemcode string `bson:"itemcode" json:"itemcode"`
+	// 	Children []PP   `bson:"children" json:"children"`
+	// }{
+	// 	Itemcode: "MO-223",
+	// 	Children: gnhhdata,
+	// }
+
+	// test
+	mos, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "mo", bson.M{})
 	if err != nil {
 		log.Println(err)
 	}
-	defer cur.Close(context.Background())
-
-	type PP struct {
-		Id          string  `bson:"_id" json:"id"`
-		Mo          string  `bson:"mo" json:"mo"`
-		Itemcode    string  `bson:"itemcode" json:"itemcode"`
-		ItemName    string  `bson:"itemname" json:"itemname"`
-		Parent      string  `bson:"parent" json:"parent"`
-		Qty         float64 `bson:"qty" json:"qty"`
-		Unit        string  `bson:"unit" json:"unit"`
-		Done        float64 `bson:"done" json:"done"`
-		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
-		Alert       bool    `bson:"alert" json:"alert"`
-		Children    []PP    `bson:"children" json:"children"`
-	}
-
-	var gnhhdata []PP
-
-	if err := cur.All(context.Background(), &gnhhdata); err != nil {
-		log.Println(err)
-	}
-	var data = struct {
-		Itemcode string `bson:"itemcode" json:"itemcode"`
-		Children []PP   `bson:"children" json:"children"`
-	}{
-		Itemcode: "MO-223",
-		Children: gnhhdata,
-	}
 
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/chart.html")).Execute(w, map[string]interface{}{
-		"gnhhdata": data,
+		// "gnhhdata": data,
+		"mos": mos,
 	})
 }
 
@@ -13184,6 +13191,57 @@ func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprout
 		Children []PP   `bson:"children" json:"children"`
 	}{
 		Itemcode: "MO-222",
+		Children: gnhhdata,
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/treechart.html")).Execute(w, map[string]interface{}{
+		"gnhhdata": data,
+	})
+}
+
+// router.POST("/gnhh/overview/mofilter", s.go_mofilter)
+func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var pipeline mongo.Pipeline
+	if r.FormValue("productstatus") == "done" {
+		pipeline = mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+		}
+	}
+	if r.FormValue("productstatus") == "undone" {
+		pipeline = mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+		}
+	}
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	type PP struct {
+		Id          string  `bson:"_id" json:"id"`
+		Mo          string  `bson:"mo" json:"mo"`
+		Itemcode    string  `bson:"itemcode" json:"itemcode"`
+		ItemName    string  `bson:"itemname" json:"itemname"`
+		Parent      string  `bson:"parent" json:"parent"`
+		Qty         float64 `bson:"qty" json:"qty"`
+		Unit        string  `bson:"unit" json:"unit"`
+		Done        float64 `bson:"done" json:"done"`
+		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert       bool    `bson:"alert" json:"alert"`
+		Children    []PP    `bson:"children" json:"children"`
+	}
+
+	var gnhhdata []PP
+
+	if err := cur.All(context.Background(), &gnhhdata); err != nil {
+		log.Println(err)
+	}
+	var data = struct {
+		Itemcode string `bson:"itemcode" json:"itemcode"`
+		Children []PP   `bson:"children" json:"children"`
+	}{
+		Itemcode: r.FormValue("mo"),
 		Children: gnhhdata,
 	}
 
