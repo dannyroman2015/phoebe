@@ -13118,9 +13118,70 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 	if err != nil {
 		log.Println(err)
 	}
-	// http.Redirect(w, r, "/gnhh/overview", http.StatusSeeOther)
-	// http.Redirect(w, r, "/gnhh/overview/mofilter", http.StatusSeeOther)
 
+	// reload tree chart
+	var pipeline mongo.Pipeline
+	if r.FormValue("productcode") == "all" {
+		if r.FormValue("productstatus") == "done" {
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+			}
+		}
+		if r.FormValue("productstatus") == "undone" {
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+			}
+		}
+	} else {
+		switch r.FormValue("productstatus") {
+		case "done":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+			}
+
+		case "undone":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+			}
+		}
+	}
+
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	// type PP struct {
+	// 	Id          string  `bson:"_id" json:"id"`
+	// 	Mo          string  `bson:"mo" json:"mo"`
+	// 	Itemcode    string  `bson:"itemcode" json:"itemcode"`
+	// 	ItemName    string  `bson:"itemname" json:"itemname"`
+	// 	Parent      string  `bson:"parent" json:"parent"`
+	// 	Qty         float64 `bson:"qty" json:"qty"`
+	// 	Unit        string  `bson:"unit" json:"unit"`
+	// 	Done        float64 `bson:"done" json:"done"`
+	// 	DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+	// 	Alert       bool    `bson:"alert" json:"alert"`
+	// 	Children    []PP    `bson:"children" json:"children"`
+	// }
+
+	var gnhhdata []PP
+
+	if err := cur.All(context.Background(), &gnhhdata); err != nil {
+		log.Println(err)
+	}
+	var data = struct {
+		Itemcode string `bson:"itemcode" json:"itemcode"`
+		Children []PP   `bson:"children" json:"children"`
+	}{
+		Itemcode: r.FormValue("mo"),
+		Children: gnhhdata,
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/treechart.html")).Execute(w, map[string]interface{}{
+		"gnhhdata": data,
+	})
 }
 
 // router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
