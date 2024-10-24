@@ -48,7 +48,8 @@ const drawRawwoodChart = (importdata, selectiondata) => {
 
 
   // selectionData area
-  const selectSeries = d3.stack()
+  if (selectiondata != undefined) {
+    const selectSeries = d3.stack()
     .keys(d3.union(selectiondata.map(d => d.woodtone)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(selectiondata, d => d.date, d => d.woodtone))
@@ -86,6 +87,8 @@ const drawRawwoodChart = (importdata, selectiondata) => {
         .attr("fill", "#75485E")
         .text(d => (d[1] - d[0] >= 0.1) ? `${d3.format(",.2f")(d[1]-d[0])}` : "")
   })
+  }
+  
 
   return svg.node();
 }

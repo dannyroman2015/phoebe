@@ -112,7 +112,8 @@
       </button>
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
-          <form class="p-5 pt-0" action="/gnhh/overview/updatetimeline" method="post">
+        <!-- action="/gnhh/overview/updatetimeline" method="post" -->
+          <form class="p-5 pt-0">
             <div class="text-center">
               <label for="codepath" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
                 <input type="text" id="codepath" name="codepath" placeholder="Code Path"
@@ -166,8 +167,8 @@
               </div>
 
               <div class="col-span-full sm:col-span-1 text-center">
-                <button type="submit"
-                        class="inline-block rounded border border-current px-6 py-3 text-sm font-medium text-indigo-600 transition hover:rotate-2 hover:scale-110 focus:outline-none focus:ring active:text-indigo-500">
+                <button hx-post="/gnhh/overview/updatetimeline" hx-target="this" hx-swap="none" hx-include="#timelinesearch"
+                        type="button" class="inline-block rounded border border-current px-6 py-3 text-sm font-medium text-indigo-600 transition hover:rotate-2 hover:scale-110 focus:outline-none focus:ring active:text-indigo-500">
                   Update
                 </button>
                 <!-- hx-post="/gnhh/overview/updatetimeline" hx-target="#timeline-container" hx-swap="outerHTML settle:200ms" hx-include="#timelinesearch" -->

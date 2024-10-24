@@ -13118,7 +13118,9 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 	if err != nil {
 		log.Println(err)
 	}
-	http.Redirect(w, r, "/gnhh/overview", http.StatusSeeOther)
+	// http.Redirect(w, r, "/gnhh/overview", http.StatusSeeOther)
+	// http.Redirect(w, r, "/gnhh/overview/mofilter", http.StatusSeeOther)
+
 }
 
 // router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
@@ -13199,19 +13201,76 @@ func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprout
 	})
 }
 
+// router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
+func (s *Server) go_getproductcodes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var filter bson.M
+	switch r.FormValue("productstatus") {
+	case "done":
+		filter = bson.M{
+			"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
+		}
+	case "undone":
+		filter = bson.M{
+			"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
+		}
+	case "":
+	case "all":
+		filter = bson.M{
+			"mo": r.FormValue("mo"),
+		}
+	}
+
+	productcodes, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "itemcode", filter)
+	if err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/productcode_select.html")).Execute(w, map[string]interface{}{
+		"productcodes": productcodes,
+	})
+}
+
 // router.POST("/gnhh/overview/mofilter", s.go_mofilter)
 func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.FormValue("mo") == "" || r.FormValue("productstatus") == "" {
+		w.Write([]byte("Thiếu thông tin lọc"))
+		return
+	}
+
+	// r.ParseForm()
+
+	// var prodlist bson.A
+	// for _, prd := range r.Form["productcode"] {
+	// 	prodlist = append(prodlist, prd)
+	// }
+
 	var pipeline mongo.Pipeline
-	if r.FormValue("productstatus") == "done" {
-		pipeline = mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+	if r.FormValue("productcode") == "all" {
+		if r.FormValue("productstatus") == "done" {
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+			}
 		}
-	}
-	if r.FormValue("productstatus") == "undone" {
-		pipeline = mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+		if r.FormValue("productstatus") == "undone" {
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+			}
 		}
+	} else {
+		switch r.FormValue("productstatus") {
+		case "done":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+			}
+
+		case "undone":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+			}
+		}
+
 	}
+
 	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), pipeline)
 	if err != nil {
 		log.Println(err)

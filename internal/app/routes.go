@@ -478,6 +478,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
 	router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
 	router.GET("/gnhh/overview/loadtree", s.go_loadtree)
+	router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
 	router.POST("/gnhh/overview/mofilter", s.go_mofilter)
 	router.POST("/gnhh/overview/productfilter", s.go_productfilter)
 	router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
