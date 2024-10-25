@@ -7524,19 +7524,19 @@ func (s *Server) swo_addnammoney(w http.ResponseWriter, r *http.Request, ps http
 
 	if r.FormValue("whitewoodnammoney") == "" {
 		w.Write([]byte("Thiếu thông tin"))
+		return
 	}
 
 	_, err := s.mgdb.Collection("whitewood").InsertOne(context.Background(), bson.M{
-		"type": "nam", "date": primitive.NewDateTimeFromTime(date), "value": value, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		"date": primitive.NewDateTimeFromTime(date), "prodtype": "variance", "value": value, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
 	})
 	if err != nil {
 		log.Println(err)
-		w.Write([]byte("Thất bai"))
-		return
 	}
-	// load lại chart
+
+	// load chart
 	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
@@ -7557,7 +7557,7 @@ func (s *Server) swo_addnammoney(w http.ResponseWriter, r *http.Request, ps http
 
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
@@ -7587,25 +7587,6 @@ func (s *Server) swo_addnammoney(w http.ResponseWriter, r *http.Request, ps http
 		}
 	}
 
-	// get Nam's data
-	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "nam", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}}}}},
-		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
-		{{"$sort", bson.D{{"_id", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
-		{{"$unset", "_id"}},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-	var NamData []struct {
-		Date  string  `bson:"date" json:"date"`
-		Value float64 `bson:"value" json:"value"`
-	}
-	if err = cur.All(context.Background(), &NamData); err != nil {
-		log.Println(err)
-	}
-
 	// get inventory
 	cur, err = s.mgdb.Collection("whitewood").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
 	if err != nil {
@@ -7628,7 +7609,7 @@ func (s *Server) swo_addnammoney(w http.ResponseWriter, r *http.Request, ps http
 	}
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}}}}},
+		{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -15))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 	})
@@ -7659,7 +7640,6 @@ func (s *Server) swo_addnammoney(w http.ResponseWriter, r *http.Request, ps http
 	template.Must(template.ParseFiles("templates/pages/dashboard/whitewood_generalchart.html")).Execute(w, map[string]interface{}{
 		"whitewoodData":          whitewoodData,
 		"whitewoodPlanData":      whitewoodPlanData,
-		"namData":                NamData,
 		"whitewoodInventoryData": whitewoodInventoryData,
 		"whitewoodTarget":        whitewoodTarget,
 		"whitewoodUpTime":        whitewoodUpTime,
@@ -12570,6 +12550,11 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 			}
 		}
 
+	case "Hoàn thành cho toàn bộ MO":
+		log.Println(path)
+		// ic := path[len(path)-1]
+		// tmo := path[0]
+
 	case "Làm được":
 		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
 		if sr.Err() != nil {
@@ -13554,6 +13539,7 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 				if product.Children[i].Itemcode == row[4] {
 					product.Children[i].Children = append(product.Children[i].Children, p)
 					level2Index = i
+
 				}
 			}
 

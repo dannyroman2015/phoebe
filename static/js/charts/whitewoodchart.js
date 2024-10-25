@@ -29,7 +29,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
 
   const color = d3.scaleOrdinal()
     .domain(series.map(d => d.key))
-    .range(["#DFC6A2", "#A5A0DE", "#D1D1D1"])
+    .range(["#DFC6A2", "#A5A0DE", "#D1D1D1", "#FFBE98"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
@@ -127,11 +127,22 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
       .attr("font-size", 12)
       
   svg.append("text")
-      .text("($)")
+      .text("Variance")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
       .attr("y", 65)
+      .attr("dy", "0.35em")
+      .attr("fill", color("variance"))
+      .attr("font-weight", 600)
+      .attr("font-size", 12)
+  
+  svg.append("text")
+      .text("($)")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 0)
+      .attr("y", 85)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", 12)
@@ -247,49 +258,49 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
   // end cột plan
 
   // cột của anh Nam
-  if (namdata != undefined) {
-    const lastSeries = series[series.length-1]
-    namdata.map(d => {
-      for (let i = 0; i < lastSeries.length; i++) {
-        if (d.date == lastSeries[i].data[0]) {
-          d.base = lastSeries[i][1]
-          return d
-        }
-      }
-    })
+  // if (namdata != undefined) {
+  //   const lastSeries = series[series.length-1]
+  //   namdata.map(d => {
+  //     for (let i = 0; i < lastSeries.length; i++) {
+  //       if (d.date == lastSeries[i].data[0]) {
+  //         d.base = lastSeries[i][1]
+  //         return d
+  //       }
+  //     }
+  //   })
 
-    innerChart 
-      .selectAll()
-      .data(namdata)
-      .join("rect")
-        .attr("x", d => x(d.date) + x.bandwidth()/3)
-        .attr("y", d => y(d.base + Math.abs(d.value)) - 20)
-        .attr("width", 2*x.bandwidth()/3)
-        .attr("height", d => innerHeight - y(Math.abs(d.value)))
-        .attr("fill", d => (d.value > 0) ? "#D1E9F6" : "#FFCFB3")
+  //   innerChart 
+  //     .selectAll()
+  //     .data(namdata)
+  //     .join("rect")
+  //       .attr("x", d => x(d.date) + x.bandwidth()/3)
+  //       .attr("y", d => y(d.base + Math.abs(d.value)) - 20)
+  //       .attr("width", 2*x.bandwidth()/3)
+  //       .attr("height", d => innerHeight - y(Math.abs(d.value)))
+  //       .attr("fill", d => (d.value > 0) ? "#D1E9F6" : "#FFCFB3")
 
-    innerChart 
-      .selectAll()
-      .data(namdata)
-      .join("text")
-        .text(d => d.value)
-        .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.date) + 2*x.bandwidth()/3)
-        .attr("y", d => y(d.base + Math.abs(d.value)/2) - 20)
-        .attr("fill", "#75485E")
-        .attr("font-size", 12)
+  //   innerChart 
+  //     .selectAll()
+  //     .data(namdata)
+  //     .join("text")
+  //       .text(d => d.value)
+  //       .attr("text-anchor", "middle")
+  //       .attr("alignment-baseline", "middle")
+  //       .attr("x", d => x(d.date) + 2*x.bandwidth()/3)
+  //       .attr("y", d => y(d.base + Math.abs(d.value)/2) - 20)
+  //       .attr("fill", "#75485E")
+  //       .attr("font-size", 12)
 
-    innerChart.append("text")
-      .text("<- Variance")
-      .attr("text-anchor", "start")
-      .attr("alignment-baseline", "middle")
-      .attr("x", x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5)
-      .attr("y", y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20)
-      .attr("fill", "#75485E")
-      .attr("font-size", 12)
-      .attr("transform", `rotate(-40, ${x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5}, ${y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20})`)
-  }
+  //   innerChart.append("text")
+  //     .text("<- Variance")
+  //     .attr("text-anchor", "start")
+  //     .attr("alignment-baseline", "middle")
+  //     .attr("x", x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5)
+  //     .attr("y", y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20)
+  //     .attr("fill", "#75485E")
+  //     .attr("font-size", 12)
+  //     .attr("transform", `rotate(-40, ${x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5}, ${y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20})`)
+  // }
   // end cột của anh Nam
 
   //draw target lines
