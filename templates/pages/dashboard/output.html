@@ -1,4 +1,4 @@
-<div class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+<div class="fade-in col-span-full lg:col-span-3 relative p-2 rounded-xl bg-white border border-gray-200">
   <!-- title & control -->
   <div class="flex justify-between">
     <a x-data @mouseover="
@@ -134,8 +134,9 @@
 </div>
 
 <script>
-  document.getElementById("outputFromDate").valueAsDate = new Date("2024-01-01");
-  document.getElementById("outputToDate").valueAsDate = new Date({{.latestInventory.Date}});
+  document.getElementById("outputFromDate").valueAsDate = new Date();
+  document.getElementById("outputToDate").valueAsDate = new Date();
+  // document.getElementById("outputToDate").valueAsDate = new Date({{.latestInventory.Date}});
 
   if ({{.reededoutputData}}) {
     outputchart.append(drawRdOpTotalChart({{.reededoutputData}}, {{.latestInventory}}))
