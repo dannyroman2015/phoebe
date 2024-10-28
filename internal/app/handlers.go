@@ -2679,7 +2679,7 @@ func (s *Server) dr_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// get data of Gỗ 25 of cutting
 		cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-			{{"$match", bson.M{"$and": bson.A{bson.M{"thickness": 25}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$match", bson.M{"$and": bson.A{bson.M{"is25reeded": true}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 			{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
 			{{"$sort", bson.M{"_id": 1}}},
 			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -12133,50 +12133,51 @@ func (s *Server) g_overview(w http.ResponseWriter, r *http.Request, ps httproute
 
 // router.GET("/gnhh/overview/loadchart", s.go_loadchart)
 func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
-	// 	{{"$match", bson.M{"mo": "MO-223"}}},
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-	// defer cur.Close(context.Background())
-
-	// type PP struct {
-	// 	Id          string  `bson:"_id" json:"id"`
-	// 	Mo          string  `bson:"mo" json:"mo"`
-	// 	Itemcode    string  `bson:"itemcode" json:"itemcode"`
-	// 	ItemName    string  `bson:"itemname" json:"itemname"`
-	// 	Parent      string  `bson:"parent" json:"parent"`
-	// 	Qty         float64 `bson:"qty" json:"qty"`
-	// 	Unit        string  `bson:"unit" json:"unit"`
-	// 	Done        float64 `bson:"done" json:"done"`
-	// 	DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
-	// 	Alert       bool    `bson:"alert" json:"alert"`
-	// 	Children    []PP    `bson:"children" json:"children"`
-	// }
-
-	// var gnhhdata []PP
-
-	// if err := cur.All(context.Background(), &gnhhdata); err != nil {
-	// 	log.Println(err)
-	// }
-	// var data = struct {
-	// 	Itemcode string `bson:"itemcode" json:"itemcode"`
-	// 	Children []PP   `bson:"children" json:"children"`
-	// }{
-	// 	Itemcode: "MO-223",
-	// 	Children: gnhhdata,
-	// }
-
-	// test
 	mos, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "mo", bson.M{})
 	if err != nil {
 		log.Println(err)
 	}
 
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"mo": mos[len(mos)-1]}}},
+		{{"$limit", 2}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	type PP struct {
+		Id          string  `bson:"_id" json:"id"`
+		Mo          string  `bson:"mo" json:"mo"`
+		Itemcode    string  `bson:"itemcode" json:"itemcode"`
+		ItemName    string  `bson:"itemname" json:"itemname"`
+		Parent      string  `bson:"parent" json:"parent"`
+		Qty         float64 `bson:"qty" json:"qty"`
+		Unit        string  `bson:"unit" json:"unit"`
+		Done        float64 `bson:"done" json:"done"`
+		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert       bool    `bson:"alert" json:"alert"`
+		Children    []PP    `bson:"children" json:"children"`
+	}
+
+	var gnhhdata []PP
+
+	if err := cur.All(context.Background(), &gnhhdata); err != nil {
+		log.Println(err)
+	}
+	var data = struct {
+		Itemcode string `bson:"itemcode" json:"itemcode"`
+		Children []PP   `bson:"children" json:"children"`
+	}{
+		Itemcode: mos[len(mos)-1].(string),
+		Children: gnhhdata,
+	}
+
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/chart.html")).Execute(w, map[string]interface{}{
-		// "gnhhdata": data,
-		"mos": mos,
+		"gnhhdata":  data,
+		"mos":       mos,
+		"currentmo": mos[len(mos)-1].(string),
 	})
 }
 
@@ -12217,26 +12218,26 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 
 // router.GET("/gnhh/overview/loaddetail", s.go_loaddetail)
 func (s *Server) go_loaddetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"mo": "MO-223", "level": 0}}},
-		{{"$group", bson.M{"_id": "$itemcode", "qty": bson.M{"$sum": "$qty"}}}},
-		{{"$sort", bson.M{"_id": 1}}},
-		{{"$set", bson.M{"itemcode": "$_id"}}},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-	defer cur.Close(context.Background())
-	var data []struct {
-		Code string  `bson:"itemcode"`
-		Qty  float64 `bson:"qty"`
-	}
-	if err := cur.All(context.Background(), &data); err != nil {
-		log.Println(err)
-	}
+	// cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+	// 	{{"$match", bson.M{"mo": "MO-223", "level": 0}}},
+	// 	{{"$group", bson.M{"_id": "$itemcode", "qty": bson.M{"$sum": "$qty"}}}},
+	// 	{{"$sort", bson.M{"_id": 1}}},
+	// 	{{"$set", bson.M{"itemcode": "$_id"}}},
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// defer cur.Close(context.Background())
+	// var data []struct {
+	// 	Code string  `bson:"itemcode"`
+	// 	Qty  float64 `bson:"qty"`
+	// }
+	// if err := cur.All(context.Background(), &data); err != nil {
+	// 	log.Println(err)
+	// }
 
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/detail.html")).Execute(w, map[string]interface{}{
-		"data": data,
+		// "data": data,
 	})
 }
 
@@ -13533,7 +13534,7 @@ func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps http
 	searchRegex := ".*" + r.FormValue("detailsearch") + ".*"
 
 	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": "MO-223"}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
 		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty", "unit": "$unit", "productcode": "$productcode"}}}}},
 		{{"$limit", 1}},
 	})
