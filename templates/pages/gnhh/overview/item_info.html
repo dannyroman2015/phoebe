@@ -28,17 +28,18 @@
             <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
               <thead class="ltr:text-left rtl:text-right">
                 <tr>
-                  <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Parent</th>
-                  <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">Product</th>
-                  <th class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">QTY</th>
+                  <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Parent & Product</th>
+                  <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">QTY</th>
                 </tr>
               </thead>
               
               <tbody class="divide-y divide-gray-200">
                 {{range .data.Parents}}
                 <tr class="odd:bg-gray-50">
-                  <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">{{.Code}}</td>
-                  <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.ProductCode}}</td>
+                  <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+                    <h2 class="text-xs">{{.Code}}</h2>
+                    <p class="font-normal text-xs">{{.ProductCode}}</p>
+                  </td>
                   <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Qty}} ({{.Unit}})</td>
                 </tr>
                 {{end}}
