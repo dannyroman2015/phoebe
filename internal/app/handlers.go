@@ -12140,7 +12140,9 @@ func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprou
 
 	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"mo": mos[len(mos)-1]}}},
-		{{"$limit", 2}},
+		{{"$sort", bson.M{"shipmentdate": 1}}},
+		// {{"$set", bson.M{"shipmentdate": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$shipmentdate"}}}}},
+		// {{"$limit", 2}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -12148,17 +12150,18 @@ func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprou
 	defer cur.Close(context.Background())
 
 	type PP struct {
-		Id          string  `bson:"_id" json:"id"`
-		Mo          string  `bson:"mo" json:"mo"`
-		Itemcode    string  `bson:"itemcode" json:"itemcode"`
-		ItemName    string  `bson:"itemname" json:"itemname"`
-		Parent      string  `bson:"parent" json:"parent"`
-		Qty         float64 `bson:"qty" json:"qty"`
-		Unit        string  `bson:"unit" json:"unit"`
-		Done        float64 `bson:"done" json:"done"`
-		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
-		Alert       bool    `bson:"alert" json:"alert"`
-		Children    []PP    `bson:"children" json:"children"`
+		Id           string  `bson:"_id" json:"id"`
+		Mo           string  `bson:"mo" json:"mo"`
+		Itemcode     string  `bson:"itemcode" json:"itemcode"`
+		ItemName     string  `bson:"itemname" json:"itemname"`
+		Parent       string  `bson:"parent" json:"parent"`
+		Qty          float64 `bson:"qty" json:"qty"`
+		Unit         string  `bson:"unit" json:"unit"`
+		Done         float64 `bson:"done" json:"done"`
+		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert        bool    `bson:"alert" json:"alert"`
+		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		// Children    []PP    `bson:"children" json:"children"`
 	}
 
 	var gnhhdata []PP
@@ -12174,10 +12177,26 @@ func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprou
 		Children: gnhhdata,
 	}
 
+	cur, err = s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"mo": mos[len(mos)-1].(string), "itemlevel": 0}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var prodlist []struct {
+		ProductCode string  `bson:"itemcode"`
+		Qty         float64 `bson:"qty"`
+		Done        float64 `bson:"done"`
+	}
+	if err := cur.All(context.Background(), &prodlist); err != nil {
+		log.Println(err)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/chart.html")).Execute(w, map[string]interface{}{
 		"gnhhdata":  data,
 		"mos":       mos,
 		"currentmo": mos[len(mos)-1].(string),
+		// "prodlist":  prodlist,
 	})
 }
 
@@ -12266,17 +12285,18 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	type PP struct {
-		Id          string  `bson:"_id" json:"id"`
-		Mo          string  `bson:"mo" json:"mo"`
-		Itemcode    string  `bson:"itemcode" json:"itemcode"`
-		ItemName    string  `bson:"itemname" json:"itemname"`
-		Parent      string  `bson:"parent" json:"parent"`
-		Qty         float64 `bson:"qty" json:"qty"`
-		Unit        string  `bson:"unit" json:"unit"`
-		Done        float64 `bson:"done" json:"done"`
-		Alert       bool    `bson:"alert" json:"alert"`
-		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
-		Children    []PP    `bson:"children" json:"children"`
+		Id           string  `bson:"_id" json:"id"`
+		Mo           string  `bson:"mo" json:"mo"`
+		Itemcode     string  `bson:"itemcode" json:"itemcode"`
+		ItemName     string  `bson:"itemname" json:"itemname"`
+		Parent       string  `bson:"parent" json:"parent"`
+		Qty          float64 `bson:"qty" json:"qty"`
+		Unit         string  `bson:"unit" json:"unit"`
+		Done         float64 `bson:"done" json:"done"`
+		Alert        bool    `bson:"alert" json:"alert"`
+		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
+		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Children     []PP    `bson:"children" json:"children"`
 	}
 
 	switch timelinetype {
@@ -13251,6 +13271,11 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 		}
 	} else {
 		switch r.FormValue("productstatus") {
+		case "all":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}}}}},
+			}
+
 		case "done":
 			pipeline = mongo.Pipeline{
 				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
@@ -13436,6 +13461,11 @@ func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprout
 		}
 	} else {
 		switch r.FormValue("productstatus") {
+		case "all":
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}}}}},
+			}
+
 		case "done":
 			pipeline = mongo.Pipeline{
 				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("productcode")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
@@ -13456,17 +13486,18 @@ func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprout
 	defer cur.Close(context.Background())
 
 	type PP struct {
-		Id          string  `bson:"_id" json:"id"`
-		Mo          string  `bson:"mo" json:"mo"`
-		Itemcode    string  `bson:"itemcode" json:"itemcode"`
-		ItemName    string  `bson:"itemname" json:"itemname"`
-		Parent      string  `bson:"parent" json:"parent"`
-		Qty         float64 `bson:"qty" json:"qty"`
-		Unit        string  `bson:"unit" json:"unit"`
-		Done        float64 `bson:"done" json:"done"`
-		DeliveryQty float64 `bson:"deliveryqty" json:"deliveryqty"`
-		Alert       bool    `bson:"alert" json:"alert"`
-		Children    []PP    `bson:"children" json:"children"`
+		Id           string  `bson:"_id" json:"id"`
+		Mo           string  `bson:"mo" json:"mo"`
+		Itemcode     string  `bson:"itemcode" json:"itemcode"`
+		ItemName     string  `bson:"itemname" json:"itemname"`
+		Parent       string  `bson:"parent" json:"parent"`
+		Qty          float64 `bson:"qty" json:"qty"`
+		Unit         string  `bson:"unit" json:"unit"`
+		Done         float64 `bson:"done" json:"done"`
+		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
+		Alert        bool    `bson:"alert" json:"alert"`
+		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Children     []PP    `bson:"children" json:"children"`
 	}
 
 	var gnhhdata []PP
@@ -13593,17 +13624,18 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 	rows, _ := f.Rows("Output")
 
 	type P struct {
-		Mo          string
-		Itemcode    string
-		Itemname    string
-		Itemlevel   int
-		Productcode string
-		Parent      string
-		Category    string
-		Itemtype    string
-		Qty         float64
-		Unit        string
-		Children    []P
+		Mo           string
+		Itemcode     string
+		Itemname     string
+		Itemlevel    int
+		Productcode  string
+		Parent       string
+		Category     string
+		Itemtype     string
+		Qty          float64
+		Unit         string
+		ShipmentDate string
+		Children     []P
 	}
 
 	var products []P
@@ -13612,6 +13644,7 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 	var level3Index int
 	var level4Index int
 	var level5Index int
+	var level6Index int
 	var bdoc []interface{}
 	var rcord []interface{}
 	var path []string
@@ -13622,18 +13655,24 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 		qty, _ := strconv.ParseFloat(row[7], 64)
 		// level, _ := strconv.Atoi(row[2])
 		level, _ := strconv.Atoi(row[0])
+		shipmentdate := ""
+
+		if len(row) == 10 {
+			shipmentdate = row[9]
+		}
 
 		var p = P{
-			Mo:          mo,
-			Itemcode:    row[1],
-			Itemname:    row[3],
-			Itemlevel:   level,
-			Productcode: row[2],
-			Parent:      row[4],
-			Category:    row[5],
-			Itemtype:    row[6],
-			Qty:         qty,
-			Unit:        row[8],
+			Mo:           mo,
+			Itemcode:     row[1],
+			Itemname:     row[3],
+			Itemlevel:    level,
+			Productcode:  row[2],
+			Parent:       row[4],
+			Category:     row[5],
+			Itemtype:     row[6],
+			Qty:          qty,
+			Unit:         row[8],
+			ShipmentDate: shipmentdate,
 		}
 
 		switch row[0] {
@@ -13714,12 +13753,26 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 			for i := 0; i < len(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children); i++ {
 				if product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Itemcode == row[4] {
 					product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Children = append(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Children, p)
-					// level6Index = i
+					level6Index = i
 				}
 			}
 
 			if len(path) > 6 {
 				path = path[:7]
+			} else {
+				path = append(path, row[4])
+			}
+
+		case "7":
+			for i := 0; i < len(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[level6Index].Children); i++ {
+				if product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[level6Index].Children[i].Itemcode == row[4] {
+					product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[level6Index].Children[i].Children = append(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[level6Index].Children[i].Children, p)
+					// level7Index = i
+				}
+			}
+
+			if len(path) > 7 {
+				path = path[:8]
 			} else {
 				path = append(path, row[4])
 			}

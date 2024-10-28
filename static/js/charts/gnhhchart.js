@@ -217,7 +217,7 @@ const drawGNHHChart2 = (data) => {
       .attr("x", d => d.depth * nodeSize + 6)
       .attr("y", "-0.67em")
       .attr("height", "1.3em")
-      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (444 - d.depth * nodeSize) : 0)
+      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (394 - d.depth * nodeSize) : 0)
       .attr("fill", "url(#gradient)")
       .attr("fill-opacity", 0.5)
 
@@ -258,14 +258,14 @@ const drawGNHHChart2 = (data) => {
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 350)
+    .attr("x", 300)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
     .text("Done");
 
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 350)
+      .attr("x", 300)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
@@ -274,19 +274,35 @@ const drawGNHHChart2 = (data) => {
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 450)
+    .attr("x", 400)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
     .text("Needed");
   
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 450)
+      .attr("x", 400)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
       // .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
       .text(d => d.data.qty ? `${Math.round(d.data.qty*1000)/1000} (${d.data.unit.toLowerCase()})`  : "");
+
+  svg.append("text")
+    .attr("dy", "0.32em")
+    .attr("y", -nodeSize)
+    .attr("x", 480)
+    .attr("text-anchor", "end")
+    .attr("font-weight", "bold")
+    .text("Ship Date");
+    
+  node.append("text")
+      .attr("dy", "0.32em")
+      .attr("x", 480)
+      .attr("text-anchor", "end")
+      .attr("fill", d => d.children ? null : "#555")
+    .data(root.copy().descendants())
+      .text(d => d.data.shipmentdate);
 
   return svg.node();
 }
