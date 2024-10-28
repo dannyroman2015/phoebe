@@ -103,8 +103,8 @@ func (s *Server) routes() http.Handler {
 	// end 6S //////////////////////////////////////////////////////////////
 
 	// Rawwood ////////////////////////////////////////////////////////
-	router.POST("/sections/rawwood/entry/entry", s.sre_entry)
-	router.POST("/sections/rawwood/entry/selection", s.sre_selection)
+	router.POST("/sections/rawwood/entry/entry", withAuth2(s.sre_entry))
+	router.POST("/sections/rawwood/entry/selection", withAuth2(s.sre_selection))
 	// End Rawwood ////////////////////////////////////////////////////////
 
 	// Cuttting ////////////////////////////////////////////////////////

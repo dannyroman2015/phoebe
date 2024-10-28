@@ -670,7 +670,7 @@ func (s *Server) d_loadreededline(w http.ResponseWriter, r *http.Request, ps htt
 
 	// get data of Gỗ 25 of cutting
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"thickness": 25}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"is25reeded": true}, bson.M{"type": "report"}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -20))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -12551,9 +12551,140 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 		}
 
 	case "Hoàn thành cho toàn bộ MO":
-		log.Println(path)
-		// ic := path[len(path)-1]
-		// tmo := path[0]
+		cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"mo": path[0], "itemcode": path[len(path)-1]}}},
+		})
+		if err != nil {
+			log.Println(err)
+			w.Write([]byte("loi"))
+			return
+		}
+		defer cur.Close(context.Background())
+		var products []struct {
+			ItemCode string   `bson:"itemcode"`
+			Path     []string `bson:"path"`
+		}
+		if err := cur.All(context.Background(), &products); err != nil {
+			log.Println(err)
+			w.Write([]byte("loi"))
+			return
+		}
+
+		for _, product := range products {
+			sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": product.Path[0], "itemcode": product.Path[1]})
+			if sr.Err() != nil {
+				log.Println(sr.Err())
+			}
+			var p PP
+			if err := sr.Decode(&p); err != nil {
+				log.Println(err)
+			}
+			switch len(product.Path) {
+
+			case 3:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.ItemCode {
+								p.Children[i].Children[j].Done = p.Children[i].Children[j].Qty
+							}
+						}
+					}
+				}
+
+			case 4:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.ItemCode {
+										p.Children[i].Children[j].Children[k].Done = p.Children[i].Children[j].Children[k].Qty
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 5:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.ItemCode {
+												p.Children[i].Children[j].Children[k].Children[l].Done = p.Children[i].Children[j].Children[k].Children[l].Qty
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 6:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.ItemCode {
+														p.Children[i].Children[j].Children[k].Children[l].Children[m].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Qty
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 7:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.Path[6] {
+														for n := 0; n < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
+															if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == product.ItemCode {
+																p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Qty
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			}
+
+			_, err = s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": product.Path[0], "itemcode": product.Path[1]}, bson.M{
+				"$set": bson.M{"children": p.Children},
+			})
+			if err != nil {
+				log.Println(err)
+			}
+		}
 
 	case "Làm được":
 		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
@@ -13479,37 +13610,17 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 	var level2Index int
 	var level3Index int
 	var level4Index int
-	// // var level5Index int
+	var level5Index int
 	var bdoc []interface{}
 	var rcord []interface{}
+	var path []string
+
 	rows.Next()
 	for rows.Next() {
 		row, _ := rows.Columns()
 		qty, _ := strconv.ParseFloat(row[7], 64)
 		// level, _ := strconv.Atoi(row[2])
 		level, _ := strconv.Atoi(row[0])
-
-		// insert every row to a collection
-		b := bson.M{
-			"mo":          mo,
-			"level":       level,
-			"itemcode":    row[1],
-			"productcode": row[2],
-			"name":        row[3],
-			"parent":      row[4],
-			"category":    row[5],
-			"type":        row[6],
-			"qty":         qty,
-			"unit":        row[8],
-		}
-		rcord = append(rcord, b)
-		// _, err := s.mgdb.Collection("totalbom").InsertOne(context.Background(), bson.M{
-		// 	"mo": mo, "level": level, "itemcode": row[1], "productcode": row[2], "name": row[3], "parentcode": row[4], "category": row[5], "type": row[6], "qty": qty, "unit": row[8],
-		// })
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		// end
 
 		var p = P{
 			Mo:          mo,
@@ -13531,16 +13642,29 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 			}
 			product = p
 
+			path = []string{mo}
+
 		case "1":
 			product.Children = append(product.Children, p)
+
+			if len(path) > 1 {
+				path = path[:2]
+			} else {
+				path = append(path, row[4])
+			}
 
 		case "2":
 			for i := 0; i < len(product.Children); i++ {
 				if product.Children[i].Itemcode == row[4] {
 					product.Children[i].Children = append(product.Children[i].Children, p)
 					level2Index = i
-
 				}
+			}
+
+			if len(path) > 2 {
+				path = path[:3]
+			} else {
+				path = append(path, row[4])
 			}
 
 		case "3":
@@ -13551,6 +13675,12 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 				}
 			}
 
+			if len(path) > 3 {
+				path = path[:4]
+			} else {
+				path = append(path, row[4])
+			}
+
 		case "4":
 			for i := 0; i < len(product.Children[level2Index].Children[level3Index].Children); i++ {
 				if product.Children[level2Index].Children[level3Index].Children[i].Itemcode == row[4] {
@@ -13559,16 +13689,63 @@ func (s *Server) ge_importdata(w http.ResponseWriter, r *http.Request, ps httpro
 				}
 			}
 
+			if len(path) > 4 {
+				path = path[:5]
+			} else {
+				path = append(path, row[4])
+			}
+
 		case "5":
 			for i := 0; i < len(product.Children[level2Index].Children[level3Index].Children[level4Index].Children); i++ {
 				if product.Children[level2Index].Children[level3Index].Children[level4Index].Children[i].Itemcode == row[4] {
 					product.Children[level2Index].Children[level3Index].Children[level4Index].Children[i].Children = append(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[i].Children, p)
-					// level5Index = i
+					level5Index = i
 				}
+			}
+
+			if len(path) > 5 {
+				path = path[:6]
+			} else {
+				path = append(path, row[4])
+			}
+
+		case "6":
+			for i := 0; i < len(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children); i++ {
+				if product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Itemcode == row[4] {
+					product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Children = append(product.Children[level2Index].Children[level3Index].Children[level4Index].Children[level5Index].Children[i].Children, p)
+					// level6Index = i
+				}
+			}
+
+			if len(path) > 6 {
+				path = path[:7]
+			} else {
+				path = append(path, row[4])
 			}
 		}
 
+		// insert every row to a collection
+		var tempPath = make([]string, len(path))
+		copy(tempPath, path)
+
+		b := bson.M{
+			"mo":          mo,
+			"level":       level,
+			"itemcode":    row[1],
+			"productcode": row[2],
+			"name":        row[3],
+			"parent":      row[4],
+			"category":    row[5],
+			"type":        row[6],
+			"qty":         qty,
+			"unit":        row[8],
+			"path":        tempPath,
+		}
+		rcord = append(rcord, b)
+		// end
+
 	}
+
 	_, err = s.mgdb.Collection("totalbom").InsertMany(context.Background(), rcord)
 	if err != nil {
 		log.Println(err)
