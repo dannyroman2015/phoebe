@@ -5125,7 +5125,7 @@ func (s *Server) sc_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/cutting/admin/loadreports - load report area on cutting admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "report"}, options.Find().SetSort(bson.M{"createddate": -1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "report"}, options.Find().SetSort(bson.M{"createddate": -1}).SetLimit(20))
 	if err != nil {
 		log.Println(err)
 	}

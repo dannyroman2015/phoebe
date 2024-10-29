@@ -46,6 +46,30 @@ const drawRawwoodChart = (importdata, selectiondata) => {
       .attr("y", d => y(d.qty/2))
       .attr("fill", "black")
 
+  svg.append("text")
+    .text("Gỗ nhập")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    // .attr("dominant-baseline", "hanging")
+    .attr("x", 0)
+    .attr("y", 5)
+    .attr("stroke", "red")
+
+  svg.append("text")
+    .text("Light")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 25)
+    .attr("stroke", "red")
+
+  svg.append("text")
+    .text("Dark")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 45)
+    .attr("stroke", "red")
 
   // selectionData area
   if (selectiondata != undefined) {
