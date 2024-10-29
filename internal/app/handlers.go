@@ -13450,6 +13450,11 @@ func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprout
 
 	var pipeline mongo.Pipeline
 	if r.FormValue("productcode") == "all" {
+		if r.FormValue("productstatus") == "all" {
+			pipeline = mongo.Pipeline{
+				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}}}}},
+			}
+		}
 		if r.FormValue("productstatus") == "done" {
 			pipeline = mongo.Pipeline{
 				{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},

@@ -310,7 +310,6 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
             .attr("alignment-baseline", "middle")
             .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
             .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
-            // .attr("dy", "0.35em")
             .attr("fill", "#75485E")
             .attr("font-size", "12px")
             .text(d => {
