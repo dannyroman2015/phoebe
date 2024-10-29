@@ -5157,7 +5157,7 @@ func (s *Server) sc_loadreports(w http.ResponseWriter, r *http.Request, ps httpr
 // /sections/cutting/admin/loadwrnote - load wrnote area on cutting admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sc_loadwrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createat": -1}))
+	cur, err := s.mgdb.Collection("cutting").Find(context.Background(), bson.M{"type": "wrnote"}, options.Find().SetSort(bson.M{"createat": -1}).SetLimit(20))
 	if err != nil {
 		log.Println(err)
 		return
