@@ -260,9 +260,9 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	//get fine wood
 	cur, err = s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "fine", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
-		{{"$group", bson.M{"_id": "$date", "qty": bson.M{"$sum": "$qtycbm"}}}},
-		{{"$sort", bson.D{{"_id", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25reeded": "$is25reeded"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25reeded", 1}}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25reeded": "$_id.is25reeded"}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -270,8 +270,9 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	var cuttingFineData []struct {
-		Date string  `bson:"date" json:"date"`
-		Qty  float64 `bson:"qty" json:"qty"`
+		Date       string  `bson:"date" json:"date"`
+		Is25reeded bool    `bson:"is25reeded" json:"is25reeded"`
+		Qty        float64 `bson:"qty" json:"qty"`
 	}
 	if err := cur.All(context.Background(), &cuttingFineData); err != nil {
 		log.Println(err)

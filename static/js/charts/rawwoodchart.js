@@ -44,32 +44,27 @@ const drawRawwoodChart = (importdata, selectiondata) => {
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.date) + x.bandwidth()/4)
       .attr("y", d => y(d.qty/2))
-      .attr("fill", "black")
+      .attr("fill", "75485E")
 
   svg.append("text")
     .text("Gỗ nhập")
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
-    // .attr("dominant-baseline", "hanging")
     .attr("x", 0)
-    .attr("y", 5)
-    .attr("stroke", "red")
+    .attr("y", 10)
+    .attr("fill", "#DFC6A2")
+    .attr("font-size", 14)
+    
 
   svg.append("text")
-    .text("Light")
+    .text("m³")
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("x", 0)
-    .attr("y", 25)
-    .attr("stroke", "red")
+    .attr("y", 70)
+    .attr("fill", "#75485E")
+    .attr("font-size", 14)
 
-  svg.append("text")
-    .text("Dark")
-    .attr("text-anchor", "start")
-    .attr("alignment-baseline", "middle")
-    .attr("x", 0)
-    .attr("y", 45)
-    .attr("stroke", "red")
 
   // selectionData area
   if (selectiondata != undefined) {
@@ -80,7 +75,7 @@ const drawRawwoodChart = (importdata, selectiondata) => {
 
   const color = d3.scaleOrdinal()
     .domain(selectSeries.map(d => d.key))
-    .range(["#FAEED1", "#A0937D", "#DFC6A2"])
+    .range(["#A0937D", "#FAEED1", "#DFC6A2"])
     .unknown("#ccc");
 
   innerChart
@@ -111,6 +106,24 @@ const drawRawwoodChart = (importdata, selectiondata) => {
         .attr("fill", "#75485E")
         .text(d => (d[1] - d[0] >= 0.1) ? `${d3.format(",.2f")(d[1]-d[0])}` : "")
   })
+  console.log(selectSeries)
+  svg.append("text")
+    .text("Light")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 30)
+    .attr("fill", color("light"))
+    .attr("font-size", 14)
+
+  svg.append("text")
+    .text("Dark")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", 50)
+    .attr("fill", color("dark"))
+    .attr("font-size", 14)
   }
   
 

@@ -213,7 +213,7 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
   const margin = {top: 30, right: 20, bottom: 20, left: 150};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
-console.log(data)
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.is25)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
@@ -258,31 +258,90 @@ console.log(data)
       .attr("width", x.bandwidth()/2)
 
   if (finedata != undefined) {
+    const fineseries = d3.stack()
+      .keys(d3.union(finedata.map(d => d.is25reeded)))
+      .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
+      (d3.index(finedata, d => d.date, d => d.is25reeded))
+
+    const color1 = d3.scaleOrdinal()
+      .domain(fineseries.map(d => d.key))
+      .range(["#E4E0E1", "#FFBB70", "#A0D9DE"])
+      .unknown("#ccc");
+
     innerChart
       .selectAll()
-      .data(finedata)
+      .data(fineseries)
+      .join("g")
+        .attr("fill", d => color1(d.key))
+        .attr("fill-opacity", 1)
+        .attr("stroke", "#AFD198")
+      .selectAll("rect")
+      .data(D => D.map(d => (d.key = D.key, d)))
       .join("rect")
-        .attr("x", d => x(d.date) + x.bandwidth()/2)
-        .attr("y", d => y(d.qty))
-        .attr("height", d => y(0) - y(d.qty))
+        .attr("x", d => x(d.data[0])+ x.bandwidth()/2)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth()/2)
-        .attr("fill", "#AFD198")
-      .append("title")
-        .text(d => d.qty)
 
-    innerChart.append("g")
+        innerChart.append("g")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 12)
       .selectAll()
-      .data(finedata)
+      .data(fineseries[fineseries.length-1])
       .join("text")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("x", d => x(d.date) + 3*x.bandwidth()/4)
-        .attr("y", d => y(d.qty))
-        .attr("dy", "-0.35em")
+        .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
+        .attr("y", d => y(d[1]) - 10)
+        .attr("dy", "0.35em")
         .attr("fill", "#75485E")
         .attr("font-size", "12px")
         .attr("font-weight", 600)
-        .text(d => `${d3.format(".1f")(d.qty)}`)
+        .text(d => `${d3.format(".1f")(d[1])}`)
+    
+      fineseries.forEach(serie => {
+        innerChart.append("g")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 12)
+          .selectAll()
+          .data(serie)
+          .join("text")
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
+            .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2 )
+            // .attr("dy", "0.35em")
+            .attr("fill", "#75485E")
+            .attr("font-size", "12px")
+            .text(d => {
+              if (d[1] - d[0] >= 1.5) { return d3.format(".1f")(d[1]-d[0])}
+            })
+      })
+    // innerChart
+    //   .selectAll()
+    //   .data(finedata)
+    //   .join("rect")
+    //     .attr("x", d => x(d.date) + x.bandwidth()/2)
+    //     .attr("y", d => y(d.qty))
+    //     .attr("height", d => y(0) - y(d.qty))
+    //     .attr("width", x.bandwidth()/2)
+    //     .attr("fill", "#AFD198")
+    //   .append("title")
+    //     .text(d => d.qty)
+
+    // innerChart.append("g")
+    //   .selectAll()
+    //   .data(finedata)
+    //   .join("text")
+    //     .attr("text-anchor", "middle")
+    //     .attr("alignment-baseline", "middle")
+    //     .attr("x", d => x(d.date) + 3*x.bandwidth()/4)
+    //     .attr("y", d => y(d.qty))
+    //     .attr("dy", "-0.35em")
+    //     .attr("fill", "#75485E")
+    //     .attr("font-size", "12px")
+    //     .attr("font-weight", 600)
+    //     .text(d => `${d3.format(".1f")(d.qty)}`)
   }
 
   if (returndata != undefined) {
@@ -311,6 +370,8 @@ console.log(data)
         .attr("width", x.bandwidth()/2)
       .append("title")
         .text(d => d[1] - d[0])
+
+    
 
     // innerChart.append("g")
     //   .selectAll()
