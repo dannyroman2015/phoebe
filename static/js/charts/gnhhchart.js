@@ -217,7 +217,7 @@ const drawGNHHChart2 = (data) => {
       .attr("x", d => d.depth * nodeSize + 6)
       .attr("y", "-0.67em")
       .attr("height", "1.3em")
-      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (394 - d.depth * nodeSize) : 0)
+      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (414 - d.depth * nodeSize) : 0)
       .attr("fill", "url(#gradient)")
       .attr("fill-opacity", 0.5)
 
@@ -258,51 +258,51 @@ const drawGNHHChart2 = (data) => {
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 300)
+    .attr("x", 420)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
-    .text("Done");
+    .text("Done/Needed");
 
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 300)
+      .attr("x", 420)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
-      .text(d => d.data.done ? Math.round(d.data.done*1000)/1000 : "")
+      .text(d => d.data.qty ? `${d.data.done ? Math.round(d.data.done*1000)/1000 : 0}/${d.data.qty ? `${Math.round(d.data.qty*1000)/1000} (${d.data.unit.toLowerCase()})`  : ""}` : "")
 
-  svg.append("text")
-    .attr("dy", "0.32em")
-    .attr("y", -nodeSize)
-    .attr("x", 400)
-    .attr("text-anchor", "end")
-    .attr("font-weight", "bold")
-    .text("Needed");
+  // svg.append("text")
+  //   .attr("dy", "0.32em")
+  //   .attr("y", -nodeSize)
+  //   .attr("x", 450)
+  //   .attr("text-anchor", "end")
+  //   .attr("font-weight", "bold")
+  //   .text("Needed");
   
-  node.append("text")
-      .attr("dy", "0.32em")
-      .attr("x", 400)
-      .attr("text-anchor", "end")
-      .attr("fill", d => d.children ? null : "#555")
-    .data(root.copy().descendants())
-      // .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
-      .text(d => d.data.qty ? `${Math.round(d.data.qty*1000)/1000} (${d.data.unit.toLowerCase()})`  : "");
+  // node.append("text")
+  //     .attr("dy", "0.32em")
+  //     .attr("x", 450)
+  //     .attr("text-anchor", "end")
+  //     .attr("fill", d => d.children ? null : "#555")
+  //   .data(root.copy().descendants())
+  //     // .text(d => d.data.qty ? d3.format(".3f")(d.data.qty) + ` (${d.data.unit})`  : "");
+  //     .text(d => d.data.qty ? `${Math.round(d.data.qty*1000)/1000} (${d.data.unit.toLowerCase()})`  : "");
 
-  svg.append("text")
-    .attr("dy", "0.32em")
-    .attr("y", -nodeSize)
-    .attr("x", 480)
-    .attr("text-anchor", "end")
-    .attr("font-weight", "bold")
-    .text("Ship Date");
+  // svg.append("text")
+  //   .attr("dy", "0.32em")
+  //   .attr("y", -nodeSize)
+  //   .attr("x", 480)
+  //   .attr("text-anchor", "end")
+  //   .attr("font-weight", "bold")
+  //   .text("Ship Date");
     
-  node.append("text")
-      .attr("dy", "0.32em")
-      .attr("x", 480)
-      .attr("text-anchor", "end")
-      .attr("fill", d => d.children ? null : "#555")
-    .data(root.copy().descendants())
-      .text(d => d.data.shipmentdate);
+  // node.append("text")
+  //     .attr("dy", "0.32em")
+  //     .attr("x", 480)
+  //     .attr("text-anchor", "end")
+  //     .attr("fill", d => d.children ? null : "#555")
+  //   .data(root.copy().descendants())
+  //     .text(d => d.data.shipmentdate);
 
   return svg.node();
 }

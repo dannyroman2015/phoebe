@@ -473,6 +473,7 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	router.GET("/gnhh/overview", s.g_overview)
 	router.GET("/gnhh/overview/loadchart", s.go_loadchart)
+	router.GET("/gnhh/overview/loadproducttree", s.go_loadproducttree)
 	router.GET("/gnhh/overview/loadtimeline", s.go_loadtimeline)
 	router.GET("/gnhh/overview/loaddetail", s.go_loaddetail)
 	router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
