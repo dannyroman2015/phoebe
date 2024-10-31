@@ -228,11 +228,29 @@ const drawGNHHChart2 = (data) => {
 
   node.append("text")
     .text(d => {
-        if (d.data.deliveryqty == undefined || d.data.deliveryqty == 0) {
-          return d.data.itemcode;
-        } else {
-          return Math.abs(d.data.deliveryqty - d.data.done) > 0.005  ? `${d.data.itemcode} ✈️(${d.data.deliveryqty})` : `${d.data.itemcode} ✈️(100%)`}
-        }        
+        let finallabel = d.data.itemcode;
+        if (d.data.shipmentdate != "" && d.data.shipmentdate != undefined) {
+          const rawdays = (Date.parse(d.data.shipmentdate) - new Date())/(1000 * 3600 * 24)
+          if (rawdays >= 1) {
+            finallabel += ` 📆${Math.round(rawdays)}d`
+          } else {
+            finallabel += ` 📆${Math.round(rawdays*24)}h`
+          }
+        }
+        
+        if (d.data.deliveryqty != undefined && d.data.deliveryqty != 0) {
+          if (Math.abs(d.data.deliveryqty - d.data.done) > 0.005) {
+            finallabel += ` ✈️(${d.data.deliveryqty})`
+          } else {
+            finallabel += ` ✈️(100%)`
+          }
+        }
+
+        if (d.data.price != undefined && d.data.price != 0) {
+          finallabel += ` 💰${d.data.price * d.data.qty}`
+        }
+        return finallabel;
+        }
       )
     .attr("dy", "0.32em")
     .attr("x", d => d.depth * nodeSize + 6)

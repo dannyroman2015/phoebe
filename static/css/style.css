@@ -2246,6 +2246,11 @@ select {
   padding-right: 1.75rem;
 }
 
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
 .py-0 {
   padding-top: 0px;
   padding-bottom: 0px;
@@ -3667,11 +3672,6 @@ select {
     border-color: rgb(55 65 81 / var(--tw-divide-opacity));
   }
 
-  .dark\:border-gray-200 {
-    --tw-border-opacity: 1;
-    border-color: rgb(229 231 235 / var(--tw-border-opacity));
-  }
-
   .dark\:border-gray-500 {
     --tw-border-opacity: 1;
     border-color: rgb(107 114 128 / var(--tw-border-opacity));
@@ -3705,11 +3705,6 @@ select {
   .dark\:bg-blue-600 {
     --tw-bg-opacity: 1;
     background-color: rgb(37 99 235 / var(--tw-bg-opacity));
-  }
-
-  .dark\:bg-gray-200 {
-    --tw-bg-opacity: 1;
-    background-color: rgb(229 231 235 / var(--tw-bg-opacity));
   }
 
   .dark\:bg-gray-400 {

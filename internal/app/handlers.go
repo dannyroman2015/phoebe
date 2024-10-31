@@ -12172,6 +12172,7 @@ func (s *Server) go_loadchart(w http.ResponseWriter, r *http.Request, ps httprou
 		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
 		Alert        bool    `bson:"alert" json:"alert"`
 		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Price        float64 `bson:"price" json:"price"`
 		// Children    []PP    `bson:"children" json:"children"`
 	}
 
@@ -12238,6 +12239,7 @@ func (s *Server) go_loadproducttree(w http.ResponseWriter, r *http.Request, ps h
 		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
 		Alert        bool    `bson:"alert" json:"alert"`
 		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Price        float64 `bson:"price" json:"price"`
 		// Children    []PP    `bson:"children" json:"children"`
 	}
 
@@ -13535,6 +13537,205 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 
 		}
 
+	case "Đặt lịch hoàn thành":
+		if r.FormValue("udatetime") == "" {
+			w.Write([]byte("Thiếu thông tin"))
+			return
+		}
+		udatetime, err := time.Parse("2006-01-02T15:04", r.FormValue("udatetime"))
+		if err != nil {
+			log.Println(err)
+		}
+
+		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
+		if sr.Err() != nil {
+			log.Println(sr.Err())
+		}
+		var rc PP
+		if err := sr.Decode(&rc); err != nil {
+			log.Println(err)
+		}
+
+		switch len(path) {
+		case 2:
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"shipmentdate": udatetime.Format("2006-01-02T15:04:05")}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 3:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					rc.Children[i].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 4:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+
+							rc.Children[i].Children[j].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 5:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+
+									rc.Children[i].Children[j].Children[k].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 6:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									for l := 0; l < len(rc.Children[i].Children[j].Children[k].Children); l++ {
+										if rc.Children[i].Children[j].Children[k].Children[l].Itemcode == path[5] {
+
+											rc.Children[i].Children[j].Children[k].Children[l].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+
+											break
+										}
+									}
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 7:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									for l := 0; l < len(rc.Children[i].Children[j].Children[k].Children); l++ {
+										if rc.Children[i].Children[j].Children[k].Children[l].Itemcode == path[5] {
+											for m := 0; m < len(rc.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+												if rc.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == path[6] {
+
+													rc.Children[i].Children[j].Children[k].Children[l].Children[m].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+
+													break
+												}
+											}
+											break
+										}
+									}
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		case 8:
+			for i := 0; i < len(rc.Children); i++ {
+				if rc.Children[i].Itemcode == path[2] {
+					for j := 0; j < len(rc.Children[i].Children); j++ {
+						if rc.Children[i].Children[j].Itemcode == path[3] {
+							for k := 0; k < len(rc.Children[i].Children[j].Children); k++ {
+								if rc.Children[i].Children[j].Children[k].Itemcode == path[4] {
+									for l := 0; l < len(rc.Children[i].Children[j].Children[k].Children); l++ {
+										if rc.Children[i].Children[j].Children[k].Children[l].Itemcode == path[5] {
+											for m := 0; m < len(rc.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+												if rc.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == path[6] {
+													for n := 0; n < len(rc.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
+														if rc.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == path[7] {
+
+															rc.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].ShipmentDate = udatetime.Format("2006-01-02T15:04:05")
+
+															break
+														}
+													}
+													break
+												}
+											}
+											break
+										}
+									}
+									break
+								}
+							}
+							break
+						}
+					}
+					break
+				}
+			}
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"children": rc.Children}})
+			if err != nil {
+				log.Println(err)
+			}
+
+		}
+
+	case "Cập nhật giá sản phẩm":
+		if r.FormValue("price") == "" {
+			w.Write([]byte("Thiếu thông tin"))
+			return
+		}
+		price, _ := strconv.ParseFloat(r.FormValue("price"), 64)
+
+		if len(path) == 2 {
+			_, err := s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]}, bson.M{"$set": bson.M{"price": price}})
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
 	case "Khác":
 
 	}
@@ -13793,6 +13994,7 @@ func (s *Server) go_mofilter(w http.ResponseWriter, r *http.Request, ps httprout
 		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
 		Alert        bool    `bson:"alert" json:"alert"`
 		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Price        float64 `bson:"price" json:"price"`
 		Children     []PP    `bson:"children" json:"children"`
 	}
 
