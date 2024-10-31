@@ -26,6 +26,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/admin", withAuth(s.admin))
 
 	router.GET("/dashboard", s.dashboard)
+	router.GET("/dashboard/loadplan", s.d_loadproductionplan)
 	router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
 	router.GET("/dashboard/loadproduction", s.d_loadproduction)
 	router.GET("/dashboard/loadreededline", s.d_loadreededline)

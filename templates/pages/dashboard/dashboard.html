@@ -28,6 +28,7 @@
   <script src="/static/js/charts/slicingchart.js"></script>
   <script src="/static/js/charts/whitewoodchart.js"></script>
   <script src="/static/js/charts/rawwoodchart.js"></script>
+  <script src="/static/js/charts/planchart.js"></script>
 
   <title>Dashboard</title>
 </head>
@@ -598,6 +599,11 @@
         <!-- SixS chart -->
         <div hx-get="/dashboard/loadsixs" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end SixS -->
+
+        <!-- test thu -->
+        <!-- value plan -->
+        <div hx-get="/dashboard/loadplan" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end plan -->
 
           <!-- <div class="col-span-full sm:col-span-3 lg:col-span-2 overflow-hidden relative p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
 

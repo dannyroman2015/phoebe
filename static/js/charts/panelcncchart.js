@@ -246,7 +246,6 @@ const drawPanelcncChart = (data) => {
 }
 
 const drawPanelcncChart2 = (data, target) => {
-  console.log(target)
   if (data == undefined) return;
   const width = 900;
   const height = 350;

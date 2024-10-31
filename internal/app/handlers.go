@@ -464,6 +464,35 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // //////////////////////////////////////////////////////////
+// router.GET("/dashboard/loadplan", s.d_loadproductionplan)
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadproductionplan(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"shipmentdate": bson.M{"$gte": time.Now().Format("2006-01-02")}}}},
+		// {{"$addFields", bson.M{"totalvalue": bson.M{"$multiply": bson.A{"$qty", "$price"}}}}},
+		// {{"$group", bson.M{"_id": "$shipmentdate", "plan": bson.M{"$sum": "$totalvalue"}}}},
+		{{"$group", bson.M{"_id": bson.M{"$substr": bson.A{"$shipmentdate", 0, 10}}, "plan": bson.M{"$sum": bson.M{"$multiply": bson.A{"$qty", "$price"}}}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"date": "$_id"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var records []struct {
+		Date string  `bson:"date" json:"date"`
+		Plan float64 `bson:"plan" json:"plan"`
+	}
+	if err := cur.All(context.Background(), &records); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/productionplan.html")).Execute(w, map[string]interface{}{
+		"plandata": records,
+	})
+}
+
+// //////////////////////////////////////////////////////////
 // router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadrawwood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -1030,7 +1059,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // router.GET("/dashboard/loadwhitewood", s.d_loadwhitewood)
 func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
@@ -1051,7 +1080,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
@@ -1083,7 +1112,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 
 	// get Nam's data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "nam", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -8))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "nam", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
 		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -12357,6 +12386,7 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 		Alert        bool    `bson:"alert" json:"alert"`
 		DeliveryQty  float64 `bson:"deliveryqty" json:"deliveryqty"`
 		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
+		Price        float64 `bson:"price" json:"price"`
 		Children     []PP    `bson:"children" json:"children"`
 	}
 
@@ -12822,6 +12852,37 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 														for n := 0; n < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
 															if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == product.ItemCode {
 																p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Qty
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 8:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.Path[6] {
+														for n := 0; n < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
+															if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == product.Path[7] {
+																for o := 0; o < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children); o++ {
+																	if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Itemcode == product.ItemCode {
+																		p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Qty
+																	}
+																}
 															}
 														}
 													}
