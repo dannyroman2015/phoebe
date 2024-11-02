@@ -204,7 +204,7 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
       return d;
     })
   }
-  
+
   if (target == undefined) {
     target = [{"date": "", "value": 0}]
   }
@@ -220,7 +220,7 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
     (d3.index(data, d => d.date, d => d.is25))
  
   const x = d3.scaleBand()
-    .domain(d3.sort(d3.union(data.map(d => d.date), target.map(d => d.date))))
+    .domain(d3.union(data.map(d => d.date), target.map(d => d.date)))
     .range([0, innerWidth])
     .padding(0.1);
 

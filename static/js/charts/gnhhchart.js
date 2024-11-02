@@ -237,6 +237,10 @@ const drawGNHHChart2 = (data) => {
             finallabel += ` 📆${Math.round(rawdays*24)}h`
           }
         }
+
+        if (d.data.performer != "" && d.data.performer != undefined) {
+          finallabel += ` 👷‍♂️(${d.data.performer})`
+        }
         
         if (d.data.deliveryqty != undefined && d.data.deliveryqty != 0) {
           if (Math.abs(d.data.deliveryqty - d.data.done) > 0.005) {

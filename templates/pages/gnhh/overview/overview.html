@@ -198,6 +198,7 @@
                 <div x-data="{ 
                   showDate: false,
                   showPrice: false,
+                  showPerformer: false,
                   activeAccordion: '', 
                   setActiveAccordion(id) { 
                       this.activeAccordion = (this.activeAccordion == id) ? '' : id 
@@ -234,6 +235,7 @@
                           <select @change="
                                       if ($el.value == 'Đặt lịch hoàn thành') {showDate=true} else {showDate=false};
                                       if ($el.value == 'Cập nhật giá sản phẩm') {showPrice=true} else {showPrice=false};
+                                      if ($el.value == 'Phân công người làm') {showPerformer=true} else {showPerformer=false};
                                   " 
                                   name="timelinetype" id="timelinetype" 
                                   class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
@@ -248,6 +250,7 @@
                             <option value="Hoàn thành cho toàn bộ MO">Hoàn thành cho toàn bộ MO</option>
                             <option value="Đặt lịch hoàn thành">Đặt lịch hoàn thành</option>
                             <option value="Cập nhật giá sản phẩm">Cập nhật giá sản phẩm</option>
+                            <option value="Phân công người làm">Phân công người làm</option>
                             <option value="Khác">Khác</option>
                           </select>
                         </div>
@@ -282,6 +285,17 @@
         
                           <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
                             Price
+                          </span>
+                        </label>
+                      </div>
+
+                      <div x-show="showPerformer" class="text-center">
+                        <label for="performer" class="relative block w-full overflow-hidden border-b border-gray-700 bg-transparent pt-3 focus-within:border-blue-600">
+                          <input type="text" id="performer" name="performer" placeholder="Performer"
+                                  class="peer h-8 w-full text-center border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 sm:text-sm"/>
+        
+                          <span class="absolute start-0 top-1 pt-4 -translate-y-1/2 text-sm text-gray-700 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-0 peer-focus:text-xs">
+                            Performer
                           </span>
                         </label>
                       </div>
