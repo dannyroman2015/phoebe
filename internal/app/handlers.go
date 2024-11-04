@@ -3746,22 +3746,28 @@ func (s *Server) sco_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 	defer cur.Close(context.Background())
 	var reports []struct {
-		Wrnote    string  `bson:"wrnote"`
-		Woodtype  string  `bson:"woodtype"`
-		ProdType  string  `bson:"prodtype"`
-		Thickness float64 `bson:"thickness"`
-		Date      string  `bson:"date"`
-		Qtycbm    float64 `bson:"qtycbm"`
-		Reporter  string  `bson:"reporter"`
+		Wrnote     string  `bson:"wrnote"`
+		Woodtype   string  `bson:"woodtype"`
+		ProdType   string  `bson:"prodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		Qtycbm     float64 `bson:"qtycbm"`
+		Reporter   string  `bson:"reporter"`
+		Is25reeded bool    `bson:"is25reeded" json:"is25reeded"`
 	}
 	if err := cur.All(context.Background(), &reports); err != nil {
 		log.Println(err)
 	}
 	numberOfReports := len(reports)
+	totalcbm := 0.0
+	for _, v := range reports {
+		totalcbm += v.Qtycbm
+	}
 
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report.html")).Execute(w, map[string]interface{}{
 		"reports":         reports,
 		"numberOfReports": numberOfReports,
+		"totalcbm":        fmt.Sprintf("%.3f", totalcbm),
 	})
 }
 
@@ -3814,6 +3820,7 @@ func (s *Server) sco_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "report", searchFilter: bson.M{"$regex": regexWord, "$options": "i"}}}},
+		{{"$sort", bson.M{"date": -1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
@@ -3821,22 +3828,27 @@ func (s *Server) sco_reportsearch(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	defer cur.Close(context.Background())
 	var reports []struct {
-		Wrnote    string  `bson:"wrnote"`
-		Woodtype  string  `bson:"woodtype"`
-		ProdType  string  `bson:"prodtype"`
-		Thickness float64 `bson:"thickness"`
-		Date      string  `bson:"date"`
-		Qtycbm    float64 `bson:"qtycbm"`
-		Reporter  string  `bson:"reporter"`
+		Wrnote     string  `bson:"wrnote"`
+		Woodtype   string  `bson:"woodtype"`
+		ProdType   string  `bson:"prodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		Qtycbm     float64 `bson:"qtycbm"`
+		Reporter   string  `bson:"reporter"`
+		Is25reeded bool    `bson:"is25reeded"`
 	}
 	if err := cur.All(context.Background(), &reports); err != nil {
 		log.Println(err)
 	}
 	numberOfReports := len(reports)
-
+	totalcbm := 0.0
+	for _, v := range reports {
+		totalcbm += v.Qtycbm
+	}
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
 		"reports":         reports,
 		"numberOfReports": numberOfReports,
+		"totalcbm":        fmt.Sprintf("%.3f", totalcbm),
 	})
 }
 
@@ -3909,23 +3921,29 @@ func (s *Server) sco_reportfilter(w http.ResponseWriter, r *http.Request, ps htt
 	defer cur.Close(context.Background())
 
 	var reports []struct {
-		Wrnote    string  `bson:"wrnote"`
-		Woodtype  string  `bson:"woodtype"`
-		ProdType  string  `bson:"prodtype"`
-		Thickness float64 `bson:"thickness"`
-		Date      string  `bson:"date"`
-		Qtycbm    float64 `bson:"qtycbm"`
-		Reporter  string  `bson:"reporter"`
+		Wrnote     string  `bson:"wrnote"`
+		Woodtype   string  `bson:"woodtype"`
+		ProdType   string  `bson:"prodtype"`
+		Thickness  float64 `bson:"thickness"`
+		Date       string  `bson:"date"`
+		Qtycbm     float64 `bson:"qtycbm"`
+		Reporter   string  `bson:"reporter"`
+		Is25reeded bool    `bson:"is25reeded"`
 	}
 	if err = cur.All(context.Background(), &reports); err != nil {
 		log.Println(err)
 	}
 
 	numberOfReports := len(reports)
+	totalcbm := 0.0
+	for _, v := range reports {
+		totalcbm += v.Qtycbm
+	}
 
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/report_tbl.html")).Execute(w, map[string]interface{}{
 		"reports":         reports,
 		"numberOfReports": numberOfReports,
+		"totalcbm":        fmt.Sprintf("%.3f", totalcbm),
 	})
 }
 

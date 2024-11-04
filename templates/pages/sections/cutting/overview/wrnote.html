@@ -166,10 +166,10 @@
                 <thead class="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      Loại hàng
+                      Mã kiện
                     </th>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                      Mã kiện
+                      Loại hàng
                     </th>
                     <th scope="col" class="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400">
                       Loại Gỗ
@@ -191,15 +191,15 @@
  
                 <tbody class="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
                   {{range .wrnotes}}
-                  <tr>  
+                  <tr>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.ProdType}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteCode}}</p>
                       </div>
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
                       <div>
-                        <p class="text-gray-500 dark:text-gray-400">{{.WrnoteCode}}</p>
+                        <p class="text-gray-500 dark:text-gray-400">{{.ProdType}}</p>
                       </div>
                     </td>
                     <td class="px-4 py-1 text-sm whitespace-nowrap">
