@@ -11971,6 +11971,34 @@ func (s *Server) co_changedisplay(w http.ResponseWriter, r *http.Request, ps htt
 			"auditdata":  auditdata,
 			"auditdates": auditdates,
 		})
+
+	case "standard":
+		cur, err := s.mgdb.Collection("mixingstandard").Aggregate(context.Background(), mongo.Pipeline{})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var standards []struct {
+			Id           string  `bson:"_id"`
+			Name         string  `bson:"name"`
+			MinL         float64 `bson:"minl"`
+			MaxL         float64 `bson:"maxl"`
+			Mina         float64 `bson:"mina"`
+			Maxa         float64 `bson:"maxa"`
+			Minb         float64 `bson:"minb"`
+			Maxb         float64 `bson:"maxb"`
+			MinViscosity float64 `bson:"minviscosity"`
+			MaxViscosity float64 `bson:"maxviscosity"`
+		}
+
+		if err := cur.All(context.Background(), &standards); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/colormixing/overview/standard.html")).Execute(w, map[string]interface{}{
+			"standards": standards,
+		})
+
 	}
 
 }
@@ -12104,6 +12132,33 @@ func (s *Server) co_filtercolor(w http.ResponseWriter, r *http.Request, ps httpr
 	template.Must(template.ParseFiles("templates/pages/colormixing/overview/color_tbody.html")).Execute(w, map[string]interface{}{
 		"colorpanelData": colorpanelData,
 	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// router.POST("/colormixing/overview/createstandard", s.co_createstandard)
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) co_createstandard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	if r.FormValue("standardname") == "" {
+		w.Write([]byte("Thiếu thông tin"))
+		return
+	}
+	minl, _ := strconv.ParseFloat(r.FormValue("minl"), 64)
+	maxl, _ := strconv.ParseFloat(r.FormValue("maxl"), 64)
+	mina, _ := strconv.ParseFloat(r.FormValue("mina"), 64)
+	maxa, _ := strconv.ParseFloat(r.FormValue("maxa"), 64)
+	minb, _ := strconv.ParseFloat(r.FormValue("minb"), 64)
+	maxb, _ := strconv.ParseFloat(r.FormValue("maxb"), 64)
+	minviscosity, _ := strconv.ParseFloat(r.FormValue("minviscosity"), 64)
+	maxviscosity, _ := strconv.ParseFloat(r.FormValue("maxviscosity"), 64)
+	_, err := s.mgdb.Collection("mixingstandard").InsertOne(context.Background(), bson.M{
+		"name": r.FormValue("standardname"), "minl": minl, "maxl": maxl, "mina": mina, "maxa": maxa, "minb": minb, "maxb": maxb, "minviscosity": minviscosity,
+		"maxviscosity": maxviscosity, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Tạo thất bại"))
+		return
+	}
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
