@@ -217,7 +217,7 @@ const drawGNHHChart2 = (data) => {
       .attr("x", d => d.depth * nodeSize + 6)
       .attr("y", "-0.67em")
       .attr("height", "1.3em")
-      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (414 - d.depth * nodeSize) : 0)
+      .attr("width", d => d.data.done ? (d.data.done/d.data.qty) * (474 - d.depth * nodeSize) : 0)
       .attr("fill", "url(#gradient)")
       .attr("fill-opacity", 0.5)
 
@@ -253,23 +253,37 @@ const drawGNHHChart2 = (data) => {
         if (d.data.price != undefined && d.data.price != 0) {
           finallabel += ` 💰${d.data.price * d.data.qty}`
         }
+
         return finallabel;
         }
       )
     .attr("dy", "0.32em")
     .attr("x", d => d.depth * nodeSize + 6)
-    .attr("fill", d => d.data.alert ? "red": "black")
+    .attr("fill", d =>  {
+      if (d.data.done != 0 || d.data.performer != "") {
+        return "black"
+      }
+
+      if (d.data.alert != "") {
+        return "red"
+      } 
+      
+      if (d.data.children != null || d.data.children != undefined) {
+        return d.data.children.some(d => d.deliveryqty != d.qty) ? "black" : "#00BDAA"
+      }
+      
+    })
     .style("cursor", "pointer")
     .on("click", (e, d) => {
       document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       
       document.getElementById("detailsearch").value = d.data.itemcode;
       document.getElementById("detailsearch").dispatchEvent(new Event('input', {bubble: true}));
-      document.getElementById("detailsearch").click();
+      // document.getElementById("detailsearch").click();
       document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
-      // document.getElementById("timelinecreate").click();
-      // document.getElementById("timelinecreate").focus();
+      // document.getElementById("timelinesearch").click();
+      document.getElementById("timelinesearch").focus();
     })
   
   node.append("title")
@@ -280,14 +294,14 @@ const drawGNHHChart2 = (data) => {
   svg.append("text")
     .attr("dy", "0.32em")
     .attr("y", -nodeSize)
-    .attr("x", 420)
+    .attr("x", 480)
     .attr("text-anchor", "end")
     .attr("font-weight", "bold")
     .text("Done/Needed");
 
   node.append("text")
       .attr("dy", "0.32em")
-      .attr("x", 420)
+      .attr("x", 480)
       .attr("text-anchor", "end")
       .attr("fill", d => d.children ? null : "#555")
     .data(root.copy().descendants())
