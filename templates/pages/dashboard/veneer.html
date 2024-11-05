@@ -133,9 +133,12 @@
 <script>
   document.getElementById("veneerToDate").valueAsDate = new Date();
   document.getElementById("veneerFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
-  if ({{.veneerTarget}} == undefined) {
-    veneerchart.append(drawVeneerChart({{.veneerChartData}}))
-  } else {
+  // if ({{.veneerTarget}} == undefined) {
+  //   veneerchart.append(drawVeneerChart({{.veneerChartData}}))
+  // } else {
+  //   veneerchart.append(drawVeneerChart1({{.veneerChartData}}, {{.veneerTarget}}))
+  // }
+  if ({{.veneerChartData}} != undefined) {
     veneerchart.append(drawVeneerChart1({{.veneerChartData}}, {{.veneerTarget}}))
   }
 

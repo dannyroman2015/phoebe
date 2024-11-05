@@ -170,7 +170,7 @@ const drawVeneerChart1 = (data, target) => {
 
   const y = d3.scaleLinear()
     // .domain([0, d3.max(series, d => d3.max(d, d => d[1]))])
-    .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), d3.max(target, d => d.value)])])
+    .domain([0,  d3.max([d3.max(series, d => d3.max(d, d => d[1])), target ? d3.max(target, d => d.value) : 0])])
     .rangeRound([innerHeight, 0])
     .nice()
 
@@ -245,9 +245,10 @@ const drawVeneerChart1 = (data, target) => {
         })
   })
 
-   //draw target lines
-   const dates = data.map(d => d.date)
-   target = target.filter(t => dates.includes(t.date))
+  //draw target lines
+  if (target != undefined) {
+    const dates = data.map(d => d.date)
+target = target.filter(t => dates.includes(t.date))
 innerChart
 .selectAll()
 .data(target)
@@ -283,6 +284,8 @@ innerChart.append("g")
   .attr("fill", "none")
   .attr("stroke", "white")
   .attr("stroke-width", 6)
+  }
+
    // end target line
 
   svg.append("text")
