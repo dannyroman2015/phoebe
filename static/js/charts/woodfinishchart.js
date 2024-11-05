@@ -907,7 +907,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 30)
+      .attr("y", 20)
       .attr("dy", "0.35em")
       .attr("fill", "#DFC6A2")
       .attr("font-weight", 600)
@@ -918,7 +918,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 55)
+      .attr("y", 35)
       .attr("dy", "0.35em")
       .attr("fill", "#102C57")
       .attr("font-weight", 600)
@@ -929,7 +929,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 80)
+      .attr("y", 50)
       .attr("dy", "0.35em")
       .attr("fill", "#921A40")
       .attr("font-weight", 600)
@@ -940,7 +940,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
-      .attr("y", 105)
+      .attr("y", 65)
       .attr("dy", "0.35em")
       .attr("fill", "#75485E")
       .attr("font-size", 12)
@@ -1122,14 +1122,14 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
   // inventory bar
   if (inventorydata != undefined) {
     const y2 = d3.scaleLinear()
-      .domain([0,  inventorydata[0].inventory + inventorydata[1].inventory])
-      .rangeRound([2*innerHeight/3, 0])
+      .domain([0,  inventorydata[0].inventory + inventorydata[1].inventory + 1])
+      .rangeRound([3*innerHeight/4, 0])
       .nice()
-      
-    const leftInnerChart = svg.append("g")
-      .attr("transform", `translate(0, ${innerHeight/3})`)
 
-      leftInnerChart.append("line")
+    const leftInnerChart = svg.append("g")
+      .attr("transform", `translate(0, ${innerHeight/4})`)
+
+      svg.append("line")
       .attr("x1", 70)
       .attr("y1", height)
       .attr("x2", 70)
@@ -1141,14 +1141,14 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("x", 10)
       .attr("y", y2(inventorydata[0].inventory) + margin.bottom)
       .attr("width", 45)
-      .attr("height", 2*innerHeight/3 - y2(inventorydata[0].inventory))
+      .attr("height", 3*innerHeight/4 - y2(inventorydata[0].inventory))
       .attr("fill", color(inventorydata[0].prodtype));
 
       leftInnerChart.append("rect")
       .attr("x", 10)
-      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
+      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (3*innerHeight/4 - y2(inventorydata[0].inventory)))
       .attr("width", 45)
-      .attr("height", 2*innerHeight/3 - y2(inventorydata[1].inventory))
+      .attr("height", 3*innerHeight/4 - y2(inventorydata[1].inventory))
       .attr("fill", color(inventorydata[1].prodtype));
 
       leftInnerChart.append("text")
@@ -1165,8 +1165,18 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
-      .attr("y",  y2(inventorydata[1].inventory/2) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
+      .attr("y",  y2(inventorydata[1].inventory/2) + margin.bottom - (3*innerHeight/4 - y2(inventorydata[0].inventory)))
       .attr("fill", "#102C57")
+      .attr("font-size", 12)
+
+      leftInnerChart.append("text")
+      .text(`${d3.format(",.0f")(inventorydata[0].inventory + inventorydata[1].inventory)}`)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "middle")
+      .attr("x", 32)
+      .attr("y",  y2(inventorydata[1].inventory) + margin.bottom - (3*innerHeight/4 - y2(inventorydata[0].inventory)))
+      .attr("dy", "-0.35em")
+      .attr("fill", "#75485E")
       .attr("font-size", 12)
 
       leftInnerChart.append("text")
@@ -1174,10 +1184,10 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 60)
-      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
+      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (3*innerHeight/4 - y2(inventorydata[0].inventory)))
       .attr("fill", "#FA7070")
       .attr("font-size", 12)
-      .attr("transform", `rotate(90, 60, ${y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory))})`)
+      .attr("transform", `rotate(90, 60, ${y2(inventorydata[1].inventory) + margin.bottom - (3*innerHeight/4 - y2(inventorydata[0].inventory))})`)
     // end inventory
 
     svg.append("text")
