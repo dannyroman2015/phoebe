@@ -34,17 +34,22 @@ const drawRawwoodChart = (importdata, selectiondata) => {
       .attr("width", x.bandwidth()/2)
       .attr("height", d => innerHeight - y(d.qty))
       .attr("fill", "#DFC6A2")
+      .append("title")
+        .text(d => d.qty)
 
   innerChart
     .selectAll()
     .data(importdata)
     .join("text")
-      .text(d => d.qty)
+      .text(d => d3.format(".1f")(d.qty))
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.date) + x.bandwidth()/4)
-      .attr("y", d => y(d.qty/2))
+      .attr("y", d => y(d.qty))
+      .attr("dy", "-0.3em")
       .attr("fill", "75485E")
+      .attr("font-size", 12)
+      
 
   svg.append("text")
     .text("Gỗ nhập")
@@ -104,9 +109,10 @@ const drawRawwoodChart = (importdata, selectiondata) => {
         .attr("x", d => x(d.data[0]) + 3*x.bandwidth()/4)
         .attr("y", d => y(d[1]) - (y(d[1]) - y(d[0]))/2)
         .attr("fill", "#75485E")
-        .text(d => (d[1] - d[0] >= 0.1) ? `${d3.format(",.2f")(d[1]-d[0])}` : "")
+        .attr("font-size", 12)
+        .text(d => (d[1] - d[0] >= 0.1) ? `${d3.format(",.1f")(d[1]-d[0])}` : "")
   })
-  console.log(selectSeries)
+
   svg.append("text")
     .text("Light")
     .attr("text-anchor", "start")

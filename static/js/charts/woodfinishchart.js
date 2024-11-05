@@ -1121,7 +1121,15 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
 
   // inventory bar
   if (inventorydata != undefined) {
-    svg.append("line")
+    const y2 = d3.scaleLinear()
+      .domain([0,  inventorydata[0].inventory + inventorydata[1].inventory])
+      .rangeRound([2*innerHeight/3, 0])
+      .nice()
+      
+    const leftInnerChart = svg.append("g")
+      .attr("transform", `translate(0, ${innerHeight/3})`)
+
+      leftInnerChart.append("line")
       .attr("x1", 70)
       .attr("y1", height)
       .attr("x2", 70)
@@ -1129,47 +1137,47 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("stroke", "black")
       .attr("stroke-opacity", 0.2)
 
-    svg.append("rect")
+      leftInnerChart.append("rect")
       .attr("x", 10)
-      .attr("y", y(inventorydata[0].inventory) + margin.bottom)
+      .attr("y", y2(inventorydata[0].inventory) + margin.bottom)
       .attr("width", 45)
-      .attr("height", innerHeight - y(inventorydata[0].inventory))
+      .attr("height", 2*innerHeight/3 - y2(inventorydata[0].inventory))
       .attr("fill", color(inventorydata[0].prodtype));
 
-    svg.append("rect")
+      leftInnerChart.append("rect")
       .attr("x", 10)
-      .attr("y", y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
       .attr("width", 45)
-      .attr("height", innerHeight - y(inventorydata[1].inventory))
+      .attr("height", 2*innerHeight/3 - y2(inventorydata[1].inventory))
       .attr("fill", color(inventorydata[1].prodtype));
 
-    svg.append("text")
+      leftInnerChart.append("text")
       .text(`${d3.format(",.0f")(inventorydata[0].inventory)}`)
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
-      .attr("y",  y(inventorydata[0].inventory/2) + margin.bottom)
+      .attr("y",  y2(inventorydata[0].inventory/2) + margin.bottom)
       .attr("fill", "#102C57")
       .attr("font-size", 12)
 
-    svg.append("text")
+      leftInnerChart.append("text")
       .text(`${d3.format(",.0f")(inventorydata[1].inventory)}`)
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
-      .attr("y",  y(inventorydata[1].inventory/2) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("y",  y2(inventorydata[1].inventory/2) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
       .attr("fill", "#102C57")
       .attr("font-size", 12)
 
-    svg.append("text")
+      leftInnerChart.append("text")
       .text(inventorydata[1].createdatstr)
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 60)
-      .attr("y", y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory)))
+      .attr("y", y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory)))
       .attr("fill", "#FA7070")
       .attr("font-size", 12)
-      .attr("transform", `rotate(90, 60, ${y(inventorydata[1].inventory) + margin.bottom - (innerHeight - y(inventorydata[0].inventory))})`)
+      .attr("transform", `rotate(90, 60, ${y2(inventorydata[1].inventory) + margin.bottom - (2*innerHeight/3 - y2(inventorydata[0].inventory))})`)
     // end inventory
 
     svg.append("text")
