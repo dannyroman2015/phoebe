@@ -438,6 +438,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/colormixing/overview/searchcolor", s.co_searchcolor)
 	router.POST("/colormixing/overview/filtercolor", s.co_filtercolor)
 	router.POST("/colormixing/overview/createstandard", s.co_createstandard)
+	router.DELETE("/colormixing/overview/deletestandard/:name", s.co_deletestandard)
 
 	router.GET("/colormixing/admin", withAuth(s.c_admin))
 	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)

@@ -212,7 +212,17 @@
             </label>
           </div> -->
   
-          <div class="flex flex-row items-center justify-center space-x-4 p-5">
+          <div class="flex justify-center mt-4 text-center">
+            <select class="flex text-center justify-center w-full h-10 px-3 py-2 text-sm bg-white border-2 text-neutral-600 border-neutral-600 ring-offset-background placeholder:text-neutral-400 focus:border-neutral-800 focus:text-neutral-800 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                name="standard" id="standard" class="p-3 peer w-full rounded-lg border-gray-300 text-gray-700">
+              <option value="" disabled selected>Select standard</option>
+              {{range .standardnames}}
+              <option value="{{.}}">{{.}}</option>
+              {{end}}
+            </select>
+          </div>
+
+          <!-- <div class="flex flex-row items-center justify-center space-x-4 p-5">
             <label class="relative flex items-center cursor-pointer">
               <input checked class="sr-only peer" value="Approved" name="status" type="radio" />
               <div class="w-6 h-6 bg-transparent border-2 border-green-500 rounded-full peer-checked:bg-green-500 peer-checked:border-green-500 peer-hover:shadow-lg peer-hover:shadow-green-500/50 peer-checked:shadow-lg peer-checked:shadow-green-500/50 transition duration-300 ease-in-out"></div>
@@ -230,7 +240,7 @@
               <div class="w-6 h-6 bg-transparent border-2 border-yellow-500 rounded-full peer-checked:bg-yellow-500 peer-checked:border-yellow-500 peer-hover:shadow-lg peer-hover:shadow-yellow-500/50 peer-checked:shadow-lg peer-checked:shadow-yellow-500/50 transition duration-300 ease-in-out"></div>
               <span class="ml-2 text-black">Pending</span>
             </label>          
-          </div>
+          </div> -->
 
           <div class="flex items-center justify-around mt-2 gap-2">
             <div>

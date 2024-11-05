@@ -10228,22 +10228,12 @@ func (s *Server) mce_sendbatchentry(w http.ResponseWriter, r *http.Request, ps h
 
 // router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
 func (s *Server) ca_loadbatchentry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// cur, err := s.mgdb.Collection("colorpanel").Find(context.Background(), bson.M{})
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-	// defer cur.Close(context.Background())
-	// var colorpanelData []struct {
-	// 	PanelNo string `bson:"panelno"`
-	// 	// Color    string `bson:"color"`
-	// 	// Brand    string `bson:"brand"`
-	// 	// Supplier string `bson:"supplier"`
-	// }
-	// if err := cur.All(context.Background(), &colorpanelData); err != nil {
-	// 	log.Println(err)
-	// }
+	standardnames, err := s.mgdb.Collection("mixingstandard").Distinct(context.Background(), "name", bson.M{})
+	if err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchentry.html")).Execute(w, map[string]interface{}{
-		// "colorpanelData": colorpanelData,
+		"standardnames": standardnames,
 	})
 }
 
@@ -10296,9 +10286,35 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 	lightdark, _ := strconv.ParseFloat(r.FormValue("lightdark"), 64)
 	redgreen, _ := strconv.ParseFloat(r.FormValue("redgreen"), 64)
 	yellowblue, _ := strconv.ParseFloat(r.FormValue("yellowblue"), 64)
-	status := r.FormValue("status")
 
-	if batchno == "" || r.FormValue("volume") == "" || code == "" || status == "" {
+	// get standard infos
+	sr := s.mgdb.Collection("mixingstandard").FindOne(context.Background(), bson.M{
+		"name": r.FormValue("standard"),
+	})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var standard struct {
+		Id           string  `bson:"_id"`
+		Name         string  `bson:"name"`
+		MinL         float64 `bson:"minl"`
+		MaxL         float64 `bson:"maxl"`
+		Mina         float64 `bson:"mina"`
+		Maxa         float64 `bson:"maxa"`
+		Minb         float64 `bson:"minb"`
+		Maxb         float64 `bson:"maxb"`
+		MinViscosity float64 `bson:"minviscosity"`
+		MaxViscosity float64 `bson:"maxviscosity"`
+	}
+	if err := sr.Decode(&standard); err != nil {
+		log.Println(err)
+	}
+	status := "Approved"
+	if lightdark > standard.MaxL || lightdark < standard.MinL || redgreen > standard.Mina || redgreen < standard.Mina || yellowblue > standard.Maxb || yellowblue < standard.Minb || viscosity > standard.MaxViscosity || viscosity < standard.MinViscosity {
+		status = "Rejected"
+	}
+
+	if batchno == "" || r.FormValue("volume") == "" || code == "" || r.FormValue("standard") == "" {
 		template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchentry.html")).Execute(w, map[string]interface{}{
 			"showMissingDialog": true,
 			"msgDialog":         "Thiếu thông tin",
@@ -10309,7 +10325,7 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 	_, err := s.mgdb.Collection("mixingbatch").InsertOne(context.Background(), bson.M{
 		"batchno": batchno, "mixingdate": primitive.NewDateTimeFromTime(mixingdate), "volume": volume, "receiver": reciever, "area": area,
 		"color": bson.M{"code": code, "name": name, "brand": brand}, "nk2": nk2, "fordcup4": fordcup4,
-		"operator": operator, "classification": classification, "sopno": sopno, "supplier": supplier,
+		"operator": operator, "classification": classification, "sopno": sopno, "supplier": supplier, "standard": r.FormValue("standard"),
 		"viscosity": viscosity, "redgreen": redgreen, "yellowblue": yellowblue, "lightdark": lightdark, "status": status, "issueddate": primitive.NewDateTimeFromTime(issueddate),
 	})
 	if err != nil {
@@ -12157,6 +12173,44 @@ func (s *Server) co_createstandard(w http.ResponseWriter, r *http.Request, ps ht
 	if err != nil {
 		log.Println(err)
 		w.Write([]byte("Tạo thất bại"))
+		return
+	}
+
+	cur, err := s.mgdb.Collection("mixingstandard").Aggregate(context.Background(), mongo.Pipeline{})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var standards []struct {
+		Id           string  `bson:"_id"`
+		Name         string  `bson:"name"`
+		MinL         float64 `bson:"minl"`
+		MaxL         float64 `bson:"maxl"`
+		Mina         float64 `bson:"mina"`
+		Maxa         float64 `bson:"maxa"`
+		Minb         float64 `bson:"minb"`
+		Maxb         float64 `bson:"maxb"`
+		MinViscosity float64 `bson:"minviscosity"`
+		MaxViscosity float64 `bson:"maxviscosity"`
+	}
+
+	if err := cur.All(context.Background(), &standards); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/colormixing/overview/standard_tbody.html")).Execute(w, map[string]interface{}{
+		"standards": standards,
+	})
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
+// router.DELETE("/colormixing/overview/deletestandard/:name", s.co_deletestandard)
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) co_deletestandard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	name, _ := primitive.ObjectIDFromHex(ps.ByName("name"))
+	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"name": name})
+	if err != nil {
+		log.Println(err)
 		return
 	}
 }
