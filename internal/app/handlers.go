@@ -12378,6 +12378,7 @@ func (s *Server) go_loadproducttree(w http.ResponseWriter, r *http.Request, ps h
 		{{"$match", bson.M{"mo": currentMo}}},
 		{{"$sort", bson.M{"shipmentdate": 1}}},
 	})
+
 	if err != nil {
 		log.Println(err)
 	}
@@ -12396,7 +12397,7 @@ func (s *Server) go_loadproducttree(w http.ResponseWriter, r *http.Request, ps h
 		Alert        bool    `bson:"alert" json:"alert"`
 		ShipmentDate string  `bson:"shipmentdate" json:"shipmentdate"`
 		Price        float64 `bson:"price" json:"price"`
-		// Children    []PP    `bson:"children" json:"children"`
+		// Children     []PP    `bson:"children" json:"children"`
 	}
 
 	var gnhhdata []PP

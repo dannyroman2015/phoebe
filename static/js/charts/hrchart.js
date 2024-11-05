@@ -5,13 +5,13 @@ const drawHrChart = (rawdata) => {
   
   const data = d3.stratify().id((d) => d.name).parentId((d) => d.parent)(rawdata);
   const root = d3.hierarchy(data);
-  const dx = 50;
+  const dx = 30;
   const dy = (width - margin.right - margin.left) / (1 + root.height);
 console.log(rawdata)
 console.log(data)
 console.log(root)
   const tree = d3.tree().nodeSize([dx, dy]);
-  const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
+  const diagonal = d3.linkHorizontal(d3.curveStep).x(d => d.y).y(d => d.x);
 
   const svg = d3.create("svg")
     .attr("width", width)
