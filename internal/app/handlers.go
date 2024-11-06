@@ -1558,9 +1558,26 @@ func (s *Server) d_loadslicing(w http.ResponseWriter, r *http.Request, ps httpro
 		log.Println(err)
 	}
 
+	// get target
+	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+		// {{"$match", bson.M{"name": "packing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"name": "slicing total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -25))}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var slicingTarget []struct {
+		Date  string  `bson:"date" json:"date"`
+		Value float64 `bson:"value" json:"value"`
+	}
+	if err = cur.All(context.Background(), &slicingTarget); err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/dashboard/slicing.html")).Execute(w, map[string]interface{}{
-		"slicingData": slicingData,
-		// "slicingTarget": slicingTarget,
+		"slicingData":   slicingData,
+		"slicingTarget": slicingTarget,
 		// "slicingUpTime": slicingUpTime,
 	})
 }
