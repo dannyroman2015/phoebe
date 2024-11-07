@@ -5413,9 +5413,9 @@ func (s *Server) sca_deletewrnote(w http.ResponseWriter, r *http.Request, ps htt
 // /sections/cutting/admin/wrnoteupdateform/:wrnoteid - update a wrnote on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
+	wrnotecode := ps.ByName("wrnoteid")
 
-	result := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"_id": wrnoteid})
+	result := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "wrnote", "wrnotecode": wrnotecode})
 	if result.Err() != nil {
 		log.Println(result.Err())
 		return
@@ -5434,6 +5434,7 @@ func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps
 	if err := result.Decode(&cuttingWrnote); err != nil {
 		log.Println(err)
 	}
+
 	template.Must(template.ParseFiles("templates/pages/sections/cutting/admin/wrnoteupdate_form.html")).Execute(w, map[string]interface{}{
 		"cuttingWrnote": cuttingWrnote,
 	})
@@ -5443,11 +5444,35 @@ func (s *Server) sca_wrnoteupdateform(w http.ResponseWriter, r *http.Request, ps
 // /sections/cutting/admin/updatewrnote/:wrnoteid - update a wrnote on page admin of cutting section
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) sca_updatewrnote(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	wrnoteid, _ := primitive.ObjectIDFromHex(ps.ByName("wrnoteid"))
+	wrnotecode := ps.ByName("wrnoteid")
+
 	prodtype := r.FormValue("prodtype")
 	date, _ := time.Parse("2006-01-02", r.FormValue("occurdate"))
+	qtycbm, _ := strconv.ParseFloat(r.FormValue("qtycbm"), 64)
 
-	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"_id": wrnoteid}, bson.M{"$set": bson.M{"prodtype": prodtype, "date": primitive.NewDateTimeFromTime(date)}})
+	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "report", "wrnote": wrnotecode}}},
+		{{"$group", bson.M{"_id": "$wrnote", "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$set", bson.M{"wrnote": "$_id"}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var alreadyCut []struct {
+		Wrnotecode string  `bson:"wrnote"`
+		Qty        float64 `bson:"qty"`
+	}
+	if err := cur.All(context.Background(), &alreadyCut); err != nil {
+		log.Println(err)
+	}
+	if qtycbm < alreadyCut[0].Qty {
+		w.Write([]byte("Thất bại. Nấu số cập nhập mới nhỏ hơn số cbm đã cắt thì phải xóa báo cáo cắt trước"))
+		return
+	}
+	qtyremain := (math.Round(qtycbm*1000) - math.Round(alreadyCut[0].Qty*1000)) / 1000
+
+	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"wrnotecode": wrnotecode}, bson.M{"$set": bson.M{
+		"wrnoteqty": qtycbm, "wrremain": qtyremain, "prodtype": prodtype, "date": primitive.NewDateTimeFromTime(date)}})
 	if result.Err() != nil {
 		log.Println(result.Err())
 		return
@@ -5468,9 +5493,11 @@ func (s *Server) sca_updatewrnote(w http.ResponseWriter, r *http.Request, ps htt
 	}
 	cuttingWrnote.ProdType = prodtype
 	cuttingWrnote.Date = date
+	cuttingWrnote.Qty = qtycbm
+	cuttingWrnote.Remain = qtyremain
 
 	// update reports
-	_, err := s.mgdb.Collection("cutting").UpdateMany(context.Background(), bson.M{"type": "report", "wrnote": cuttingWrnote.WrnoteCode}, bson.M{"$set": bson.M{"prodtype": prodtype}})
+	_, err = s.mgdb.Collection("cutting").UpdateMany(context.Background(), bson.M{"type": "report", "wrnote": cuttingWrnote.WrnoteCode}, bson.M{"$set": bson.M{"prodtype": prodtype}})
 	if err != nil {
 		log.Println(err)
 	}
