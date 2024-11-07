@@ -44,7 +44,7 @@ const drawVOPChart = (data, manhr) => {
     .selectAll()
     .data(data)
     .join("text")
-      .text(d => (d.value > 20000) ? d3.format(",.0f")(d.value) : "")
+      .text(d => (d.value > 40000) ? d3.format(",.0f")(d.value) : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", d => x(d.date) + x.bandwidth()/2)

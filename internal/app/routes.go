@@ -386,7 +386,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/manhr/admin/search", s.ma_search)
 	router.POST("/manhr/admin/filterbydate", s.ma_filterbydate)
 
-	router.POST("/manhr/entry/sendtotalmanhr", s.me_sendtotalmanhr)
+	router.POST("/manhr/entry/sendtotalmanhr", withAuth2(s.me_sendtotalmanhr))
 
 	// end Manhr
 
