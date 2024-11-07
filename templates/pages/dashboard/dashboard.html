@@ -29,6 +29,7 @@
   <script src="/static/js/charts/whitewoodchart.js"></script>
   <script src="/static/js/charts/rawwoodchart.js"></script>
   <script src="/static/js/charts/planchart.js"></script>
+  <script src="/static/js/charts/productionvopchart.js"></script>
 
   <title>Dashboard</title>
 </head>
@@ -575,6 +576,10 @@
         <!-- Panelcnc -->
         <div hx-get="/dashboard/loadpanelcnc" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
         <!-- end Panelcnc -->  
+
+        <!-- producttion VOP chart -->
+        <div hx-get="/dashboard/loadproductionvop" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>
+        <!-- end producttion VOP -->
 
         <!-- quality -->
         <div hx-get="/dashboard/loadquality" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML settle:200ms"></div>

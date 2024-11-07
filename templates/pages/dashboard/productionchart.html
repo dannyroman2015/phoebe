@@ -106,6 +106,13 @@
                       type="number" min="0" step="1" id="numberOfMTDs" name="numberOfMTDs" value="3" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                   </div>
 
+                  <div class="grid items-center grid-cols-3 gap-4">
+                    <label for="prodvalchangetime" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Change after (s)
+                    </label>
+                    <input type="number" min="0" step="1" id="prodvalchangetime" name="prodvalchangetime" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                  </div>
+
                 </div>
 
               </form>
@@ -157,12 +164,15 @@
 
     productionchart.append(drawProductionChart(newData))
 
-    /*const prodChart = document.getElementById("productioncharttype")
+    const prodChart = document.getElementById("productioncharttype")
+    
     const interval = d3.interval(() => {
-      prodChart.selectedIndex = (prodChart.selectedIndex + 1) % prodChart.length;
-      prodChart.dispatchEvent(new Event("input", {bubbles: true}))
-    }, 8000)
+      if (document.getElementById("prodvalchangetime").value != "") {
+        prodChart.selectedIndex = (prodChart.selectedIndex + 1) % prodChart.length;
+        prodChart.dispatchEvent(new Event("input", {bubbles: true}))
+      } 
+    }, 60000*10)
     const clear = () => interval.stop();
-    prodChart.addEventListener("change", clear, {once: true}); */
+    prodChart.addEventListener("change", clear, {once: true}); 
     // invalidation.then(() => (clear(), prodChart.removeEventListener("change", clear)));
 </script>

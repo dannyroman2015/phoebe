@@ -108,6 +108,7 @@ const drawProductionChart = (data) => {
       .transition(transition2)
         .attr("fill", d => color(!!d.children))
         .attr("width", d => x(d.value) - x(0));
+
   }
 
   function up(svg, d) {

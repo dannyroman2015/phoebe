@@ -464,6 +464,57 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // //////////////////////////////////////////////////////////
+// router.POST("/dashboard/loadproductionvop", s.d_loadproductionvop)
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadproductionvop(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -60))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var productiondata []struct {
+		Date  string  `json:"date"`
+		Value float64 `json:"value"`
+	}
+
+	if err := cur.All(context.Background(), &productiondata); err != nil {
+		log.Println(err)
+	}
+
+	cur, err = s.mgdb.Collection("vopmanhr").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -60))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$sort", bson.M{"date": 1}}},
+		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+
+	var manhrdata []struct {
+		Date  string  `bson:"date" json:"date"`
+		Manhr float64 `bson:"manhr" json:"manhr"`
+	}
+
+	if err := cur.All(context.Background(), &manhrdata); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/productionvopchart.html")).Execute(w, map[string]interface{}{
+		"productiondata": productiondata,
+		"manhrdata":      manhrdata,
+	})
+}
+
+// //////////////////////////////////////////////////////////
 // router.GET("/dashboard/loadplan", s.d_loadproductionplan)
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadproductionplan(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -9890,6 +9941,30 @@ func (s *Server) ma_filterbydate(w http.ResponseWriter, r *http.Request, ps http
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////
+// router.POST("/manhr/entry/sendtotalmanhr", s.me_sendtotalmanhr)
+// ////////////////////////////////////////////////////////////////////////////////////////////
+func (s *Server) me_sendtotalmanhr(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	date, _ := time.Parse("2006-01-02", r.FormValue("vopdate"))
+	totalmanhr, _ := strconv.ParseFloat(r.FormValue("totalmanhr"), 64)
+
+	if r.FormValue("totalmanhr") == "" {
+		w.Write([]byte("thiếu thông tin"))
+		return
+	}
+	_, err := s.mgdb.Collection("vopmanhr").UpdateOne(context.Background(), bson.M{"date": primitive.NewDateTimeFromTime(date)}, bson.M{
+		"$set": bson.M{"manhr": totalmanhr},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		log.Println(err)
+	}
+
+	// template.Must(template.ParseFiles("templates/pages/manhr/admin/manhrentry.html")).Execute(w, map[string]interface{}{
+	// 	"showSuccessDialog": true,
+	// 	"msgDialog":         "Cập nhật thành công",
+	// })
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////
 // /downtime/entry - copy paste report for downtime
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dt_entry(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -13052,6 +13127,179 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 			}
 		}
 
+	case "Hoàn thành và Giao cho toàn bộ MO":
+		cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"mo": path[0], "itemcode": path[len(path)-1]}}},
+		})
+		if err != nil {
+			log.Println(err)
+			w.Write([]byte("loi"))
+			return
+		}
+		defer cur.Close(context.Background())
+		var products []struct {
+			ItemCode string   `bson:"itemcode"`
+			Path     []string `bson:"path"`
+		}
+		if err := cur.All(context.Background(), &products); err != nil {
+			log.Println(err)
+			w.Write([]byte("loi"))
+			return
+		}
+
+		for _, product := range products {
+			sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": product.Path[0], "itemcode": product.Path[1]})
+			if sr.Err() != nil {
+				log.Println(sr.Err())
+			}
+			var p PP
+			if err := sr.Decode(&p); err != nil {
+				log.Println(err)
+			}
+			switch len(product.Path) {
+
+			case 3:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.ItemCode {
+								p.Children[i].Children[j].Done = p.Children[i].Children[j].Qty
+								p.Children[i].Children[j].DeliveryQty = p.Children[i].Children[j].Qty
+							}
+						}
+					}
+				}
+
+			case 4:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.ItemCode {
+										p.Children[i].Children[j].Children[k].Done = p.Children[i].Children[j].Children[k].Qty
+										p.Children[i].Children[j].Children[k].DeliveryQty = p.Children[i].Children[j].Children[k].Qty
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 5:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.ItemCode {
+												p.Children[i].Children[j].Children[k].Children[l].Done = p.Children[i].Children[j].Children[k].Children[l].Qty
+												p.Children[i].Children[j].Children[k].Children[l].DeliveryQty = p.Children[i].Children[j].Children[k].Children[l].Qty
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 6:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.ItemCode {
+														p.Children[i].Children[j].Children[k].Children[l].Children[m].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Qty
+														p.Children[i].Children[j].Children[k].Children[l].Children[m].DeliveryQty = p.Children[i].Children[j].Children[k].Children[l].Children[m].Qty
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 7:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.Path[6] {
+														for n := 0; n < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
+															if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == product.ItemCode {
+																p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Qty
+																p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].DeliveryQty = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Qty
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			case 8:
+				for i := 0; i < len(p.Children); i++ {
+					if p.Children[i].Itemcode == product.Path[2] {
+						for j := 0; j < len(p.Children[i].Children); j++ {
+							if p.Children[i].Children[j].Itemcode == product.Path[3] {
+								for k := 0; k < len(p.Children[i].Children[j].Children); k++ {
+									if p.Children[i].Children[j].Children[k].Itemcode == product.Path[4] {
+										for l := 0; l < len(p.Children[i].Children[j].Children[k].Children); l++ {
+											if p.Children[i].Children[j].Children[k].Children[l].Itemcode == product.Path[5] {
+												for m := 0; m < len(p.Children[i].Children[j].Children[k].Children[l].Children); m++ {
+													if p.Children[i].Children[j].Children[k].Children[l].Children[m].Itemcode == product.Path[6] {
+														for n := 0; n < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children); n++ {
+															if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Itemcode == product.Path[7] {
+																for o := 0; o < len(p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children); o++ {
+																	if p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Itemcode == product.ItemCode {
+																		p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Done = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Qty
+																		p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].DeliveryQty = p.Children[i].Children[j].Children[k].Children[l].Children[m].Children[n].Children[o].Qty
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+			}
+
+			_, err = s.mgdb.Collection("gnhh").UpdateOne(context.Background(), bson.M{"mo": product.Path[0], "itemcode": product.Path[1]}, bson.M{
+				"$set": bson.M{"children": p.Children},
+			})
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
 	case "Làm được":
 		sr := s.mgdb.Collection("gnhh").FindOne(context.Background(), bson.M{"mo": path[0], "itemcode": path[1]})
 		if sr.Err() != nil {
@@ -14271,28 +14519,64 @@ func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprout
 
 // router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
 func (s *Server) go_getproductcodes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var filter bson.M
+	// var filter bson.M
+	// switch r.FormValue("productstatus") {
+	// case "done":
+	// 	filter = bson.M{
+	// 		"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
+	// 	}
+	// case "undone":
+	// 	filter = bson.M{
+	// 		"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
+	// 	}
+	// case "":
+	// case "all":
+	// 	filter = bson.M{
+	// 		"mo": r.FormValue("mo"),
+	// 	}
+	// }
+	var pipline mongo.Pipeline
 	switch r.FormValue("productstatus") {
 	case "done":
-		filter = bson.M{
-			"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
+		pipline = mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}}}}},
+			{{"$project", bson.M{"itemcode": 1, "shipmentdate": 1}}},
+			{{"$sort", bson.M{"shipmentdate": 1}}},
 		}
+		// filter = bson.M{
+		// 	"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
+		// }
 	case "undone":
-		filter = bson.M{
-			"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
+		pipline = mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
+			{{"$project", bson.M{"itemcode": 1, "shipmentdate": 1}}},
+			{{"$sort", bson.M{"shipmentdate": 1}}},
 		}
+		// filter = bson.M{
+		// 	"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
+		// }
 	case "":
 	case "all":
-		filter = bson.M{
-			"mo": r.FormValue("mo"),
+		pipline = mongo.Pipeline{
+			{{"$match", bson.M{"mo": r.FormValue("mo")}}},
+			{{"$project", bson.M{"itemcode": 1, "shipmentdate": 1}}},
+			{{"$sort", bson.M{"shipmentdate": 1}}},
 		}
 	}
 
-	productcodes, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "itemcode", filter)
+	// productcodes, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "itemcode", filter)
+	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), pipline)
 	if err != nil {
 		log.Println(err)
 	}
-
+	defer cur.Close(context.Background())
+	var productcodes []struct {
+		Productcode  string `bson:"itemcode"`
+		Shipmentdate string `bson:"shipmentdate"`
+	}
+	if err := cur.All(context.Background(), &productcodes); err != nil {
+		log.Println(err)
+	}
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/productcode_select.html")).Execute(w, map[string]interface{}{
 		"productcodes": productcodes,
 	})
@@ -14434,10 +14718,11 @@ func (s *Server) go_productfilter(w http.ResponseWriter, r *http.Request, ps htt
 
 // router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
 func (s *Server) go_searchdetail(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	searchRegex := ".*" + r.FormValue("detailsearch") + ".*"
+	// searchRegex := ".*" + r.FormValue("detailsearch") + ".*"
 
 	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		// {{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": bson.M{"$regex": searchRegex, "$options": "i"}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"itemcode": r.FormValue("detailsearch")}}}}},
 		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty", "unit": "$unit", "productcode": "$productcode"}}}}},
 		{{"$limit", 1}},
 	})

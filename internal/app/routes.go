@@ -26,6 +26,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/admin", withAuth(s.admin))
 
 	router.GET("/dashboard", s.dashboard)
+	router.GET("/dashboard/loadproductionvop", s.d_loadproductionvop)
 	router.GET("/dashboard/loadplan", s.d_loadproductionplan)
 	router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
 	router.GET("/dashboard/loadproduction", s.d_loadproduction)
@@ -354,6 +355,7 @@ func (s *Server) routes() http.Handler {
 	// router.POST("/production/overview/reportsearch", s.po_reportsearch)
 	router.POST("/production/overview/prodtypefilter", s.po_prodtypefilter)
 	router.POST("/production/overview/summarydatefilter", s.po_summarydatefilter)
+
 	// end Production Value
 
 	////////////////////////////////////////////////////////////////////
@@ -383,6 +385,8 @@ func (s *Server) routes() http.Handler {
 	router.PUT("/manhr/admin/updatereport/:id", s.ma_updatereport)
 	router.POST("/manhr/admin/search", s.ma_search)
 	router.POST("/manhr/admin/filterbydate", s.ma_filterbydate)
+
+	router.POST("/manhr/entry/sendtotalmanhr", s.me_sendtotalmanhr)
 
 	// end Manhr
 
