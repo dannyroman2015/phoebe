@@ -629,6 +629,67 @@ func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+//
+//	router.POST("/dashboard/productionvop/getchart", s.dpv_getchart)
+//
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dpv_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("vopcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("vopFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("vopToDate"))
+
+	switch pickedChart {
+	case "value-man":
+		cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.M{"_id": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+
+		var productiondata []struct {
+			Date  string  `json:"date"`
+			Value float64 `json:"value"`
+		}
+
+		if err := cur.All(context.Background(), &productiondata); err != nil {
+			log.Println(err)
+		}
+
+		cur, err = s.mgdb.Collection("vopmanhr").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+
+		var manhrdata []struct {
+			Date  string  `bson:"date" json:"date"`
+			Manhr float64 `bson:"manhr" json:"manhr"`
+		}
+
+		if err := cur.All(context.Background(), &manhrdata); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/productionvop_genchart.html")).Execute(w, map[string]interface{}{
+			"productiondata": productiondata,
+			"manhrdata":      manhrdata,
+		})
+
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/production/getchart - change chart of production area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dpr_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -9958,8 +10019,12 @@ func (s *Server) me_sendtotalmanhr(w http.ResponseWriter, r *http.Request, ps ht
 		log.Println(err)
 	}
 
+	// load chart
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("vopFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("vopToDate"))
+
 	cur, err := s.mgdb.Collection("prodvalue").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -60))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.M{"_id": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
@@ -9980,7 +10045,7 @@ func (s *Server) me_sendtotalmanhr(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	cur, err = s.mgdb.Collection("vopmanhr").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -60))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
 		{{"$sort", bson.M{"date": 1}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
 		{{"$unset", "_id"}},

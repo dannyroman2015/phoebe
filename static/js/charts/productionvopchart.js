@@ -20,12 +20,11 @@ const drawVOPChart = (data, manhr) => {
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-  innerChart.append("g")
+  const xAxis = innerChart.append("g")
     .attr("transform", `translate(0, ${innerHeight})`)
     .call(d3.axisBottom(x))
     .call(g => g.selectAll(".domain").remove())
-    .call(g => g.selectAll("text").text((d, i) => (d.slice(0, 2) == "01") ? d.slice(2, 6) : d.slice(0, 2)).attr("font-size", "10px"))
-
+    .call(g => g.selectAll("text").text((d, i) => (d.slice(0, 2) == "01") ? d.slice(2, 6) : d.slice(0, 2)).attr("font-size", (data.length > 30) ? "10px" :"12px"))
 
   innerChart
     .selectAll()
@@ -59,10 +58,11 @@ const drawVOPChart = (data, manhr) => {
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("x", 0)
-    .attr("y", margin.top + innerHeight/2)
-    .attr("dy", "1em")
+    .attr("y", innerHeight)
+    .attr("dy", "0.5em")
     .attr("fill", "steelblue")
     .attr("font-size", 14)
+    .attr("transform", `rotate(-90, 0, ${innerHeight})`)
     
 
   // svg.append("text")
@@ -88,12 +88,14 @@ const drawVOPChart = (data, manhr) => {
     .rangeRound([innerHeight/2, 0])
     .nice()
 
-  innerChart.append("g")
+  if (data.length > 15) {
+    innerChart.append("g")
     .attr("transform", `translate(${innerWidth}, 0)`)
     .call(d3.axisRight(y2))
     .call(g => g.selectAll(".domain").remove())
     .call(g => g.selectAll("text").text(d => `${d3.format("~s")(d)}`).attr("font-size", "12px"))
     .call(g => g.selectAll(".tick line").clone(true).attr("x2", -innerWidth).attr("opacity", 0.2))
+  }
 
   innerChart.append("path")
       .attr("fill", "none")
@@ -113,16 +115,16 @@ const drawVOPChart = (data, manhr) => {
       .attr("fill", "#75485E")
       .append("title")
         .text(d => `${d3.format(",.0f")(d.efficiency)}$ with manhr(${d.manhr})` )
-    
-  innerChart.append("g")
+  
+  if (data.length <= 15) {
+    innerChart.append("g")
     .selectAll()
     .data(workinghrs)
     .join("text")
       .text(d => `${d3.format(",.0f")(d.efficiency)}`)
-        .attr("class", "hiddenvop")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
-        .attr("font-size", "10px")
+        .attr("font-size", "12px")
         .attr("dy", "0.35em")
         .attr("x", d => x(d.date) + x.bandwidth()/2)
         .attr("y", d => y2(d.efficiency))
@@ -130,7 +132,18 @@ const drawVOPChart = (data, manhr) => {
         .attr("fill", "none")
         .attr("stroke", "white")
         .attr("stroke-width", 6);
+
+        
+  }
+
+  if (data.length > 15) {
+    xAxis
+      .call(g => g.selectAll(".tick line").clone(true)
+      .attr("y2", -innerHeight)
+      .attr("opacity", 0.1))
+  }
   
+
   svg.append("text")
         .text("$/man")
         .attr("text-anchor", "end")
