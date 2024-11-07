@@ -1,7 +1,7 @@
 const drawVOPChart = (data, manhr) => {
   const width = 900;
   const height = 350;
-  const margin = {top: 20, right: 30, bottom: 20, left: 20};
+  const margin = {top: 20, right: 40, bottom: 20, left: 20};
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
@@ -78,7 +78,7 @@ const drawVOPChart = (data, manhr) => {
   // vop line
   if (manhr != undefined) {
   const workinghrs = manhr
-
+  
   workinghrs.forEach(w => {
     w.efficiency = data.find(d => d.date == w.date).value / (w.manhr / 208)
   })
@@ -92,7 +92,7 @@ const drawVOPChart = (data, manhr) => {
     .attr("transform", `translate(${innerWidth}, 0)`)
     .call(d3.axisRight(y2))
     .call(g => g.selectAll(".domain").remove())
-    .call(g => g.selectAll("text").text(d => `${d3.format("~s")(d)}`).attr("font-size", "10px"))
+    .call(g => g.selectAll("text").text(d => `${d3.format("~s")(d)}`).attr("font-size", "12px"))
     .call(g => g.selectAll(".tick line").clone(true).attr("x2", -innerWidth).attr("opacity", 0.2))
 
   innerChart.append("path")
@@ -109,10 +109,10 @@ const drawVOPChart = (data, manhr) => {
     .join("circle")
       .attr("cx", d => x(d.date) + x.bandwidth()/2)
       .attr("cy", d => y2(d.efficiency))
-      .attr("r", 2)
+      .attr("r", 3)
       .attr("fill", "#75485E")
       .append("title")
-        .text(d => d.efficiency)
+        .text(d => `${d3.format(",.0f")(d.efficiency)}$ with manhr(${d.manhr})` )
     
   innerChart.append("g")
     .selectAll()
