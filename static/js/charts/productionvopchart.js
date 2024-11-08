@@ -54,7 +54,7 @@ const drawVOPChart = (data, manhr) => {
       .attr("transform", d => `rotate(-90, ${x(d.date) + x.bandwidth()/2}, ${y(d.value/2)})`)
 
   svg.append("text")
-    .text("Production Value")
+    .text("Production Value ($)")
     .attr("text-anchor", "start")
     .attr("alignment-baseline", "middle")
     .attr("x", 0)
@@ -87,6 +87,25 @@ const drawVOPChart = (data, manhr) => {
     .domain(d3.extent(workinghrs, d => d.efficiency))
     .rangeRound([innerHeight/2, 0])
     .nice()
+
+   // target line
+  innerChart.append("line")
+    .attr("x1", 0)
+    .attr("y1", y2(2500))
+    .attr("x2", innerWidth)
+    .attr("y2", y2(2500))
+    .attr("stroke", "red")
+    .attr("stroke-opacity", 0.4)
+  innerChart.append("text")
+    .text("Target: 2,500")
+    .attr("text-anchor", "start")
+    .attr("alignment-baseline", "middle")
+    .attr("x", 0)
+    .attr("y", y2(2500))
+    .attr("dy", "-0.5em")
+    .attr("fill", "red")
+    .attr("font-weight", 600)
+    .attr("font-size", 12)
 
   if (data.length > 15) {
     innerChart.append("g")
@@ -132,8 +151,18 @@ const drawVOPChart = (data, manhr) => {
         .attr("fill", "none")
         .attr("stroke", "white")
         .attr("stroke-width", 6);
-
         
+    innerChart.append("text")
+      .text("$/FET")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", x(workinghrs[workinghrs.length-1].date) + x.bandwidth()/2)
+      .attr("y", y2(workinghrs[workinghrs.length-1].efficiency))
+      .attr("dx", "1.2em")
+      .attr("dy", "0.3em")
+      .attr("fill", "#75485E")
+      .attr("font-weight", 600)
+      .attr("font-size", 14)
   }
 
   if (data.length > 15) {
@@ -141,19 +170,20 @@ const drawVOPChart = (data, manhr) => {
       .call(g => g.selectAll(".tick line").clone(true)
       .attr("y2", -innerHeight)
       .attr("opacity", 0.1))
+
+    innerChart.append("text")
+      .text("$/FET")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", innerWidth)
+      .attr("y", innerHeight/2)
+      .attr("dy", "1.5em")
+      .attr("fill", "#75485E")
+      .attr("font-weight", 600)
+      .attr("font-size", 12)
   }
   
 
-  svg.append("text")
-        .text("$/man")
-        .attr("text-anchor", "end")
-        .attr("alignment-baseline", "middle")
-        .attr("x", width)
-        .attr("y", 10)
-        // .attr("dy", "0.35em")
-        .attr("fill", "#75485E")
-        .attr("font-weight", 600)
-        .attr("font-size", 12)
   }
 
   return svg.node();

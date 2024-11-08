@@ -289,13 +289,7 @@
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Item' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li> -->
-                <li>
-                    <button
-                        :class="{ 'bg-neutral-100' : navigationMenu=='Sections', 'hover:bg-neutral-100' : navigationMenu!='Sections' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Sections'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
-                        <span>Sections</span> 
-                        <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Sections' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-                </li>
+                
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='Quality', 'hover:bg-neutral-100' : navigationMenu!='Quality' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Quality'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
@@ -343,7 +337,13 @@
                         <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'HR' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                 </li> -->
-
+                <li>
+                    <button
+                        :class="{ 'bg-neutral-100' : navigationMenu=='Sections', 'hover:bg-neutral-100' : navigationMenu!='Sections' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='Sections'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">
+                        <span>Sections</span> 
+                        <svg :class="{ '-rotate-180' : navigationMenuOpen==true && navigationMenu == 'Sections' }" class="relative top-[1px] ml-1 h-3 w-3 ease-out duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
                 <li>
                     <button
                         :class="{ 'bg-neutral-100' : navigationMenu=='GNHH', 'hover:bg-neutral-100' : navigationMenu!='GNHH' }" @mouseover="navigationMenuOpen=true; navigationMenuReposition($el); navigationMenu='GNHH'" @mouseleave="navigationMenuLeave()" class="inline-flex items-center justify-center h-10 px-4 py-2 text-sm font-medium transition-colors rounded-md hover:text-neutral-900 focus:outline-none disabled:opacity-50 disabled:pointer-events-none group w-max">

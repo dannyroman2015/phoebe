@@ -353,7 +353,7 @@
 
 <script>
   document.getElementById("vopToDate").valueAsDate = new Date();
-  document.getElementById("vopFromDate").valueAsDate = new Date(Date.now() - 60*86400000);
+  document.getElementById("vopFromDate").valueAsDate = new Date(Date.now() - 15*86400000);
 
   productionvopchart.append(drawVOPChart({{.productiondata}}, {{.manhrdata}}))
 
