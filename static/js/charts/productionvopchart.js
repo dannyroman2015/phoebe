@@ -153,7 +153,7 @@ const drawVOPChart = (data, manhr) => {
         .attr("stroke-width", 6);
         
     innerChart.append("text")
-      .text("$/FET")
+      .text("$/FTE")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", x(workinghrs[workinghrs.length-1].date) + x.bandwidth()/2)
@@ -172,7 +172,7 @@ const drawVOPChart = (data, manhr) => {
       .attr("opacity", 0.1))
 
     innerChart.append("text")
-      .text("$/FET")
+      .text("$/FTE")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", innerWidth)
