@@ -28,7 +28,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(series.map(d => d.key))
+    .domain(["brand", "rh", "white", "variance"])
     .range(["#DFC6A2", "#A5A0DE", "#D1D1D1", "#FFBE98"])
     .unknown("#ccc");
 
@@ -100,7 +100,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
     .attr("x", 0)
     .attr("y", 5)
     .attr("dy", "0.35em")
-    .attr("fill", "#A5A0DE")
+    .attr("fill", color("rh"))
     .attr("font-weight", 600)
     .attr("font-size", 12)
 
@@ -111,7 +111,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
       .attr("x", 0)
       .attr("y", 25)
       .attr("dy", "0.35em")
-      .attr("fill", "#DFC6A2")
+      .attr("fill", color("brand"))
       .attr("font-weight", 600)
       .attr("font-size", 12)
 
