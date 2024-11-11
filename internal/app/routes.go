@@ -26,6 +26,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/admin", withAuth(s.admin))
 
 	router.GET("/dashboard", s.dashboard)
+	router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
 	router.GET("/dashboard/loadproductionvop", s.d_loadproductionvop)
 	router.GET("/dashboard/loadplan", s.d_loadproductionplan)
 	router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
@@ -45,6 +46,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
 	router.GET("/dashboard/loadsixs", s.d_loadsixs)
 	router.GET("/dashboard/loadsafety", s.d_loadsafety)
+	router.POST("/dashboard/manpower/getchart", s.dmp_getchart)
 	router.POST("/dashboard/productionvop/getchart", s.dpv_getchart)
 	router.POST("/dashboard/production/getchart", s.dpr_getchart)
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
@@ -502,6 +504,12 @@ func (s *Server) routes() http.Handler {
 	router.GET("/safety/entry", s.s_entry)
 	router.POST("/safety/sendentry", s.s_sendentry)
 	// end Safety
+
+	////////////////////////////////////////////////////////////////////
+	// Manpower ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.POST("/manpower/importfile", s.mp_importfile)
+	// end Manpower
 
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////

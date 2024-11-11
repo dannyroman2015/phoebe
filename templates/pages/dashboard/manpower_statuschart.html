@@ -1,0 +1,7 @@
+<div class="fade-in" id="manpowerchart" style="width: 100%; max-width: 1200px; margin: 0 auto"></div>
+
+<script>
+  if ({{.manpowerdata}} != undefined) {
+    manpowerchart.append(drawManPowerChart({{.manpowerdata}}))
+  }
+</script>

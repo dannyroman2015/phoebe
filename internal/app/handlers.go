@@ -464,6 +464,49 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // //////////////////////////////////////////////////////////
+// router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadmanpower(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	cur, err := s.mgdb.Collection("manpower").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}).SetLimit(5))
+	if err != nil {
+		log.Println(err)
+	}
+
+	type MP struct {
+		Name     string                   `bson:"name" json:"name"`
+		Children []map[string]interface{} `bson:"children" json:"children"`
+	}
+
+	var ss []MP
+	if err := cur.All(context.Background(), &ss); err != nil {
+		log.Println(err)
+	}
+	// var ss struct {
+	// 	Data string `bson:"jsonstr"`
+	// }
+	// if err := sr.Decode(&ss); err != nil {
+	// 	log.Println(err)
+	// }
+
+	// log.Println(ss.Data)
+	// // ssss, err := bson.MarshalExtJSON(ss, true, true)
+	// // if err != nil {
+	// // 	log.Println(err)
+	// // }
+	// // log.Println(ssss)
+	// var obj map[string]interface{}
+
+	// // Unmarshal the JSON string into the map
+	// err := json.Unmarshal([]byte(ss.Data), &obj)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	template.Must(template.ParseFiles("templates/pages/dashboard/manpower.html")).Execute(w, map[string]interface{}{
+		"manpowerdata": ss,
+	})
+}
+
+// //////////////////////////////////////////////////////////
 // router.POST("/dashboard/loadproductionvop", s.d_loadproductionvop)
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadproductionvop(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -625,6 +668,31 @@ func (s *Server) d_loadproduction(w http.ResponseWriter, r *http.Request, ps htt
 
 	template.Must(template.ParseFiles("templates/pages/dashboard/productionchart.html")).Execute(w, map[string]interface{}{
 		"productiondata": productiondata,
+	})
+}
+
+// //////////////////////////////////////////////////////////////
+// router.POST("/dashboard/manpower/getchart", s.dmp_getchart)
+// //////////////////////////////////////////////////////////////
+func (s *Server) dmp_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	days, _ := strconv.Atoi(r.FormValue("numberofdays"))
+	cur, err := s.mgdb.Collection("manpower").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"name": -1}).SetLimit(int64(days)))
+	if err != nil {
+		log.Println(err)
+	}
+
+	type MP struct {
+		Name     string                   `bson:"name" json:"name"`
+		Children []map[string]interface{} `bson:"children" json:"children"`
+	}
+
+	var ss []MP
+	if err := cur.All(context.Background(), &ss); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/manpower_statuschart.html")).Execute(w, map[string]interface{}{
+		"manpowerdata": ss,
 	})
 }
 
@@ -15155,6 +15223,348 @@ func (s *Server) s_sendentry(w http.ResponseWriter, r *http.Request, ps httprout
 	template.Must(template.ParseFiles("templates/pages/safety/entry/entry.html", "templates/shared/navbar.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 	})
+}
+
+// /////////////////////////////////////////////////////
+// router.POST("/manpower/importfile", s.mp_importfile)
+// /////////////////////////////////////////////////////
+func (s *Server) mp_importfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("importfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	// get the lastest date in collection
+	sr := s.mgdb.Collection("manpower").FindOne(context.Background(), bson.M{})
+	if sr.Err() != nil {
+		log.Println(sr.Err())
+	}
+	var record struct {
+		Date string `bson:"name"`
+	}
+	if err := sr.Decode(&record); err != nil {
+		log.Println(err)
+	}
+	latestdate := record.Date
+
+	datecells := []string{"JN2", "JE2", "IV2", "IM2", "ID2", "HU2", "HL2", "HC2", "GT2", "GK2", "GB2", "FS2", "FJ2", "FA2", "ER2", "EI2", "DZ2", "DQ2", "DH2", "CY2", "CP2", "CG2", "BX2", "BO2", "BF2", "AW2", "AN2", "AE2", "V2", "M2", "D2"}
+
+	// 	jsonStr += `{
+	// 		"date":"` + date.Format("2006-01-02") + `",
+	// 		"section":"` + section + `",
+	// 		"checkedqty":` + checkedqty + `,
+	// 		"failedqty":` + failedqty + `
+	// 		},`
+
+	// jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+
+	// var jsonStr = `[`
+	var bdoc []interface{}
+	type MP struct {
+		Name     string                   `bson:"name" json:"name"`
+		Children []map[string]interface{} `bson:"children" json:"children"`
+	}
+	var c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14 int
+	for _, dc := range datecells {
+		date, _ := f.GetCellValue("DAILY ĐIỂM DANH", dc)
+		if date == latestdate {
+			break
+		}
+		if date != latestdate {
+			x, y, _ := excelize.CellNameToCoordinates(dc)
+			checkcellname, _ := excelize.CoordinatesToCellName(x, y+2)
+			checkcell, _ := f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			if checkcell == "" {
+				continue
+			}
+
+			var mp = MP{}
+			mp.Name = date
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+2)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c1, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+3)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c2, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+4)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c3, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+5)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c4, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+6)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c5, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+7)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c6, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+8)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c7, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+9)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c8, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+10)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c9, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+11)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c10, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+12)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c11, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+13)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c12, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+14)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c13, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+1, y+15)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c14, _ = strconv.Atoi(checkcell)
+
+			present := map[string]interface{}{
+				"name": "Hiện diện",
+				"children": []map[string]interface{}{
+					map[string]interface{}{"name": "ASSEMBLY", "value": c1},
+					map[string]interface{}{"name": "CONCRETE", "value": c2},
+					map[string]interface{}{"name": "FINE MILL", "value": c3},
+					map[string]interface{}{"name": "MECHANICAL", "value": c4},
+					map[string]interface{}{"name": "METAL FINISHING", "value": c5},
+					map[string]interface{}{"name": "OEM ASSEMBLY", "value": c6},
+					map[string]interface{}{"name": "OEM PACKING", "value": c7},
+					map[string]interface{}{"name": "OEM WOOD FINISHING", "value": c8},
+					map[string]interface{}{"name": "PACKING", "value": c9},
+					map[string]interface{}{"name": "RAW MILL", "value": c10},
+					map[string]interface{}{"name": "UPHOLSTERY", "value": c11},
+					map[string]interface{}{"name": "VENEER", "value": c12},
+					map[string]interface{}{"name": "WELDING", "value": c13},
+					map[string]interface{}{"name": "WOOD FINISHING", "value": c14},
+				},
+			}
+			mp.Children = append(mp.Children, present)
+
+			// vắng
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+2)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c1, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+3)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c2, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+4)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c3, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+5)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c4, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+6)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c5, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+7)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c6, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+8)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c7, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+9)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c8, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+10)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c9, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+11)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c10, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+12)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c11, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+13)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c12, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+14)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c13, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+2, y+15)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c14, _ = strconv.Atoi(checkcell)
+
+			absent := map[string]interface{}{
+				"name": "Vắng",
+				"children": []map[string]interface{}{
+					map[string]interface{}{"name": "ASSEMBLY", "value": c1},
+					map[string]interface{}{"name": "CONCRETE", "value": c2},
+					map[string]interface{}{"name": "FINE MILL", "value": c3},
+					map[string]interface{}{"name": "MECHANICAL", "value": c4},
+					map[string]interface{}{"name": "METAL FINISHING", "value": c5},
+					map[string]interface{}{"name": "OEM ASSEMBLY", "value": c6},
+					map[string]interface{}{"name": "OEM PACKING", "value": c7},
+					map[string]interface{}{"name": "OEM WOOD FINISHING", "value": c8},
+					map[string]interface{}{"name": "PACKING", "value": c9},
+					map[string]interface{}{"name": "RAW MILL", "value": c10},
+					map[string]interface{}{"name": "UPHOLSTERY", "value": c11},
+					map[string]interface{}{"name": "VENEER", "value": c12},
+					map[string]interface{}{"name": "WELDING", "value": c13},
+					map[string]interface{}{"name": "WOOD FINISHING", "value": c14},
+				},
+			}
+			mp.Children = append(mp.Children, absent)
+
+			// vắng
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+2)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c1, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+3)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c2, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+4)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c3, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+5)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c4, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+6)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c5, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+7)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c6, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+8)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c7, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+9)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c8, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+10)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c9, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+11)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c10, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+12)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c11, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+13)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c12, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+14)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c13, _ = strconv.Atoi(checkcell)
+
+			checkcellname, _ = excelize.CoordinatesToCellName(x+7, y+15)
+			checkcell, _ = f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+			c14, _ = strconv.Atoi(checkcell)
+
+			off := map[string]interface{}{
+				"name": "Nghỉ",
+				"children": []map[string]interface{}{
+					map[string]interface{}{"name": "ASSEMBLY", "value": c1},
+					map[string]interface{}{"name": "CONCRETE", "value": c2},
+					map[string]interface{}{"name": "FINE MILL", "value": c3},
+					map[string]interface{}{"name": "MECHANICAL", "value": c4},
+					map[string]interface{}{"name": "METAL FINISHING", "value": c5},
+					map[string]interface{}{"name": "OEM ASSEMBLY", "value": c6},
+					map[string]interface{}{"name": "OEM PACKING", "value": c7},
+					map[string]interface{}{"name": "OEM WOOD FINISHING", "value": c8},
+					map[string]interface{}{"name": "PACKING", "value": c9},
+					map[string]interface{}{"name": "RAW MILL", "value": c10},
+					map[string]interface{}{"name": "UPHOLSTERY", "value": c11},
+					map[string]interface{}{"name": "VENEER", "value": c12},
+					map[string]interface{}{"name": "WELDING", "value": c13},
+					map[string]interface{}{"name": "WOOD FINISHING", "value": c14},
+				},
+			}
+			mp.Children = append(mp.Children, off)
+
+			b, err := bson.Marshal(mp)
+			if err != nil {
+				log.Println(err)
+			}
+			bdoc = append(bdoc, b)
+		}
+	}
+
+	// rows, _ := f.Rows("DAILY ĐIỂM DANH")
+	// for _, dc := range datecells {
+	// 		x, y, _ := excelize.CellNameToCoordinates(dc)
+	// 		checkcellname, _ := excelize.CoordinatesToCellName(x, y+2)
+	// 		checkcell, _ := f.GetCellValue("DAILY ĐIỂM DANH", checkcellname)
+	// 		if checkcell == "" {
+	// 			continue
+	// 		}
+
+	// 		a := `{"name":"` + dc +`", "children": [{"name": "Hiện diện", "children":[
+	// 			{"name": "`+rows+`"},
+	// 		]}, {"name": "Vắng", "children":}, {"name": "Nghỉ", "children":}, {"name": "Cần thêm", "children":}]}`
+	// }
+	// jsonStr := `{"name":"all","children":[{"name":"` + "2024-11-05" + `",
+	// "children": [{"name": "PresentHC","children": [{"name": "Assembly","value": 20},
+	// {"name": "Rawmill","value": 40}]},{"name": "Absent","children": [{"name": "Không phép","children": [{"name": "Assembly","value": 1},{"name": "Rawmill","value": 1}]},{"name": "Có phép","children": [{"name": "Assembly","value": 2},{"name": "Rawmill","value": 3}]}]},{"name": "Off","children": [{"name": "Assembly","value": 1}]},{"name": "Need","children": [{"name": "Assembly","value": 10},{"name": "Rawmill","value": 5}]}]}]}`
+	// jsonStr = jsonStr[:len(jsonStr)-1] + `]`
+	// err := bson.UnmarshalExtJSON([]byte(jsonStr), true, &bdoc)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	_, err = s.mgdb.Collection("manpower").InsertMany(context.Background(), bdoc)
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Thất bại"))
+		return
+	}
+	// _, err := s.mgdb.Collection("manpower").InsertOne(context.Background(), bson.M{
+	// 	"jsonstr": jsonStr,
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	w.Write([]byte("Thành công"))
 }
 
 // /////////////////////////////////////////////////////////////////////////////////////////
