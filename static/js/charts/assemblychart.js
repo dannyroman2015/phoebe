@@ -967,7 +967,7 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
     leftInnerChart.append("text")
-      .text(`${d3.format(",.0f")(inventorydata[0].inventory + inventorydata[1].inventory)}`)
+      .text(`${d3.format(",.0f")(d3.sum(inventorydata, d => d.inventory))}`)
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
