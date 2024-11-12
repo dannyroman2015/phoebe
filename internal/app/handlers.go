@@ -1178,18 +1178,25 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// get inventory
-	cur, err = s.mgdb.Collection("assembly").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+	cur, err = s.mgdb.Collection("assembly").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "Inventory", "factory": bson.M{"$exists": true}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$limit", 20}},
+		{{"$group", bson.M{"_id": bson.M{"factory": "$factory", "prodtype": "$prodtype"}, "inventory": bson.M{"$first": "$inventory"}, "createdat": bson.M{"$first": "$createdat"}}}},
+		{{"$set", bson.M{"type": bson.M{"$concat": bson.A{"X", "$_id.factory", "-", "$_id.prodtype"}}}}},
+		{{"$sort", bson.M{"type": 1}}},
+		{{"$unset", "_id"}},
+	})
 	if err != nil {
 		log.Println(err)
 	}
 	defer cur.Close(context.Background())
 	var assemblyInventoryData []struct {
-		Prodtype     string    `bson:"prodtype" json:"prodtype"`
+		Type         string    `bson:"type" json:"type"`
 		Inventory    float64   `bson:"inventory" json:"inventory"`
-		CreatedAt    time.Time `bson:"createdat" json:"createdat"`
-		CreatedAtStr string    `json:"createdatstr"`
+		CreatedAt    time.Time `bson:"createdat"`
+		CreatedAtStr string    `json:"createdat"`
 	}
-
 	if err := cur.All(context.Background(), &assemblyInventoryData); err != nil {
 		log.Println(err)
 	}
@@ -1197,6 +1204,7 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 	for i := 0; i < len(assemblyInventoryData); i++ {
 		assemblyInventoryData[i].CreatedAtStr = assemblyInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
 	}
+
 	// get target
 	cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
 		// {{"$match", bson.M{"name": "assembly total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
@@ -7021,24 +7029,49 @@ func (s *Server) sao_updateinventory(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	brandinventory, _ := strconv.ParseFloat(r.FormValue("brandinventory"), 64)
-	rhinventory, _ := strconv.ParseFloat(r.FormValue("rhinventory"), 64)
+	x3brandinventory, _ := strconv.ParseFloat(r.FormValue("x3brandinventory"), 64)
+	x3rhinventory, _ := strconv.ParseFloat(r.FormValue("x3rhinventory"), 64)
+	x7brandinventory, _ := strconv.ParseFloat(r.FormValue("x7brandinventory"), 64)
+	x7rhinventory, _ := strconv.ParseFloat(r.FormValue("x7rhinventory"), 64)
 
-	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
-		"type": "Inventory", "prodtype": "rh", "inventory": rhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
-	})
-	if err != nil {
-		log.Println(err)
+	if r.FormValue("x3brandinventory") != "" {
+		_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+			"type": "Inventory", "prodtype": "brand", "factory": "2", "inventory": x3brandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
-		"type": "Inventory", "prodtype": "brand", "inventory": brandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
-	})
-	if err != nil {
-		log.Println(err)
+	if r.FormValue("x3rhinventory") != "" {
+		_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+			"type": "Inventory", "prodtype": "rh", "factory": "2", "inventory": x3rhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	if r.FormValue("x7brandinventory") != "" {
+		_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+			"type": "Inventory", "prodtype": "brand", "factory": "1", "inventory": x7brandinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	if r.FormValue("x7rhinventory") != "" {
+		_, err = s.mgdb.Collection("assembly").InsertOne(context.Background(), bson.M{
+			"type": "Inventory", "prodtype": "rh", "factory": "1", "inventory": x7rhinventory, "reporter": usernameToken.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	s.d_loadassembly(w, r, ps)
+
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

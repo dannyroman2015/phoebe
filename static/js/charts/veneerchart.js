@@ -175,8 +175,8 @@ const drawVeneerChart1 = (data, target) => {
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(series.map(d => d.key))
-    .range(d3.schemePastel1)
+    .domain(["curve", "straight", "reeded", "rework", "okoumebacker"])
+    .range(["#BC7C7C", "#E4C087", "#F6EFBD", "#A2D2DF", "#CBD2A4"])
     .unknown("#ccc");
 
   const svg = d3.create("svg")
