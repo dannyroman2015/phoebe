@@ -884,7 +884,6 @@ const drawAssemblyVTChart = (data, plandata, inventorydata, target) => {
 
   // inventory bar
   if (inventorydata != undefined) {
-    console.log(inventorydata)
 
     const y2 = d3.scaleLinear()
       .domain([0, d3.sum(inventorydata, d => d.inventory)])
