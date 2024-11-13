@@ -14763,6 +14763,7 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 		{{"$match", bson.M{"$or": bson.A{
 			bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
 			bson.M{"reporter": bson.M{"$regex": regexSearch, "$options": "i"}},
+			bson.M{"title": bson.M{"$regex": regexSearch, "$options": "i"}},
 			// bson.M{"codepath": r.FormValue("timelinesearch")},
 		}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
