@@ -3904,8 +3904,9 @@ func (s *Server) sc_overview(w http.ResponseWriter, r *http.Request, ps httprout
 // /sections/cutting/overview/loadwoodremain - get woodremain area of page overview of Cutting
 // ///////////////////////////////////////////////////////////////////////////////
 func (s *Server) sco_loadwoodremain(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	tempdate, _ := time.Parse("2006-01-02", "2024-10-01")
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}}}},
+		{{"$match", bson.M{"type": "wrnote", "wrremain": bson.M{"$gt": 0}, "date": bson.M{"$gte": primitive.NewDateTimeFromTime(tempdate)}}}},
 		{{"$group", bson.M{"_id": "$thickness", "value": bson.M{"$sum": "$wrremain"}}}},
 		{{"$sort", bson.M{"value": -1}}},
 		{{"$set", bson.M{"name": "$_id"}}},
