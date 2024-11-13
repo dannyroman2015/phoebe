@@ -277,13 +277,15 @@ const drawGNHHChart2 = (data) => {
     .on("click", (e, d) => {
       document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       
-      document.getElementById("detailsearch").value = d.data.itemcode;
-      document.getElementById("detailsearch").dispatchEvent(new Event('input', {bubble: true}));
+      // document.getElementById("detailsearch").value = d.data.itemcode;
+      // document.getElementById("detailsearch").dispatchEvent(new Event('input', {bubble: true}));
       // document.getElementById("detailsearch").click();
+      // document.getElementById("iteminfobtn").click();
+      document.getElementById("iteminfobtn").dispatchEvent(new Event('click', {bubble: true}));
       document.getElementById("timelinesearch").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       document.getElementById("timelinesearch").dispatchEvent(new Event('input', {bubble: true}));
       // document.getElementById("timelinesearch").click();
-      document.getElementById("timelinesearch").focus();
+      // document.getElementById("timelinesearch").focus();
     })
   
   node.append("title")

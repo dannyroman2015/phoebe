@@ -21,7 +21,7 @@
     <div class="py-4">
       <div class="mx-2 max-w-full text-gray-500">
         <div class="relative">
-          <div class="relative z-10 grid gap-3 grid-cols-6">
+          <div class="relative z-10 grid gap-3 grid-cols-4">
 
             <!-- <div hx-get="/gnhh/overview/loadchart" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>       -->
             <div class="fade-in col-span-full lg:col-span-2 relative p-2 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
@@ -64,7 +64,7 @@
                       popoverPositionCalculate();
                     });
                     $watch('popoverOpen', function(value){
-                      if(value){ popoverPositionCalculate(); document.getElementById('prodtypeFromDate').focus();  }
+                      if(value){ popoverPositionCalculate(); }
                     });
                   "
                   class="relative">
@@ -135,13 +135,13 @@
               </div>
             
               <form>
-            
+                <!-- lọc sản phẩm -->
                 <div x-data="{ 
                   activeAccordion: '', 
                   setActiveAccordion(id) { 
                       this.activeAccordion = (this.activeAccordion == id) ? '' : id 
                   } 
-                }" class="relative w-full mx-auto p-2 text-sm">
+                }" class="relative w-full mx-auto p-1 text-sm">
                   
                   <div x-data="{ id: $id('accordion') }" :class="{ 'p-4 border-blue-500 text-neutral-800' : activeAccordion==id, 'border-transparent text-black hover:text-neutral-800' : activeAccordion!=id }" 
                         class=" duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
@@ -156,45 +156,46 @@
                     </a>
             
                     <div x-show="activeAccordion==id" x-collapse x-cloak>
-                          <div class="grid grid-cols-2">
-            
-                            <div class="col-span-full sm:col-span-1"> 
-                              <select 
-                                      name="mo" id="mo" class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
-                                <option value="{{.currentmo}}">Default Mo ({{.currentmo}})</option>
-                                {{range .mos}}
-                                <option value="{{.}}">{{.}}</option>
-                                {{end}}
-                              </select>
-                            </div>
-            
-                            <div class="col-span-full sm:col-span-1"> 
-                              <select hx-post="/gnhh/overview/getproductcodes" hx-target="#productcodes-container" hx-swap="innerHTML settle:200ms"
-                                      name="productstatus" id="productstatus" class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
-                                <option value="" selected disabled>Select Product's Status</option>
-                                <option value="all">All</option>
-                                <option value="done">Done</option>
-                                <option value="undone">Undone</option>
-                              </select>
-                            </div>
-            
-                            <div id="productcodes-container" class="col-span-full sm:col-span-1"> 
-                              
-                            </div>
+                      <div class="grid grid-cols-2">
+        
+                        <div class="col-span-full sm:col-span-1"> 
+                          <select hx-post="/gnhh/overview/getproductcodes" hx-target="#productcodes-container" hx-swap="innerHTML settle:200ms"
+                                  name="mo" id="mo" class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
+                            <option value="{{.currentmo}}">Default Mo ({{.currentmo}})</option>
+                            {{range .mos}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                          </select>
+                        </div>
+        
+                        <div class="col-span-full sm:col-span-1"> 
+                          <select hx-post="/gnhh/overview/getproductcodes" hx-target="#productcodes-container" hx-swap="innerHTML settle:200ms"
+                                  name="productstatus" id="productstatus" class="mt-4 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
+                            <option value="" selected disabled>Select Product's Status</option>
+                            <option value="all">All</option>
+                            <option value="done">Done</option>
+                            <option value="undone">Undone</option>
+                          </select>
+                        </div>
+        
+                        <div id="productcodes-container" class="col-span-full sm:col-span-1"> 
+                          
+                        </div>
 
-                            <div class="col-span-full sm:col-span-1 text-center pt-3">
-                              <button hx-post="/gnhh/overview/mofilter" hx-target="#chart-container" hx-swap="innerHTML settle:200ms"
-                                      type="button" class="inline-block rounded border border-current px-6 py-3 text-sm font-medium text-indigo-600 transition hover:rotate-2 hover:scale-110 focus:outline-none focus:ring active:text-indigo-500">
-                                Refresh
-                              </button>
-                            </div>
-                          </div>
+                        <div class="col-span-full sm:col-span-1 text-center pt-3">
+                          <button hx-post="/gnhh/overview/mofilter" hx-target="#chart-container" hx-swap="innerHTML settle:200ms"
+                                  type="button" class="inline-block rounded border border-current px-6 py-3 text-sm font-medium text-indigo-600 transition hover:rotate-2 hover:scale-110 focus:outline-none focus:ring active:text-indigo-500">
+                            Refresh
+                          </button>
+                        </div>
+                      </div>
                           
                     </div>
                   </div>
                   
                 </div>
             
+                <!-- cập nhật thay đổi -->
                 <div x-data="{ 
                   showDate: false,
                   showPrice: false,
@@ -203,7 +204,7 @@
                   setActiveAccordion(id) { 
                       this.activeAccordion = (this.activeAccordion == id) ? '' : id 
                   } 
-                }" class="relative w-full mx-auto p-2 text-sm">
+                }" class="relative w-full mx-auto p-1 text-sm">
                   
                   <div x-data="{ id: $id('accordion') }" :class="{ 'p-4 border-red-500 text-neutral-800' : activeAccordion==id, 'border-transparent text-black hover:text-neutral-800' : activeAccordion!=id }" 
                         class="duration-200 ease-out bg-white border rounded-md cursor-pointer group" x-cloak>
@@ -324,6 +325,24 @@
                   </div>
                   
                 </div>
+
+                <!-- thông tin -->
+                <div class="relative w-full mx-auto p-1 text-sm">
+                  
+                  <div class="border-green-500 text-neutral-800 hover:text-neutral-800 bg-white border rounded-md cursor-pointer group" x-cloak>
+                    <a  hx-post="/gnhh/overview/iteminfo" hx-target="#item-info" hx-swap="outerHTML settle:200ms" hx-include="#codepath"
+                        id="iteminfobtn" @click="setActiveAccordion(id)" class="flex items-center justify-center space-x-6 w-full px-5 py-2 font-semibold text-center text-green-500 select-none">
+                      <span class="text-green-500">Thông tin</span> 
+                    </a>
+            
+                    <div>
+                      <div id="item-info">
+
+                      </div>                  
+                    </div>
+                  </div>
+                  
+                </div>
             
               </form>
                 <div id="chart-container">
@@ -332,7 +351,7 @@
                 </div>
             </div>
 
-            <div hx-get="/gnhh/overview/loaddetail" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>  
+            <!-- <div hx-get="/gnhh/overview/loaddetail" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>   -->
 
             <div hx-get="/gnhh/overview/loadtimeline" hx-trigger="load" hx-target="this" hx-swap="outerHTML settle:200ms"></div>   
 

@@ -12812,6 +12812,8 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 		Note      string  `bson:"note"`
 		Reporter  string  `bson:"reporter"`
 		CreatedAt string  `bson:"createdat"`
+		Mo        string
+		Product   string
 		Code      string
 	}
 
@@ -12821,7 +12823,10 @@ func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps http
 
 	for i := 0; i < len(timelinedata); i++ {
 		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Mo = arr[0]
+		timelinedata[i].Product = arr[1]
 		timelinedata[i].Code = arr[len(arr)-1]
+		timelinedata[i].Qty = math.Round(timelinedata[i].Qty*1000) / 1000
 	}
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
@@ -14780,6 +14785,8 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 		Note      string  `bson:"note"`
 		Reporter  string  `bson:"reporter"`
 		CreatedAt string  `bson:"createdat"`
+		Mo        string
+		Product   string
 		Code      string
 	}
 	if err := cur.All(context.Background(), &timelinedata); err != nil {
@@ -14787,7 +14794,10 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	for i := 0; i < len(timelinedata); i++ {
 		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Mo = arr[0]
+		timelinedata[i].Product = arr[1]
 		timelinedata[i].Code = arr[len(arr)-1]
+		timelinedata[i].Qty = math.Round(timelinedata[i].Qty*1000) / 1000
 	}
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline_report.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
@@ -14815,6 +14825,8 @@ func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps ht
 		Note      string  `bson:"note"`
 		Reporter  string  `bson:"reporter"`
 		CreatedAt string  `bson:"createdat"`
+		Mo        string
+		Product   string
 		Code      string
 	}
 	if err := cur.All(context.Background(), &timelinedata); err != nil {
@@ -14822,11 +14834,56 @@ func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps ht
 	}
 	for i := 0; i < len(timelinedata); i++ {
 		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Mo = arr[0]
+		timelinedata[i].Product = arr[1]
 		timelinedata[i].Code = arr[len(arr)-1]
+		timelinedata[i].Qty = math.Round(timelinedata[i].Qty*1000) / 1000
 	}
 
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline_report.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
+	})
+}
+
+// router.POST("/gnhh/overview/iteminfo", s.go_iteminfo)
+func (s *Server) go_iteminfo(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	codepath := strings.Split(r.FormValue("codepath"), "->")
+	mo := codepath[0]
+	itemcode := codepath[len(codepath)-1]
+
+	cur, err := s.mgdb.Collection("totalbom").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"mo": mo}, bson.M{"itemcode": itemcode}}}}},
+		{{"$group", bson.M{"_id": "$itemcode", "totalqty": bson.M{"$sum": "$qty"}, "name": bson.M{"$first": "$name"}, "unit": bson.M{"$first": "$unit"}, "parents": bson.M{"$push": bson.M{"code": "$parent", "qty": "$qty", "unit": "$unit", "productcode": "$productcode"}}}}},
+		{{"$limit", 1}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	type P struct {
+		Code    string  `bson:"_id"`
+		Name    string  `bson:"name"`
+		Qty     float64 `bson:"totalqty"`
+		Unit    string  `bson:"unit"`
+		Parents []struct {
+			Code        string  `bson:"code"`
+			Qty         float64 `bson:"qty"`
+			Unit        string  `bson:"unit"`
+			ProductCode string  `bson:"productcode"`
+		} `bson:"parents"`
+	}
+	var data []P
+	if err := cur.All(context.Background(), &data); err != nil {
+		log.Println(err)
+	}
+	var fdata P
+	if len(data) != 0 {
+		fdata = data[0]
+		fdata.Qty = math.Round(fdata.Qty*1000) / 1000
+	}
+
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/itemInfo.html")).Execute(w, map[string]interface{}{
+		"data": fdata,
 	})
 }
 
@@ -14874,22 +14931,11 @@ func (s *Server) go_loadtree(w http.ResponseWriter, r *http.Request, ps httprout
 
 // router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
 func (s *Server) go_getproductcodes(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// var filter bson.M
-	// switch r.FormValue("productstatus") {
-	// case "done":
-	// 	filter = bson.M{
-	// 		"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
-	// 	}
-	// case "undone":
-	// 	filter = bson.M{
-	// 		"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
-	// 	}
-	// case "":
-	// case "all":
-	// 	filter = bson.M{
-	// 		"mo": r.FormValue("mo"),
-	// 	}
-	// }
+	if r.FormValue("mo") == "" || r.FormValue("productstatus") == "" {
+		template.Must(template.ParseFiles("templates/pages/gnhh/overview/productcode_select.html")).Execute(w, nil)
+		return
+	}
+
 	var pipline mongo.Pipeline
 	switch r.FormValue("productstatus") {
 	case "done":
@@ -14898,18 +14944,14 @@ func (s *Server) go_getproductcodes(w http.ResponseWriter, r *http.Request, ps h
 			{{"$project", bson.M{"itemcode": 1, "shipmentdate": 1}}},
 			{{"$sort", bson.M{"shipmentdate": 1}}},
 		}
-		// filter = bson.M{
-		// 	"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$eq": bson.A{"$qty", "$done"}}}},
-		// }
+
 	case "undone":
 		pipline = mongo.Pipeline{
 			{{"$match", bson.M{"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}}}}},
 			{{"$project", bson.M{"itemcode": 1, "shipmentdate": 1}}},
 			{{"$sort", bson.M{"shipmentdate": 1}}},
 		}
-		// filter = bson.M{
-		// 	"$and": bson.A{bson.M{"mo": r.FormValue("mo")}, bson.M{"$expr": bson.M{"$ne": bson.A{"$qty", "$done"}}}},
-		// }
+
 	case "":
 	case "all":
 		pipline = mongo.Pipeline{
@@ -14919,7 +14961,6 @@ func (s *Server) go_getproductcodes(w http.ResponseWriter, r *http.Request, ps h
 		}
 	}
 
-	// productcodes, err := s.mgdb.Collection("gnhh").Distinct(context.Background(), "itemcode", filter)
 	cur, err := s.mgdb.Collection("gnhh").Aggregate(context.Background(), pipline)
 	if err != nil {
 		log.Println(err)

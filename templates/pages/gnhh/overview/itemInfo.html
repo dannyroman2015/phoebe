@@ -1,0 +1,51 @@
+<div id="item-info">
+  <p>Tên: <strong>{{.data.Name}}</strong></p>
+  <p>Tổng số lượng cần sản xuất/lãnh cho cả MO: <strong>{{.data.Qty}}</strong> ({{.data.Unit}})</p>
+
+  <div x-data="{ 
+    activeAccordion: '', 
+    setActiveAccordion(id) { 
+        this.activeAccordion = (this.activeAccordion == id) ? '' : id 
+    } 
+  }" class="relative w-full mx-auto text-sm pb-2">
+    
+    <div x-data="{ id: $id('accordion') }" :class="{ 'text-neutral-800' : activeAccordion==id, 'border-transparent text-black hover:text-neutral-800' : activeAccordion!=id }" 
+          class="duration-200 ease-out bg-white border-none rounded-md cursor-pointer group" x-cloak>
+      <a id="timelinecreate" @click="setActiveAccordion(id)" class="flex items-center justify-start space-x-2 w-full font-semibold text-center text-green-500 select-none">
+        <div :class="{ 'rotate-90': activeAccordion==id }" class="relative flex items-center justify-center w-2.5 h-2.5 duration-300 ease-out">
+          <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
+          <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
+        </div>
+        
+        <span>Danh sách item sử dụng và số lượng tương ứng:</span>    
+      </a>
+
+      <div x-show="activeAccordion==id" x-collapse x-cloak>
+        <div class="overflow-x-auto pb-2">
+          <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+            <thead class="ltr:text-left rtl:text-right">
+              <tr>
+                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Parent & Product</th>
+                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">QTY</th>
+              </tr>
+            </thead>
+            
+            <tbody class="divide-y divide-gray-200">
+              {{range .data.Parents}}
+              <tr class="odd:bg-gray-50">
+                <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">
+                  <h2 class="text-xs">{{.Code}}</h2>
+                  <p class="font-normal text-xs">{{.ProductCode}}</p>
+                </td>
+                <td class="whitespace-nowrap px-4 py-2 text-gray-700">{{.Qty}} ({{.Unit}})</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        
+      </div>
+    </div>
+    
+  </div>
+</div>
