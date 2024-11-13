@@ -74,14 +74,40 @@
             </div>
 
             <form>
-              <!-- <div class="grid gap-2">
-                <div class="grid items-center grid-cols-3 gap-4">
-                  <label for="summarymonth" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Month
+              <div class="grid gap-2">
+
+                <!-- <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="whitewoodcharttype" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Chart
                   </label>
-                  <input hx-post="/production/overview/summarydatefilter" hx-trigger="change" hx-target="#summary-tbody" hx-swap="outerHTML settle:200ms"
-                    id="summarymonth" name="summarymonth" type="number" min="1" step="1" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"></div>
-              </div> -->
+                  <div class="col-span-2 w-full">
+                    <select @change="popoverOpen=!popoverOpen"
+                      hx-post="/dashboard/whitewood/getchart" hx-trigger="input" hx-target="#whitewood-container" hx-swap="innerHTML settle:200ms"
+                      name="whitewoodcharttype" id="whitewoodcharttype" class="mt-1.5 w-full rounded-lg border-gray-300 text-gray-700 sm:text-sm">
+                      <option value="value-target">Value-Target</option>
+                      <option value="efficiency">Efficiency</option>
+
+                    </select>
+                  </div>
+                </div> -->
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="timelineFromDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    From Date
+                  </label>
+                  <input hx-post="/gnhh/overview/filtertimeline" hx-trigger="input" hx-target="#timeline-container" hx-swap="outerHTML settle:200ms"
+                    type="date" id="timelineFromDate" name="timelineFromDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+
+                <div class="grid items-center grid-cols-3 gap-4">
+                  <label for="timelineToDate" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    To Date
+                  </label>
+                  <input hx-post="/gnhh/overview/filtertimeline" hx-trigger="input" hx-target="#timeline-container" hx-swap="outerHTML settle:200ms"
+                    type="date" id="timelineToDate" name="timelineToDate" value="" class="flex w-full h-8 col-span-2 px-3 py-2 text-sm bg-transparent border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                </div>
+
+              </div>
             </form>
 
           </div>
@@ -90,10 +116,6 @@
     </div>
 
   </div>
-
-  <!-- update done qty -->
-
-  <!-- end update done qty -->
 
   <!-- Timeline -->
   <div class="fade-in" id="timeline-container">
@@ -168,3 +190,8 @@
     transition: opacity 1s ease-out;
   }
 </style>
+
+<script>
+  document.getElementById("timelineToDate").valueAsDate = new Date();
+  document.getElementById("timelineFromDate").valueAsDate = new Date(Date.now() - 3*86400000);
+</script>

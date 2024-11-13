@@ -12797,7 +12797,7 @@ func (s *Server) go_loadproducttree(w http.ResponseWriter, r *http.Request, ps h
 func (s *Server) go_loadtimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("timeline_report").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat"}}}}},
+		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat", "timezone": "+07:00"}}}}},
 		{{"$limit", 20}},
 	})
 	if err != nil {
@@ -14757,15 +14757,16 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 
 // router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
 func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// regexSearch := ".*" + r.FormValue("timelinesearch") + ".*"
+	regexSearch := ".*" + r.FormValue("timelinesearch") + ".*"
 
 	cur, err := s.mgdb.Collection("timeline_report").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"$or": bson.A{
-			// bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
-			bson.M{"codepath": r.FormValue("timelinesearch")},
+			bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
+			bson.M{"reporter": bson.M{"$regex": regexSearch, "$options": "i"}},
+			// bson.M{"codepath": r.FormValue("timelinesearch")},
 		}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
-		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat"}}}}},
+		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat", "timezone": "+07:00"}}}}},
 	})
 	if err != nil {
 		log.Println(err)
@@ -14787,6 +14788,42 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 		arr := strings.Split(timelinedata[i].CodePath, "->")
 		timelinedata[i].Code = arr[len(arr)-1]
 	}
+	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline_report.html")).Execute(w, map[string]interface{}{
+		"timelinedata": timelinedata,
+	})
+}
+
+// router.POST("/gnhh/overview/filtertimeline", s.go_filtertimeline)
+func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("timelineFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("timelineToDate"))
+
+	cur, err := s.mgdb.Collection("timeline_report").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"createdat": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"createdat": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
+		{{"$sort", bson.M{"createdat": -1}}},
+		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat", "timezone": "+07:00"}}}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	defer cur.Close(context.Background())
+	var timelinedata []struct {
+		CodePath  string  `bson:"codepath"`
+		Title     string  `bson:"title"`
+		Qty       float64 `bson:"qty"`
+		Note      string  `bson:"note"`
+		Reporter  string  `bson:"reporter"`
+		CreatedAt string  `bson:"createdat"`
+		Code      string
+	}
+	if err := cur.All(context.Background(), &timelinedata); err != nil {
+		log.Println(err)
+	}
+	for i := 0; i < len(timelinedata); i++ {
+		arr := strings.Split(timelinedata[i].CodePath, "->")
+		timelinedata[i].Code = arr[len(arr)-1]
+	}
+
 	template.Must(template.ParseFiles("templates/pages/gnhh/overview/timeline_report.html")).Execute(w, map[string]interface{}{
 		"timelinedata": timelinedata,
 	})
