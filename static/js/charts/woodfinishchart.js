@@ -1167,7 +1167,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("fill", color(inventorydata[3].type));
 
     leftInnerChart.append("text")
-      .text(`${d3.format(",.0f")(inventorydata[0].inventory)}`)
+      .text((inventorydata[0].inventory != 0) ? `${d3.format(",.0f")(inventorydata[0].inventory)}` : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
@@ -1176,7 +1176,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
     leftInnerChart.append("text")
-      .text(`${d3.format(",.0f")(inventorydata[1].inventory)}`)
+      .text((inventorydata[1].inventory != 0) ? `${d3.format(",.0f")(inventorydata[1].inventory)}` : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
@@ -1185,7 +1185,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
     leftInnerChart.append("text")
-      .text(`${d3.format(",.0f")(inventorydata[2].inventory)}`)
+      .text((inventorydata[2].inventory != 0) ? `${d3.format(",.0f")(inventorydata[2].inventory)}` : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
@@ -1194,7 +1194,7 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
 
     leftInnerChart.append("text")
-      .text(`${d3.format(",.0f")(inventorydata[3].inventory)}`)
+      .text((inventorydata[3].inventory != 0) ? `${d3.format(",.0f")(inventorydata[3].inventory)}` : "")
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "middle")
       .attr("x", 32)
