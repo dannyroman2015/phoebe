@@ -14806,7 +14806,7 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 
 // router.POST("/gnhh/overview/filtertimeline", s.go_filtertimeline)
 func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	regexSearch := ".*" + r.FormValue("timelinefiltersearch") + ".*"
+	regexSearch := ".*" + r.FormValue("timelinefiltersearch")
 	fromdate, _ := time.Parse("2006-01-02", r.FormValue("timelineFromDate"))
 	todate, _ := time.Parse("2006-01-02", r.FormValue("timelineToDate"))
 

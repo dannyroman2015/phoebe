@@ -1,5 +1,5 @@
 <div id="item-info">
-  <p>Tên: <strong>{{.data.Name}}</strong></p>
+  <p>Tên: <strong>[{{.data.Code}}] {{.data.Name}}</strong></p>
   <p>Tổng số lượng cần sản xuất/lãnh cho cả MO: <strong>{{.data.Qty}}</strong> ({{.data.Unit}})</p>
 
   <div x-data="{ 
@@ -26,7 +26,7 @@
             <thead class="ltr:text-left rtl:text-right">
               <tr>
                 <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Parent & Product</th>
-                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">QTY</th>
+                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Quantity</th>
               </tr>
             </thead>
             

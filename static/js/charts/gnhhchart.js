@@ -274,6 +274,7 @@ const drawGNHHChart2 = (data) => {
       
     })
     .style("cursor", "pointer")
+    .style("hover", "background-color: yellow;")
     .on("click", (e, d) => {
       document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
       
@@ -287,6 +288,13 @@ const drawGNHHChart2 = (data) => {
       // document.getElementById("timelinesearch").click();
       // document.getElementById("timelinesearch").focus();
     })
+    .on("mouseover", function() {
+      d3.select(this).attr("fill", "orange");
+    })
+    .on("mouseout", function() {
+      d3.select(this).attr("fill", "black");
+    });
+   
   
   node.append("title")
       .text(d => d.data.itemname)
