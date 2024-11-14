@@ -14806,11 +14806,19 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 
 // router.POST("/gnhh/overview/filtertimeline", s.go_filtertimeline)
 func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	regexSearch := ".*" + r.FormValue("timelinefiltersearch") + ".*"
 	fromdate, _ := time.Parse("2006-01-02", r.FormValue("timelineFromDate"))
 	todate, _ := time.Parse("2006-01-02", r.FormValue("timelineToDate"))
 
 	cur, err := s.mgdb.Collection("timeline_report").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"createdat": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"createdat": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{
+			bson.M{"createdat": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"createdat": bson.M{"$lte": primitive.NewDateTimeFromTime(todate.AddDate(0, 0, 1))}},
+			bson.M{"$or": bson.A{
+				bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
+				bson.M{"reporter": bson.M{"$regex": regexSearch, "$options": "i"}},
+				bson.M{"title": bson.M{"$regex": regexSearch, "$options": "i"}},
+			}},
+		}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
 		{{"$set", bson.M{"createdat": bson.M{"$dateToString": bson.M{"format": "%H:%M %d %b", "date": "$createdat", "timezone": "+07:00"}}}}},
 	})
