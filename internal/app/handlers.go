@@ -7154,6 +7154,25 @@ func (s *Server) sae_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 		})
 		return
 	}
+
+	//wait to 26th Nov to open
+	//create a report for production value collection when White Product were inserted
+	// if prodtype == "white" {
+	// 	_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
+	// 		"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
+	// 		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	// 		"from": "assembly", "refid": insertedResult.InsertedID,
+	// 	})
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+	// 			"showErrDialog": true,
+	// 			"msgDialog":     "Không cập nhật được vào prodvalue",
+	// 		})
+	// 		return
+	// 	}
+	// }
+
 	template.Must(template.ParseFiles("templates/pages/sections/assembly/entry/form.html")).Execute(w, map[string]interface{}{
 		"showSuccessDialog": true,
 		"msgDialog":         "Gửi dữ liệu thành công.",
@@ -7312,11 +7331,27 @@ func (s *Server) saa_searchreport(w http.ResponseWriter, r *http.Request, ps htt
 func (s *Server) saa_deletereport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	reportid, _ := primitive.ObjectIDFromHex(ps.ByName("reportid"))
 
-	_, err := s.mgdb.Collection("assembly").DeleteOne(context.Background(), bson.M{"_id": reportid})
-	if err != nil {
-		log.Println(err)
+	deletedPackReport := s.mgdb.Collection("assembly").FindOneAndDelete(context.Background(), bson.M{"_id": reportid})
+	if deletedPackReport.Err() != nil {
+		log.Println(deletedPackReport.Err())
 		return
 	}
+	var assemblyReport struct {
+		ReportID string `bson:"_id"`
+		Prodtype string `bson:"prodtype"`
+	}
+	if err := deletedPackReport.Decode(&assemblyReport); err != nil {
+		log.Println(err)
+	}
+	// đợi 26 tháng 11 bắt đầu mở
+	// if assemblyReport.Prodtype == "white" {
+	// 	refidObject, _ := primitive.ObjectIDFromHex(assemblyReport.ReportID)
+	// 	// update production value
+	// 	result := s.mgdb.Collection("prodvalue").FindOneAndDelete(context.Background(), bson.M{"refid": refidObject})
+	// 	if result.Err() != nil {
+	// 		log.Println(result.Err())
+	// 	}
+	// }
 }
 
 // ///////////////////////////////////////////////////////////////////////////////

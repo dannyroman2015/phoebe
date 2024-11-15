@@ -226,16 +226,23 @@ const drawGNHHChart2 = (data) => {
       .attr("r", 2.5)
       .attr("fill", d => d.children ? null : "#999");
 
+  let prevcolor = "black"
   node.append("text")
     .text(d => {
         let finallabel = d.data.itemcode;
         if (d.data.shipmentdate != "" && d.data.shipmentdate != undefined) {
           const rawdays = (Date.parse(d.data.shipmentdate) - new Date())/(1000 * 3600 * 24)
-          if (rawdays >= 1) {
-            finallabel += ` 📆${Math.round(rawdays)}d`
-          } else {
-            finallabel += ` 📆${Math.round(rawdays*24)}h`
-          }
+          if (Math.abs(d.data.qty - d.data.done) > 0.005) {
+            if (rawdays >= 1) {
+              finallabel += ` 📆${Math.round(rawdays)}d`
+            } 
+            else if (rawdays <= 0) {
+              finallabel += ` 💣${Math.round(rawdays*24)} hrs`
+            }
+            else {
+              finallabel += ` ⏱${Math.round(rawdays*24)} hrs`
+            }
+          }     
         }
 
         if (d.data.performer != "" && d.data.performer != undefined) {
@@ -277,7 +284,6 @@ const drawGNHHChart2 = (data) => {
     .style("hover", "background-color: yellow;")
     .on("click", (e, d) => {
       document.getElementById("codepath").value = d.ancestors().reverse().map(d => d.data.itemcode).join("->");
-      
       // document.getElementById("detailsearch").value = d.data.itemcode;
       // document.getElementById("detailsearch").dispatchEvent(new Event('input', {bubble: true}));
       // document.getElementById("detailsearch").click();
@@ -289,17 +295,17 @@ const drawGNHHChart2 = (data) => {
       // document.getElementById("timelinesearch").focus();
     })
     .on("mouseover", function() {
+      prevcolor = this.getAttribute("fill")
       d3.select(this).attr("fill", "orange");
     })
     .on("mouseout", function() {
-      d3.select(this).attr("fill", "black");
+      d3.select(this).attr("fill", prevcolor);
     });
    
   
   node.append("title")
       .text(d => d.data.itemname)
       // .text(d => d.ancestors().reverse().map(d => d.data.itemcode).join("/"))
-
 
   svg.append("text")
     .attr("dy", "0.32em")
@@ -424,7 +430,7 @@ const drawGNHHChart3 = (rdata) => {
     .attr("stroke-width", 10);
 
   nodeEnter.append("text")
-    .text(d => {console.log(d); return d.data.name} )
+    .text(d => d.data.name)
     .attr("dy", "0.35em")
     .attr("x", d => d._children ? 6 : 6)
     .attr("text-anchor", d => d._children ? "end": "start")
