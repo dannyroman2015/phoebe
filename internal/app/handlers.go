@@ -464,6 +464,58 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 // //////////////////////////////////////////////////////////
+// router.GET("/dashboard/loadotattend", s.d_loadotattend)
+// //////////////////////////////////////////////////////////
+func (s *Server) d_loadotattend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	yesterday, _ := time.Parse("2006-01-02", time.Now().AddDate(0, 0, -17).Format("2006-01-02"))
+
+	cur, err := s.mgdb.Collection("otattend").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "attend", "date": primitive.NewDateTimeFromTime(yesterday)}}},
+		{{"$addFields", bson.M{"isPresent": bson.M{"$eq": bson.A{"$category", "hiện diện"}}}}},
+		{{"$group", bson.M{"_id": bson.M{"department": "$department", "isPresent": "$isPresent"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"_id.department": 1, "_id.isPresent": -1}}},
+		{{"$set", bson.M{"department": "$_id.department", "isPresent": "$_id.isPresent"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var otattenddata []struct {
+		Department string `bson:"department" json:"department"`
+		IsPresent  bool   `bson:"isPresent" json:"ispresent"`
+		Value      int    `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &otattenddata); err != nil {
+		log.Println(err)
+	}
+
+	cur, err = s.mgdb.Collection("otattend").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"type": "ot", "date": primitive.NewDateTimeFromTime(yesterday)}}},
+		{{"$group", bson.M{"_id": bson.M{"department": "$department", "category": "$category"}, "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"_id.department": 1, "_id.category": 1}}},
+		{{"$set", bson.M{"department": "$_id.department", "category": "$_id.category"}}},
+		{{"$unset", "_id"}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var otdata []struct {
+		Department string  `bson:"department" json:"department"`
+		Category   string  `bson:"category" json:"category"`
+		Value      float64 `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &otdata); err != nil {
+		log.Println(err)
+	}
+
+	template.Must(template.ParseFiles("templates/pages/dashboard/otattend.html")).Execute(w, map[string]interface{}{
+		"otattenddata": otattenddata,
+		"otdata":       otdata,
+		"date":         yesterday.Format("02 Jan"),
+	})
+}
+
+// //////////////////////////////////////////////////////////
 // router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
 // //////////////////////////////////////////////////////////
 func (s *Server) d_loadmanpower(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -15804,6 +15856,59 @@ func (s *Server) mp_importfile(w http.ResponseWriter, r *http.Request, ps httpro
 	// }
 
 	w.Write([]byte("Thành công"))
+}
+
+// /////////////////////////////////////////////////////
+// router.POST("/otattend/importfile", s.oa_importfile)
+// //////////////////////////////////////////////////////
+func (s *Server) oa_importfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	const MAX = 32 << 20
+	r.ParseMultipartForm(MAX)
+	file, _, err := r.FormFile("attendimportfile")
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	attendrows, _ := f.Rows("Attend")
+	attendrows.Next()
+	for attendrows.Next() {
+		row, _ := attendrows.Columns()
+		date, err := time.Parse("2006-01-02", row[0])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		value, err := strconv.Atoi(row[3])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "attend", "date": date, "department": row[1], "category": row[2]}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+	}
+
+	otrows, _ := f.Rows("OVT")
+	otrows.Next()
+	for otrows.Next() {
+		row, _ := otrows.Columns()
+		date, err := time.Parse("2006-01-02", row[0])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		value, err := strconv.ParseFloat(row[3], 64)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "ot", "date": date, "department": row[1], "category": row[2]}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+	}
+
 }
 
 // /////////////////////////////////////////////////////////////////////////////////////////

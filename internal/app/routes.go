@@ -26,6 +26,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/admin", withAuth(s.admin))
 
 	router.GET("/dashboard", s.dashboard)
+	router.GET("/dashboard/loadotattend", s.d_loadotattend)
 	router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
 	router.GET("/dashboard/loadproductionvop", s.d_loadproductionvop)
 	router.GET("/dashboard/loadplan", s.d_loadproductionplan)
@@ -512,6 +513,12 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	router.POST("/manpower/importfile", s.mp_importfile)
 	// end Manpower
+
+	////////////////////////////////////////////////////////////////////
+	// OT-Attend ////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	router.POST("/otattend/importfile", s.oa_importfile)
+	// end OT-Attend
 
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////
