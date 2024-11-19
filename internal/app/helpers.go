@@ -57,11 +57,11 @@ func OpenPgDB(conStr string) (*sql.DB, error) {
 }
 
 type GNHHAUTH struct {
-	OnlyLeaves     bool
-	Actions        []string
-	Levels         []int
-	InStartList    []string
-	NotInStartList []string
+	OnlyLeaves bool
+	Actions    []string
+	Levels     []int
+	// InStartList    []string
+	// NotInStartList []string
 }
 
 var GNHHAUTHTABLE = map[string]GNHHAUTH{

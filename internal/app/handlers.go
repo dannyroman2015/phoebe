@@ -12721,8 +12721,7 @@ func (s *Server) co_createstandard(w http.ResponseWriter, r *http.Request, ps ht
 // router.DELETE("/colormixing/overview/deletestandard/:name", s.co_deletestandard)
 // ////////////////////////////////////////////////////////////////////////////////////////////
 func (s *Server) co_deletestandard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	name, _ := primitive.ObjectIDFromHex(ps.ByName("name"))
-	_, err := s.mgdb.Collection("colorpanel").DeleteOne(context.Background(), bson.M{"name": name})
+	_, err := s.mgdb.Collection("mixingstandard").DeleteOne(context.Background(), bson.M{"name": ps.ByName("name")})
 	if err != nil {
 		log.Println(err)
 		return
