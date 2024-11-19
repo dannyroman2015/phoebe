@@ -55,3 +55,19 @@ func OpenPgDB(conStr string) (*sql.DB, error) {
 
 	return db, nil
 }
+
+type GNHHAUTH struct {
+	OnlyLeaves     bool
+	Actions        []string
+	Levels         []int
+	InStartList    []string
+	NotInStartList []string
+}
+
+var GNHHAUTHTABLE = map[string]GNHHAUTH{
+	"trung-production admin": {
+		OnlyLeaves: true,
+		Actions:    []string{"Hoàn thành", "Hoàn thành và Giao", "Hoàn thành cho toàn bộ MO", "Hoàn thành và Giao cho toàn bộ MO", "Làm được", "Giao được", "Xác nhận Nhận hàng", "Cảnh báo", "Tắt cảnh báo", "Phân công người làm", "Đặt lịch hoàn thành", "Cập nhật giá sản phẩm"},
+		Levels:     []int{2, 3, 4, 5, 6, 7},
+	},
+}

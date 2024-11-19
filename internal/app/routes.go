@@ -47,6 +47,7 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
 	router.GET("/dashboard/loadsixs", s.d_loadsixs)
 	router.GET("/dashboard/loadsafety", s.d_loadsafety)
+	router.POST("/dashboard/otattend/getchart", s.doa_getchart)
 	router.POST("/dashboard/manpower/getchart", s.dmp_getchart)
 	router.POST("/dashboard/productionvop/getchart", s.dpv_getchart)
 	router.POST("/dashboard/production/getchart", s.dpr_getchart)
