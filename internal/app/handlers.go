@@ -13051,11 +13051,41 @@ func (s *Server) go_updatetimeline(w http.ResponseWriter, r *http.Request, ps ht
 		log.Println(err)
 	}
 
+	// check authorication
 	gnhhAuths, ok := GNHHAUTHTABLE["trung-production admin"]
 	if !ok || !slices.Contains(gnhhAuths.Actions, timelinetype) || !slices.Contains(gnhhAuths.Levels, len(path)-1) {
 		w.Write([]byte("Không có thẩm quyền"))
 		return
 	}
+	if len(gnhhAuths.InStartList) != 0 {
+		itemcode := path[len(path)-1]
+		found := false
+		for _, v := range gnhhAuths.InStartList {
+			if strings.HasPrefix(itemcode, v) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			w.Write([]byte("Không có thẩm quyền"))
+			return
+		}
+	}
+	if len(gnhhAuths.NotInStartList) != 0 {
+		itemcode := path[len(path)-1]
+		found := false
+		for _, v := range gnhhAuths.NotInStartList {
+			if strings.HasPrefix(itemcode, v) {
+				found = true
+				break
+			}
+		}
+		if found {
+			w.Write([]byte("Không có thẩm quyền"))
+			return
+		}
+	}
+	// end check authorication
 
 	switch timelinetype {
 
