@@ -234,13 +234,13 @@ const drawGNHHChart2 = (data) => {
           const rawdays = (Date.parse(d.data.shipmentdate) - new Date())/(1000 * 3600 * 24)
           if (Math.abs(d.data.qty - d.data.done) > 0.005) {
             if (rawdays >= 1) {
-              finallabel += ` 📆${Math.round(rawdays)}d`
+              finallabel += ` 📆${Math.round(rawdays)}d ${Math.round(rawdays%1*24)}h`
             } 
             else if (rawdays <= 0) {
               finallabel += ` 💣${Math.round(rawdays*24)} hrs`
             }
             else {
-              finallabel += ` ⏱${Math.round(rawdays*24)} hrs`
+              finallabel += ` ⏰${Math.round(rawdays*24)} hrs`
             }
           }     
         }
@@ -280,6 +280,7 @@ const drawGNHHChart2 = (data) => {
       }
       
     })
+    .attr("class", d => ((Math.abs(d.data.qty - d.data.done) > 0.005) && (Date.parse(d.data.shipmentdate) - new Date())/(1000 * 3600) < 0.25) ? "motion-preset-blink motion-duration-2000" : "")
     .style("cursor", "pointer")
     .style("hover", "background-color: yellow;")
     .on("click", (e, d) => {

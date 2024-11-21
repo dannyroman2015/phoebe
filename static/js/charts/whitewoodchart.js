@@ -6,6 +6,8 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
+  console.log(d3.rollups(data, D => d3.sum(D, d => d.value) , d => d.date))
+
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)
@@ -37,6 +39,41 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
+
+  const avgData = series[series.length-1].slice(0, -1)
+  const dataAvg = d3.sum(avgData, d => d[1])/avgData.length
+  const minDate = avgData[d3.minIndex(avgData, d => d[1])].data[0]
+  innerChart.append("line")
+    .attr("x1", 0)
+    .attr("y1", y(dataAvg))
+    .attr("x2", innerWidth - x.bandwidth() - 10)
+    .attr("y2", y(dataAvg))
+    .attr("stroke", "#257180")
+    .attr("fill", "none")
+    .attr("stroke-opacity", 0.7)
+  innerChart.append("text")
+      .text(`AVG: ${d3.format(",.0f")(dataAvg)}`)
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("x", x(minDate) + x.bandwidth())
+      .attr("y", y(dataAvg))
+      .attr("dy", "-0.5em")
+      .attr("fill", "#257180")
+      .attr("font-weight", 600)
+      .attr("font-size", 12)
+  innerChart.append("text")
+      .text("* của cột tiền thực tế theo số ngày hiện hữu")
+      .attr("class", "disappear")
+      .attr("text-anchor", "start")
+      .attr("alignment-baseline", "middle")
+      .attr("x", x(minDate) + 5)
+      .attr("y", y(dataAvg))
+      .attr("dy", "-1.8em")
+      .attr("fill", "#257180")
+      .attr("font-size", 12)
+      .style("transition", "opacity 2s ease-out")
+  setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 40000)
+
 
   innerChart
     .selectAll()

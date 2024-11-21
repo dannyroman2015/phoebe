@@ -10850,7 +10850,13 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 		})
 	}
 
+	standardnames, err := s.mgdb.Collection("mixingstandard").Distinct(context.Background(), "name", bson.M{})
+	if err != nil {
+		log.Println(err)
+	}
+
 	template.Must(template.ParseFiles("templates/pages/colormixing/admin/batchentry.html")).Execute(w, map[string]interface{}{
+		"standardnames":     standardnames,
 		"showSuccessDialog": true,
 		"msgDialog":         "Thêm vào thành công",
 	})
@@ -10860,6 +10866,7 @@ func (s *Server) ca_sendmixingentry(w http.ResponseWriter, r *http.Request, ps h
 func (s *Server) ca_loadmixingbatch(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("mixingbatch").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.D{{"mixingdate", -1}, {"batchno", 1}}}},
+		{{"$limit", 20}},
 		{{"$set", bson.M{
 			"mixingdate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$mixingdate"}},
 			"issueddate": bson.M{"$dateToString": bson.M{"format": "%H:%M %d-%m-%Y", "date": "$issueddate"}},
@@ -15062,6 +15069,7 @@ func (s *Server) go_searchtimeline(w http.ResponseWriter, r *http.Request, ps ht
 			bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
 			bson.M{"reporter": bson.M{"$regex": regexSearch, "$options": "i"}},
 			bson.M{"title": bson.M{"$regex": regexSearch, "$options": "i"}},
+			bson.M{"note": bson.M{"$regex": regexSearch, "$options": "i"}},
 			// bson.M{"codepath": r.FormValue("timelinesearch")},
 		}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
@@ -15110,6 +15118,7 @@ func (s *Server) go_filtertimeline(w http.ResponseWriter, r *http.Request, ps ht
 				bson.M{"codepath": bson.M{"$regex": regexSearch, "$options": "i"}},
 				bson.M{"reporter": bson.M{"$regex": regexSearch, "$options": "i"}},
 				bson.M{"title": bson.M{"$regex": regexSearch, "$options": "i"}},
+				bson.M{"note": bson.M{"$regex": regexSearch, "$options": "i"}},
 			}},
 		}}}},
 		{{"$sort", bson.M{"createdat": -1}}},

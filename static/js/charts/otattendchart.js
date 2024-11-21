@@ -1,5 +1,4 @@
 const drawOtAttendChart = (data, otdata, date) => {
-  console.log(otdata)
   if (data == undefined) return;
   const width = 900;
   const height = 350;
