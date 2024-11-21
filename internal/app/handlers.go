@@ -2676,6 +2676,115 @@ func (s *Server) dw_getchart(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 // ////////////////////////////////////////////////////////////////////////////////
+// router.POST("/dashboard/whitewood/getchart", s.dww_getchart)
+// ////////////////////////////////////////////////////////////////////////////////
+func (s *Server) dww_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	pickedChart := r.FormValue("whitewoodcharttype")
+	fromdate, _ := time.Parse("2006-01-02", r.FormValue("whitewoodFromDate"))
+	todate, _ := time.Parse("2006-01-02", r.FormValue("whitewoodToDate"))
+
+	switch pickedChart {
+	case "value-target":
+		cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var whitewoodData []struct {
+			Date  string  `bson:"date" json:"date"`
+			Type  string  `bson:"type" json:"type"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err := cur.All(context.Background(), &whitewoodData); err != nil {
+			log.Println(err)
+		}
+
+		// get plan data
+		cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
+			{{"$sort", bson.M{"createdat": -1}}},
+			{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
+			{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "plantype": "$_id.plantype"}}},
+			{{"$unset", "_id"}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var whitewoodPlanData []struct {
+			Date     string    `bson:"date" json:"date"`
+			Plantype string    `bson:"plantype" json:"plantype"`
+			Plan     float64   `bson:"plan" json:"plan"`
+			Plans    []float64 `bson:"plans" json:"plans"`
+			Change   float64   `json:"change"`
+		}
+
+		if err := cur.All(context.Background(), &whitewoodPlanData); err != nil {
+			log.Println(err)
+		}
+		for i := 0; i < len(whitewoodPlanData); i++ {
+			if len(whitewoodPlanData[i].Plans) >= 2 && whitewoodPlanData[i].Plans[1] != 0 {
+				whitewoodPlanData[i].Change = whitewoodPlanData[i].Plans[1] - whitewoodPlanData[i].Plan
+			} else {
+				whitewoodPlanData[i].Change = 0
+			}
+		}
+
+		// get inventory
+		cur, err = s.mgdb.Collection("whitewood").Find(context.Background(), bson.M{"type": "Inventory"}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(2))
+		if err != nil {
+			log.Println(err)
+		}
+		defer cur.Close(context.Background())
+		var whitewoodInventoryData []struct {
+			Prodtype     string    `bson:"prodtype" json:"prodtype"`
+			Inventory    float64   `bson:"inventory" json:"inventory"`
+			CreatedAt    time.Time `bson:"createdat" json:"createdat"`
+			CreatedAtStr string    `json:"createdatstr"`
+		}
+
+		if err := cur.All(context.Background(), &whitewoodInventoryData); err != nil {
+			log.Println(err)
+		}
+
+		for i := 0; i < len(whitewoodInventoryData); i++ {
+			whitewoodInventoryData[i].CreatedAtStr = whitewoodInventoryData[i].CreatedAt.Add(7 * time.Hour).Format("15h04 date 2/1")
+		}
+		// get target
+		cur, err = s.mgdb.Collection("target").Aggregate(context.Background(), mongo.Pipeline{
+			{{"$match", bson.M{"name": "whitewood total by date", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}}}}},
+			{{"$sort", bson.M{"date": 1}}},
+			{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$date"}}}}},
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		var whitewoodTarget []struct {
+			Date  string  `bson:"date" json:"date"`
+			Value float64 `bson:"value" json:"value"`
+		}
+		if err = cur.All(context.Background(), &whitewoodTarget); err != nil {
+			log.Println(err)
+		}
+
+		template.Must(template.ParseFiles("templates/pages/dashboard/whitewood_generalchart.html")).Execute(w, map[string]interface{}{
+			"whitewoodData":          whitewoodData,
+			"whitewoodPlanData":      whitewoodPlanData,
+			"whitewoodInventoryData": whitewoodInventoryData,
+			"whitewoodTarget":        whitewoodTarget,
+		})
+
+	}
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
 // /dashboard/cutting/getchart - change chart of cutting area in dashboard
 // ////////////////////////////////////////////////////////////////////////////////
 func (s *Server) dc_getchart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

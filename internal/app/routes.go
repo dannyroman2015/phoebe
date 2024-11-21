@@ -54,6 +54,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
 	router.POST("/dashboard/assembly/getchart", s.da_getchart)
 	router.POST("/dashboard/woodfinish/getchart", s.dw_getchart)
+	router.POST("/dashboard/whitewood/getchart", s.dww_getchart)
 	router.POST("/dashboard/cutting/getchart", s.dc_getchart)
 	router.POST("/dashboard/lamination/getchart", s.dl_getchart)
 	router.POST("/dashboard/reededline/getchart", s.dr_getchart)
