@@ -125,7 +125,7 @@ func (s *Server) routes() http.Handler {
 	router.POST("/sections/cutting/overview/wrnotefilter", s.sco_wrnotefilter)
 	router.POST("/sections/cutting/overview/reportfilter", s.sco_reportfilter)
 	router.POST("/sections/cutting/overview/createdemand", s.sco_createdemand)
-	router.PUT("/sections/cutting/overview/wrnotereturn/:wrnotecode/:remainqty", s.sco_wrnotereturn)
+	router.PUT("/sections/cutting/overview/wrnotereturn/:wrnotecode/:remainqty", s.sco_wrnotereturn) // cho huế
 
 	router.GET("/sections/cutting/entry", withAuth(s.sc_entry))
 	router.POST("/sections/cutting/entry/wrnoteinfo", s.sc_wrnoteinfo)

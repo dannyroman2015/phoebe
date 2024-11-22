@@ -4428,9 +4428,10 @@ func (s *Server) sco_createdemand(w http.ResponseWriter, r *http.Request, ps htt
 // //////////////////////////////////////////////////////////
 func (s *Server) sco_wrnotereturn(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	usernameTk, err := r.Cookie("username")
-	if err != nil {
+	log.Println(usernameTk.Value)
+	if err != nil || usernameTk.Value != "hue" {
 		log.Println(err)
-		w.Write([]byte("Phải đăng nhập"))
+		w.Write([]byte("Cần thẩm quyền"))
 		return
 	}
 	wrnotecode := ps.ByName("wrnotecode")

@@ -42,6 +42,7 @@ func withAuth2(h httprouter.Handle) httprouter.Handle {
 			w.Write([]byte("Not log in yet"))
 			return
 		}
+
 		if !strings.Contains(authurlsToken.Value, r.URL.Path) {
 			w.Write([]byte("không có thẩm quyền"))
 			return
