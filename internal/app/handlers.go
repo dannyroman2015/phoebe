@@ -4149,6 +4149,7 @@ func (s *Server) sco_loadwrnote(w http.ResponseWriter, r *http.Request, ps httpr
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "wrnote"}}},
 		{{"$sort", bson.M{"date": -1}}},
+		{{"$limit", 20}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
@@ -4182,6 +4183,7 @@ func (s *Server) sco_loadreport(w http.ResponseWriter, r *http.Request, ps httpr
 	cur, err := s.mgdb.Collection("cutting").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$match", bson.M{"type": "report"}}},
 		{{"$sort", bson.M{"date": -1}}},
+		{{"$limit", 20}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
@@ -4417,6 +4419,58 @@ func (s *Server) sco_createdemand(w http.ResponseWriter, r *http.Request, ps htt
 	// 	"reports":         reports,
 	// 	"numberOfReports": numberOfReports,
 	// })
+}
+
+// //////////////////////////////////////////////////////////
+//
+//	router.PUT("/sections/cutting/overview/wrnotereturn/:wrnotecode", s.sco_wrnotereturn)
+//
+// //////////////////////////////////////////////////////////
+func (s *Server) sco_wrnotereturn(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	usernameTk, err := r.Cookie("username")
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Phải đăng nhập"))
+		return
+	}
+	wrnotecode := ps.ByName("wrnotecode")
+	remainqty, _ := strconv.ParseFloat(ps.ByName("remainqty"), 64)
+
+	result := s.mgdb.Collection("cutting").FindOneAndUpdate(context.Background(), bson.M{"type": "wrnote", "wrnotecode": wrnotecode}, bson.M{"$set": bson.M{"wrremain": 0}})
+	if result.Err() != nil {
+		log.Println(result.Err())
+		w.Write([]byte("Cập nhật thất bại"))
+		return
+	}
+	var cuttingWrnote struct {
+		WrnoteCode string    `bson:"wrnotecode"`
+		WoodType   string    `bson:"woodtype"`
+		Thickness  float64   `bson:"thickness"`
+		Date       time.Time `bson:"date"`
+		WrnoteQty  float64   `bson:"wrnoteqty"`
+		WrRemain   float64   `bson:"wrremain"`
+		ProdType   string    `bson:"prodtype"`
+		DateStr    string
+	}
+	if err := result.Decode(&cuttingWrnote); err != nil {
+		log.Println(err)
+	}
+	cuttingWrnote.WrRemain = 0
+	cuttingWrnote.DateStr = cuttingWrnote.Date.Format("02-01-2006")
+
+	// create a report return wrnote remain
+	_, err = s.mgdb.Collection("cutting").InsertOne(context.Background(), bson.M{
+		"type": "wrnote return", "returnwrnote": wrnotecode, "returnqty": remainqty, "reporter": usernameTk.Value, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+	})
+	if err != nil {
+		log.Println(err)
+		w.Write([]byte("Thất bại"))
+		return
+	}
+
+	template.Must(template.ParseFiles("templates/pages/sections/cutting/overview/wrnote_tr.html")).Execute(w, map[string]interface{}{
+		"cuttingWrnote": cuttingWrnote,
+	})
 }
 
 // //////////////////////////////////////////////////////////

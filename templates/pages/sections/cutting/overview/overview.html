@@ -80,12 +80,12 @@
             <div class="absolute w-0.5 h-full bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
             <div :class="{ 'rotate-90': activeAccordion==id }" class="absolute w-full h-0.5 ease duration-500 bg-neutral-500 group-hover:bg-neutral-800 rounded-full"></div>
         </div>
-          <span>Quản lý phiếu nhập gỗ</span>
+          <span>Bảng báo cáo return phiếu gỗ</span>
       </button>
 
       <div x-show="activeAccordion==id" x-collapse x-cloak>
           <div class="p-5 pt-0">
-            <div hx-get="/sections/cutting/admin/loadwrnote" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+            <div hx-get="/sections/cutting/overview/loadreturn" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
           </div>
       </div>
     </div> -->
