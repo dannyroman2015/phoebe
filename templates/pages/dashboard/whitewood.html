@@ -529,6 +529,6 @@
   document.getElementById("whitewoodToDate").valueAsDate = new Date();
   document.getElementById("whitewoodFromDate").valueAsDate = new Date(Date.now() - 11*86400000);
 
-  whitewoodchart.append(drawWhiteWhoodVTPChart({{.whitewoodData}}, {{.whitewoodPlanData}}, {{.namData}}, {{.whitewoodInventoryData}}, {{.whitewoodTarget}}))
+  whitewoodchart.append(drawWhiteWhoodVTPChart({{.whitewoodData}}, {{.whitewoodPlanData}}, {{.avgdata}}, {{.whitewoodInventoryData}}, {{.whitewoodTarget}}))
 
 </script>

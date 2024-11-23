@@ -1351,10 +1351,11 @@ func (s *Server) d_loadassembly(w http.ResponseWriter, r *http.Request, ps httpr
 // router.GET("/dashboard/loadwhitewood", s.d_loadwhitewood)
 func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "prodtype": "$prodtype"}, "value": bson.M{"$sum": "$value"}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.prodtype", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "type": "$_id.prodtype"}}},
+		// {{"$set", bson.M{"date": "_id.date", "type": "$_id.prodtype"}}},
 		{{"$unset", "_id"}},
 	})
 	if err != nil {
@@ -1370,9 +1371,37 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 		log.Println(err)
 	}
 
+	// get avg of this month
+	fromdate := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Local)
+	todate := fromdate.AddDate(0, 1, 0)
+	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": bson.M{"$exists": false}}, bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(fromdate)}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(todate)}}}}}},
+		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
+		{{"$sort", bson.M{"_id": 1}}},
+	})
+	if err != nil {
+		log.Println(err)
+	}
+	var valuedata []struct {
+		Date  time.Time `bson:"_id"`
+		Value float64   `bson:"value" json:"value"`
+	}
+	if err := cur.All(context.Background(), &valuedata); err != nil {
+		log.Println(err)
+	}
+
+	if valuedata[len(valuedata)-1].Date.Format("2006-01-02") == time.Now().Format("2006-01-02") {
+		valuedata = valuedata[:len(valuedata)-1]
+	}
+	var total float64
+	for _, v := range valuedata {
+		total += v.Value
+	}
+	avgdata := total / float64(len(valuedata))
+
 	// get plan data
 	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
+		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "plan", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}}}}},
 		{{"$sort", bson.M{"createdat": -1}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "plantype": "$plantype"}, "plan": bson.M{"$first": "$plan"}, "plans": bson.M{"$firstN": bson.M{"input": "$plan", "n": 2}}}}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.plantype", 1}}}},
@@ -1400,25 +1429,6 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 		} else {
 			whitewoodPlanData[i].Change = 0
 		}
-	}
-
-	// get Nam's data
-	cur, err = s.mgdb.Collection("whitewood").Aggregate(context.Background(), mongo.Pipeline{
-		{{"$match", bson.M{"$and": bson.A{bson.M{"type": "nam", "date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -10))}}}}}},
-		{{"$group", bson.M{"_id": "$date", "value": bson.M{"$sum": "$value"}}}},
-		{{"$sort", bson.D{{"_id", 1}}}},
-		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id"}}}}},
-		{{"$unset", "_id"}},
-	})
-	if err != nil {
-		log.Println(err)
-	}
-	var NamData []struct {
-		Date  string  `bson:"date" json:"date"`
-		Value float64 `bson:"value" json:"value"`
-	}
-	if err = cur.All(context.Background(), &NamData); err != nil {
-		log.Println(err)
 	}
 
 	// get inventory
@@ -1474,7 +1484,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 	template.Must(template.ParseFiles("templates/pages/dashboard/whitewood.html")).Execute(w, map[string]interface{}{
 		"whitewoodData":          whitewoodData,
 		"whitewoodPlanData":      whitewoodPlanData,
-		"namData":                NamData,
+		"avgdata":                avgdata,
 		"whitewoodInventoryData": whitewoodInventoryData,
 		"whitewoodTarget":        whitewoodTarget,
 		"whitewoodUpTime":        whitewoodUpTime,

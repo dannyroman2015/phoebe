@@ -1,4 +1,4 @@
-const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) => {
+const drawWhiteWhoodVTPChart = (data, plandata, avgdata, inventorydata, target) => {
   if (data == undefined) return;
   const width = 900;
   const height = 350;
@@ -41,7 +41,8 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
   const avgData = series[series.length-1].slice(0, -1)
-  const dataAvg = d3.sum(avgData, d => d[1])/avgData.length
+  // const dataAvg = d3.sum(avgData, d => d[1])/avgData.length
+  const dataAvg = avgdata
   const minDate = avgData[d3.minIndex(avgData, d => d[1])].data[0]
   innerChart.append("line")
     .attr("x1", 0)
@@ -62,7 +63,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
       .attr("font-weight", 600)
       .attr("font-size", 12)
   innerChart.append("text")
-      .text("* của cột tiền thực tế theo số ngày hiện hữu")
+      .text("* của cột tiền thực tế từ đầu tháng")
       .attr("class", "disappear")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
@@ -291,52 +292,6 @@ const drawWhiteWhoodVTPChart = (data, plandata, namdata, inventorydata, target) 
       .attr("stroke-opacity", 0.5)
 
   // end cột plan
-
-  // cột của anh Nam
-  // if (namdata != undefined) {
-  //   const lastSeries = series[series.length-1]
-  //   namdata.map(d => {
-  //     for (let i = 0; i < lastSeries.length; i++) {
-  //       if (d.date == lastSeries[i].data[0]) {
-  //         d.base = lastSeries[i][1]
-  //         return d
-  //       }
-  //     }
-  //   })
-
-  //   innerChart 
-  //     .selectAll()
-  //     .data(namdata)
-  //     .join("rect")
-  //       .attr("x", d => x(d.date) + x.bandwidth()/3)
-  //       .attr("y", d => y(d.base + Math.abs(d.value)) - 20)
-  //       .attr("width", 2*x.bandwidth()/3)
-  //       .attr("height", d => innerHeight - y(Math.abs(d.value)))
-  //       .attr("fill", d => (d.value > 0) ? "#D1E9F6" : "#FFCFB3")
-
-  //   innerChart 
-  //     .selectAll()
-  //     .data(namdata)
-  //     .join("text")
-  //       .text(d => d.value)
-  //       .attr("text-anchor", "middle")
-  //       .attr("alignment-baseline", "middle")
-  //       .attr("x", d => x(d.date) + 2*x.bandwidth()/3)
-  //       .attr("y", d => y(d.base + Math.abs(d.value)/2) - 20)
-  //       .attr("fill", "#75485E")
-  //       .attr("font-size", 12)
-
-  //   innerChart.append("text")
-  //     .text("<- Variance")
-  //     .attr("text-anchor", "start")
-  //     .attr("alignment-baseline", "middle")
-  //     .attr("x", x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5)
-  //     .attr("y", y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20)
-  //     .attr("fill", "#75485E")
-  //     .attr("font-size", 12)
-  //     .attr("transform", `rotate(-40, ${x(namdata[namdata.length-1].date) + x.bandwidth()/3 + 5}, ${y(namdata[namdata.length-1].base + Math.abs(namdata[namdata.length-1].value)) - 20})`)
-  // }
-  // end cột của anh Nam
 
   //draw target lines
   if (target != undefined) { 
