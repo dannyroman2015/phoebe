@@ -16313,6 +16313,9 @@ func (s *Server) oa_importfile(w http.ResponseWriter, r *http.Request, ps httpro
 	attendrows.Next()
 	for attendrows.Next() {
 		row, _ := attendrows.Columns()
+		if len(row) == 3 {
+			continue
+		}
 		date, err := time.Parse("2006-01-02", row[0])
 		if err != nil {
 			log.Println(err)
@@ -16323,7 +16326,12 @@ func (s *Server) oa_importfile(w http.ResponseWriter, r *http.Request, ps httpro
 			log.Println(err)
 			return
 		}
+
 		_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "attend", "date": date, "department": row[1], "category": row[2]}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 	otrows, _ := f.Rows("OVT")
@@ -16335,12 +16343,34 @@ func (s *Server) oa_importfile(w http.ResponseWriter, r *http.Request, ps httpro
 			log.Println(err)
 			return
 		}
-		value, err := strconv.ParseFloat(row[3], 64)
-		if err != nil {
-			log.Println(err)
-			return
+
+		if len(row) == 4 {
+			value, err := strconv.ParseFloat(row[2], 64)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "ot", "date": date, "department": row[1], "category": "OVT"}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			value, err = strconv.ParseFloat(row[3], 64)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "ot", "date": date, "department": row[1], "category": "MANHR"}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
 		}
-		_, err = s.mgdb.Collection("otattend").UpdateOne(context.Background(), bson.M{"type": "ot", "date": date, "department": row[1], "category": row[2]}, bson.M{"$set": bson.M{"value": value}}, options.Update().SetUpsert(true))
+
 	}
 
 }
