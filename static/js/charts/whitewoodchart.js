@@ -6,8 +6,6 @@ const drawWhiteWhoodVTPChart = (data, plandata, avgdata, inventorydata, target) 
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  console.log(d3.rollups(data, D => d3.sum(D, d => d.value) , d => d.date))
-
   const series = d3.stack()
     .keys(d3.union(data.map(d => d.type)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).value)

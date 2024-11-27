@@ -2,7 +2,6 @@
 // value fuction chart
 ///////////////////////////////////
 const drawProductionChart = (data) => {
-
   const margin = {top: 30, right: 50, bottom: 10, left: 85};
   const width = 900;
   const height = 350;
@@ -241,12 +240,12 @@ const drawProdMtdChart = (data) => {
   let pastDays = 0;
   let avg = 0;
   let estimateData = [];
-  console.log(curmonthData)
+
   if (curmonthData.length > 1) {
     pastDays = curmonthData[curmonthData.length-2].days // không tính hôm nay
     avg = curmonthData[curmonthData.length-2].value / pastDays
     estimateData = [{days: pastDays + 1, value: curmonthData[curmonthData.length-2].value + avg}]
-    for (let i = pastDays+2; i < 28; i++) { // làm tạm theo số ngày đã được plan trước
+    for (let i = pastDays+2; i < 27; i++) { // làm tạm theo số ngày đã được plan trước
       estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
     }
   }
