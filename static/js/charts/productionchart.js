@@ -249,7 +249,7 @@ const drawProdMtdChart = (data) => {
       estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
     }
   }
-  
+
   // for (let i = pastDays+2; i < 31; i++) {
   //   estimateData.push({days: i, value: estimateData[estimateData.length-1].value + avg})
   // }
@@ -283,7 +283,6 @@ const drawProdMtdChart = (data) => {
     .curve(d3.curveCatmullRom)
 
   data.forEach((serie, i) => {
-    console.log(serie)
     innerChart.append("path")
       .attr("d", area(serie.dat))
       .attr("fill", color(serie.month))
@@ -292,14 +291,14 @@ const drawProdMtdChart = (data) => {
     innerChart.append("text")
       .text(`${serie.month} - $ ${d3.format(",.0f")(serie.dat[serie.dat.length-1].value)}`)
       .attr("font-size", "14px")
-      .attr("x", (i == data.length-1 && serie.dat[serie.dat.length-1].days > 6 && serie.dat[serie.dat.length-1].days < 23) ? x(serie.dat[serie.dat.length-1].days) - 150 : x(serie.dat[serie.dat.length-1].days) + 14 )
+      .attr("x", (i == data.length-1 && serie.dat[serie.dat.length-1].days > 6 && serie.dat[serie.dat.length-1].days < 25) ? x(serie.dat[serie.dat.length-1].days) - 150 : x(serie.dat[serie.dat.length-1].days) + 14 )
       .attr("y", y(serie.dat[serie.dat.length-1].value) - 13)
       .attr("fill", "#75485E")
 
     innerChart.append("line")
       .attr("x1", x(serie.dat[serie.dat.length-1].days))
       .attr("y1", y(serie.dat[serie.dat.length-1].value) + 1)
-      .attr("x2", (i == data.length-1 && serie.dat[serie.dat.length-1].days > 6 && serie.dat[serie.dat.length-1].days < 23) ? x(serie.dat[serie.dat.length-1].days) - 13 : x(serie.dat[serie.dat.length-1].days) + 13)
+      .attr("x2", (i == data.length-1 && serie.dat[serie.dat.length-1].days > 6 && serie.dat[serie.dat.length-1].days < 25) ? x(serie.dat[serie.dat.length-1].days) - 13 : x(serie.dat[serie.dat.length-1].days) + 13)
       .attr("y2", y(serie.dat[serie.dat.length-1].value) - 11)
       .attr("stroke", "#75485E")
       .attr("stroke-width", 1);
@@ -374,7 +373,6 @@ const drawProdMtdChart = (data) => {
   //   .attr("stroke-width", 1);
   }
   
-
   innerChart.append("text")
     .text(`AVG of This Month up to ${pastDays}th: $ ${d3.format(",.0f")(avg)}`)
     .attr("text-anchor", "start")
