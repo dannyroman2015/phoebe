@@ -6112,7 +6112,7 @@ func (s *Server) sl_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/lamination/admin/loadreport - load report area on lamination admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sla_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("lamination").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(50))
 	if err != nil {
 		log.Println(err)
 	}
@@ -6487,7 +6487,7 @@ func (s *Server) sr_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/reededline/admin/loadreport - load report area on reededline admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sra_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("reededline").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("reededline").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(50))
 	if err != nil {
 		log.Println(err)
 	}
@@ -7077,7 +7077,7 @@ func (s *Server) sv_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/veneer/admin/loadreport - load report area on veneer admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) sva_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("veneer").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("veneer").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(50))
 	if err != nil {
 		log.Println(err)
 	}
@@ -7527,7 +7527,7 @@ func (s *Server) sa_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/assembly/admin/loadreport - load report area on assembly admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) saa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("assembly").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("assembly").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(100))
 	if err != nil {
 		log.Println(err)
 	}
@@ -7898,7 +7898,7 @@ func (s *Server) sw_admin(w http.ResponseWriter, r *http.Request, ps httprouter.
 // /sections/woodfinish/admin/loadreport - load report area on woodfinish admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) swa_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("woodfinish").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("woodfinish").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(100))
 	if err != nil {
 		log.Println(err)
 	}
@@ -8570,7 +8570,7 @@ func (s *Server) spk_admin(w http.ResponseWriter, r *http.Request, ps httprouter
 // /sections/pack/admin/loadreport - load report area on pack admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) spka_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("pack").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("pack").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(100))
 	if err != nil {
 		log.Println(err)
 	}
@@ -9075,7 +9075,7 @@ func (s *Server) spc_admin(w http.ResponseWriter, r *http.Request, ps httprouter
 // /sections/veneer/admin/loadreport - load report area on veneer admin page
 // ///////////////////////////////////////////////////////////////////////
 func (s *Server) spca_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	cur, err := s.mgdb.Collection("panelcnc").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}))
+	cur, err := s.mgdb.Collection("panelcnc").Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"createdat": -1}).SetLimit(50))
 	if err != nil {
 		log.Println(err)
 	}
@@ -10305,6 +10305,7 @@ func (s *Server) ma_loadentry(w http.ResponseWriter, r *http.Request, ps httprou
 func (s *Server) ma_loadreport(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	cur, err := s.mgdb.Collection("manhr").Aggregate(context.Background(), mongo.Pipeline{
 		{{"$sort", bson.D{{"date", -1}, {"section", 1}}}},
+		{{"$limit", 50}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d-%m-%Y", "date": "$date"}}}}},
 	})
 	if err != nil {
