@@ -38,7 +38,8 @@ const drawWhiteWhoodVTPChart = (data, plandata, avgdata, inventorydata, target) 
   const innerChart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-  const avgData = series[series.length-1].slice(0, -1)
+  if (avgdata > 0) {
+    const avgData = series[series.length-1].slice(0, -1)
   // const dataAvg = d3.sum(avgData, d => d[1])/avgData.length
   const dataAvg = avgdata
   const minDate = avgData[d3.minIndex(avgData, d => d[1])].data[0]
@@ -72,7 +73,7 @@ const drawWhiteWhoodVTPChart = (data, plandata, avgdata, inventorydata, target) 
       .attr("font-size", 12)
       .style("transition", "opacity 2s ease-out")
   setTimeout(() => d3.selectAll(".disappear").attr("opacity", 0), 40000)
-
+  }
 
   innerChart
     .selectAll()

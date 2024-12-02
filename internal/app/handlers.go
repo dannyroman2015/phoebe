@@ -1390,7 +1390,7 @@ func (s *Server) d_loadwhitewood(w http.ResponseWriter, r *http.Request, ps http
 		log.Println(err)
 	}
 
-	if valuedata[len(valuedata)-1].Date.Format("2006-01-02") == time.Now().Format("2006-01-02") {
+	if len(valuedata) > 0 && valuedata[len(valuedata)-1].Date.Format("2006-01-02") == time.Now().Format("2006-01-02") {
 		valuedata = valuedata[:len(valuedata)-1]
 	}
 	var total float64
