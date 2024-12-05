@@ -218,9 +218,9 @@ const drawCuttingChart2 = (data, returndata, finedata, target_actual, prodtypeda
     .keys(d3.union(data.map(d => d.is25)))
     .value(([, D], key) => D.get(key) === undefined ? 0 : D.get(key).qty)
     (d3.index(data, d => d.date, d => d.is25))
- 
+
   const x = d3.scaleBand()
-    .domain(d3.union(data.map(d => d.date), target.map(d => d.date)))
+    .domain(data.map(d => d.date))
     .range([0, innerWidth])
     .padding(0.1);
 
