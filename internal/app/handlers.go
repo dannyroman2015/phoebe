@@ -9752,9 +9752,10 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 	if err = cur.All(context.Background(), &data); err != nil {
 		log.Println(err)
 	}
-	var mtdv, rhmtdv, brandmtdv, outsourcemtdv float64
-	var mtdp, rhmtdp, brandmtdp, outsourcemtdp int
+	var mtdv, rhmtdv, brandmtdv, whitemtdv, outsourcemtdv float64
+	var mtdp, rhmtdp, brandmtdp, whitemtdp, outsourcemtdp int
 	var dates []string
+
 	for _, i := range data {
 		mtdv += i.Value
 		mtdp += i.Qty
@@ -9765,6 +9766,9 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 		case "rh":
 			rhmtdv += i.Value
 			rhmtdp += i.Qty
+		case "white":
+			whitemtdv += i.Value
+			whitemtdp += i.Qty
 		case "outsource":
 			outsourcemtdv += i.Value
 			outsourcemtdp += i.Qty
@@ -9776,7 +9780,7 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 
 	pastdays := len(dates)
 
-	var todayv, todaybrandv, todayrhv, todayoutsourcev float64
+	var todayv, todaybrandv, todayrhv, todaywhitev, todayoutsourcev float64
 	var todayp int
 	todayv, todaybrandv, todayrhv, todayoutsourcev = 0, 0, 0, 0
 	todayp = 0
@@ -9794,6 +9798,8 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 				todaybrandv += data[i].Value
 			case "rh":
 				todayrhv += data[i].Value
+			case "white":
+				todaywhitev += data[i].Value
 			case "outsource":
 				todayoutsourcev += data[i].Value
 			}
@@ -9824,6 +9830,8 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 		"brandmtdp":     p.Sprintf("%d", brandmtdp),
 		"rhmtdv":        p.Sprintf("%.0f", rhmtdv),
 		"rhmtdp":        p.Sprintf("%d", rhmtdp),
+		"whitemtdv":     p.Sprintf("%.0f", whitemtdv),
+		"whitemtdp":     p.Sprintf("%d", whitemtdp),
 		"outsourcemtdv": p.Sprintf("%.0f", outsourcemtdv),
 		"pastdays":      pastdays,
 		"avgv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)),
@@ -9832,10 +9840,13 @@ func (s *Server) po_loadsummary(w http.ResponseWriter, r *http.Request, ps httpr
 		"brandavgp":     p.Sprintf("%d", brandmtdp/pastdays),
 		"rhavgv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)),
 		"rhavgp":        p.Sprintf("%d", rhmtdp/pastdays),
+		"whiteavgv":     p.Sprintf("%.0f", (whitemtdv-todaywhitev)/float64(pastdays)),
+		"whiteavgp":     p.Sprintf("%d", whitemtdp/pastdays),
 		"outsourceavgv": p.Sprintf("%.0f", (outsourcemtdv-todayoutsourcev)/float64(pastdays)),
 		"estv":          p.Sprintf("%.0f", (mtdv-todayv)/float64(pastdays)*float64(estdays)+(mtdv-todayv)),
 		"estbrandv":     p.Sprintf("%.0f", (brandmtdv-todaybrandv)/float64(pastdays)*float64(estdays)+(brandmtdv-todaybrandv)),
 		"estrhv":        p.Sprintf("%.0f", (rhmtdv-todayrhv)/float64(pastdays)*float64(estdays)+(rhmtdv-todayrhv)),
+		"estwhitev":     p.Sprintf("%.0f", (whitemtdv-todaywhitev)/float64(pastdays)*float64(estdays)+(whitemtdv-todaywhitev)),
 		"estoutsourcev": p.Sprintf("%.0f", (outsourcemtdv-todayoutsourcev)/float64(pastdays)*float64(estdays)+(outsourcemtdv-todayoutsourcev)),
 	})
 }

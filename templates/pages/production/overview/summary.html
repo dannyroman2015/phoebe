@@ -100,6 +100,9 @@
                       RH
                   </th>
                   <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
+                      White
+                  </th>
+                  <th scope="col" class="px-6 py-3">
                       Outsource
                   </th>
               </tr>
@@ -128,8 +131,14 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
+                    <div class="ps-3">
+                     <div class="text-base font-semibold">$ {{.whitemtdv}}</div>
+                     <div class="font-normal text-gray-500">{{.whitemtdp}} pcs</div>
+                   </div>
+                 </td>
+                  <td class="px-6 py-4">
                      $ {{.outsourcemtdv}}
-                </td>
+                  </td>
               </tr>
               <tr class="border-b border-gray-200 dark:border-gray-700">
                   <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
@@ -154,12 +163,18 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.whiteavgv}}</div>
+                      <div class="font-normal text-gray-500">{{.whiteavgp}} pcs</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
                      $ {{.outsourceavgv}}
                 </td>
               </tr>
               <tr class="border-b border-gray-200 dark:border-gray-700">
                   <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap bg-gray-50 dark:text-white dark:bg-gray-800">
-                      Month End Estimate 
+                      Estimate 
                   </th>
                   <td class="px-6 py-4">
                     <div class="ps-3">
@@ -176,7 +191,12 @@
                       <div class="text-base font-semibold">$ {{.estrhv}}</div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">                  
+                  <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">
+                    <div class="ps-3">
+                      <div class="text-base font-semibold">$ {{.estwhitev}}</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">                  
                     <div class="text-base font-semibold">$ {{.estoutsourcev}}</div>
                 </td>
               </tr>
