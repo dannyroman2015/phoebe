@@ -8489,18 +8489,20 @@ func (s *Server) spk_sendentry(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	//create a report for production value collection
-	_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
-		"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
-		"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
-		"from": "pack", "refid": insertedResult.InsertedID,
-	})
-	if err != nil {
-		log.Println(err)
-		template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
-			"showErrDialog": true,
-			"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+	if prodtype != "stock" {
+		_, err = s.mgdb.Collection("prodvalue").InsertOne(context.Background(), bson.M{
+			"date": primitive.NewDateTimeFromTime(date), "item": itemcode, "itemtype": itemtype,
+			"factory": factory, "prodtype": prodtype, "qty": qty, "value": value, "reporter": username, "createdat": primitive.NewDateTimeFromTime(time.Now()),
+			"from": "pack", "refid": insertedResult.InsertedID,
 		})
-		return
+		if err != nil {
+			log.Println(err)
+			template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{
+				"showErrDialog": true,
+				"msgDialog":     "Kết nối cơ sở dữ liệu thất bại, vui lòng nhập lại hoặc báo admin.",
+			})
+			return
+		}
 	}
 
 	template.Must(template.ParseFiles("templates/pages/sections/pack/entry/form.html")).Execute(w, map[string]interface{}{

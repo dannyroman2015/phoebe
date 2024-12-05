@@ -784,7 +784,7 @@ const drawPactVTChart = (data, plandata, inventorydata, target) => {
     .nice()
 
   const color = d3.scaleOrdinal()
-    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh", "X1-white", "X2-white", "brand", "rh"])
+    .domain(["X1-brand", "X1-rh", "X2-brand", "X2-rh", "X1-stock", "X2-stock", "brand", "rh"])
     .range(["#DFC6A2", "#A5A0DE", "#DFC6A2", "#A5A0DE", "#D1D1D1", "#D1D1D1", "#DFC6A2", "#A5A0DE"])
     .unknown("white");
 
@@ -904,7 +904,7 @@ const drawPactVTChart = (data, plandata, inventorydata, target) => {
       .attr("font-size", 12)
      
   svg.append("text")
-      .text("White")
+      .text("Stock")
       .attr("text-anchor", "start")
       .attr("alignment-baseline", "middle")
       .attr("x", 0)
