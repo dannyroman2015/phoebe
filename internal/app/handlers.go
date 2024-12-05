@@ -211,8 +211,11 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	// 	{{"$unset", "_id"}},
 	// }
 	pipeline := mongo.Pipeline{
-		{{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		// {{"$match", bson.M{"type": "report", "$and": bson.A{bson.M{"date": bson.M{"$gte": primitive.NewDateTimeFromTime(time.Now().AddDate(0, 0, -12))}}, bson.M{"date": bson.M{"$lte": primitive.NewDateTimeFromTime(time.Now())}}}}}},
+		{{"$match", bson.M{"type": "report"}}},
 		{{"$group", bson.M{"_id": bson.M{"date": "$date", "is25reeded": "$is25reeded"}, "qty": bson.M{"$sum": "$qtycbm"}}}},
+		{{"$sort", bson.D{{"_id.date", -1}, {"_id.is25reeded", 1}}}},
+		{{"$limit", 12}},
 		{{"$sort", bson.D{{"_id.date", 1}, {"_id.is25reeded", 1}}}},
 		{{"$set", bson.M{"date": bson.M{"$dateToString": bson.M{"format": "%d %b", "date": "$_id.date"}}, "is25": "$_id.is25reeded"}}},
 		{{"$unset", "_id"}},
@@ -358,6 +361,7 @@ func (s *Server) dashboard(w http.ResponseWriter, r *http.Request, ps httprouter
 	if err = cur.All(context.Background(), &cuttingTarget); err != nil {
 		log.Println(err)
 	}
+
 	// get last update time of cutting
 	cuttingSr := s.mgdb.Collection("cutting").FindOne(context.Background(), bson.M{"type": "report"}, options.FindOne().SetSort(bson.M{"createddate": -1}))
 	if cuttingSr.Err() != nil {
