@@ -12,7 +12,7 @@ const drawRawwoodChart = (importdata, selectiondata) => {
 
   const y = d3.scaleLinear()
     // .domain([0, d3.max(importdata, d => d.qty)])
-    .domain([0, d3.max(d3.rollups(selectiondata, D => d3.sum(D, d => d.qty), d => d.date), d => d[1])])
+    .domain([0, d3.max(d3.union(importdata.map(d => d.qty), d3.rollups(selectiondata, D => d3.sum(D, d => d.qty), d => d.date).map(d => d[1])))])
     .range([innerHeight, 0])
     .nice();
 
