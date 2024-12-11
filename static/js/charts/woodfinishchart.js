@@ -782,8 +782,8 @@ const drawWoodFinishVTPChart = (data, plandata, inventorydata, target) => {
     (d3.index(plandata, d => d.date, d => d.plantype))
 
   const x = d3.scaleBand()
-    // .domain(data.map(d => d.date))
-    .domain(d3.union(data.map(d=> d.date), plandata.map(d => d.date)))
+    .domain(plandata.map(d => d.date))
+    // .domain(d3.union(data.map(d=> d.date), plandata.map(d => d.date)))
     .range([0, innerWidth])
     .padding(0.1);
 

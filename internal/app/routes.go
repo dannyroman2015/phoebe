@@ -26,10 +26,10 @@ func (s *Server) routes() http.Handler {
 	router.GET("/admin", withAuth(s.admin))
 
 	router.GET("/dashboard", s.dashboard)
-	router.GET("/dashboard/loadotattend", s.d_loadotattend)
-	router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
+	// router.GET("/dashboard/loadotattend", s.d_loadotattend)
+	// router.GET("/dashboard/loadmanpower", s.d_loadmanpower)
 	router.GET("/dashboard/loadproductionvop", s.d_loadproductionvop)
-	router.GET("/dashboard/loadplan", s.d_loadproductionplan)
+	// router.GET("/dashboard/loadplan", s.d_loadproductionplan)
 	router.GET("/dashboard/loadrawwood", s.d_loadrawwood)
 	router.GET("/dashboard/loadproduction", s.d_loadproduction)
 	router.GET("/dashboard/loadreededline", s.d_loadreededline)
@@ -44,11 +44,11 @@ func (s *Server) routes() http.Handler {
 	router.GET("/dashboard/loadslicing", s.d_loadslicing)
 	router.GET("/dashboard/loadquality", s.d_loadquality)
 	router.GET("/dashboard/loadwoodrecovery", s.d_loadwoodrecovery)
-	router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
-	router.GET("/dashboard/loadsixs", s.d_loadsixs)
-	router.GET("/dashboard/loadsafety", s.d_loadsafety)
-	router.POST("/dashboard/otattend/getchart", s.doa_getchart)
-	router.POST("/dashboard/manpower/getchart", s.dmp_getchart)
+	// router.GET("/dashboard/loaddowntime", s.d_loaddowntime)
+	// router.GET("/dashboard/loadsixs", s.d_loadsixs)
+	// router.GET("/dashboard/loadsafety", s.d_loadsafety)
+	// router.POST("/dashboard/otattend/getchart", s.doa_getchart)
+	// router.POST("/dashboard/manpower/getchart", s.dmp_getchart)
 	router.POST("/dashboard/productionvop/getchart", s.dpv_getchart)
 	router.POST("/dashboard/production/getchart", s.dpr_getchart)
 	router.POST("/dashboard/panelcnc/getchart", s.dpc_getchart)
@@ -60,54 +60,54 @@ func (s *Server) routes() http.Handler {
 	router.POST("/dashboard/reededline/getchart", s.dr_getchart)
 	router.POST("/dashboard/output/getchart", s.do_getchart)
 	router.POST("/dashboard/veneer/getchart", s.dv_getchart)
-	router.POST("/dashboard/finemill/getchart", s.df_getchart)
+	// router.POST("/dashboard/finemill/getchart", s.df_getchart)
 	router.POST("/dashboard/pack/getchart", s.dp_getchart)
 	router.POST("/dashboard/woodrecovery/getchart", s.dwr_getchart)
-	router.POST("/dashboard/sixs/getchart", s.ds_getchart)
+	// router.POST("/dashboard/sixs/getchart", s.ds_getchart)
 	router.POST("/dashboard/quality/getchart", s.dq_getchart)
-	router.POST("/dashboard/downtime/getchart", s.dd_getchart)
-	router.POST("/dashboard/safety/getchart", s.dst_getchart)
+	// router.POST("/dashboard/downtime/getchart", s.dd_getchart)
+	// router.POST("/dashboard/safety/getchart", s.dst_getchart)
 
-	router.GET("/incentive/admin", withAuth(s.iadmin))
-	router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
-	router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
-	router.DELETE("/incentive/admin/deletecriteria/:criteriaid", s.deletecriteria)
-	router.POST("/incentive/admin/searchcriterion", s.ia_searchcriterion)
-	router.GET("/incentive/admin/loadevaltable", s.loadevaltable)
-	router.DELETE("/incentive/admin/deleteevaluate/:evaluateid", s.deleteevaluate)
-	router.POST("/incentive/admin/searchevaluate", s.ia_searchevaluate)
+	// router.GET("/incentive/admin", withAuth(s.iadmin))
+	// router.GET("/incentive/admin/loadcrittable", s.loadcrittable)
+	// router.POST("/incentive/admin/upsertcriteria", s.caupsertcriteria)
+	// router.DELETE("/incentive/admin/deletecriteria/:criteriaid", s.deletecriteria)
+	// router.POST("/incentive/admin/searchcriterion", s.ia_searchcriterion)
+	// router.GET("/incentive/admin/loadevaltable", s.loadevaltable)
+	// router.DELETE("/incentive/admin/deleteevaluate/:evaluateid", s.deleteevaluate)
+	// router.POST("/incentive/admin/searchevaluate", s.ia_searchevaluate)
 
-	router.GET("/incentive/evaluate", s.evaluate) // use withAuth later
-	router.POST("/incentive/evaluate/searchstaff", s.searchstaff)
-	router.POST("/incentive/evaluate/searchcriterion", s.searchcriterion)
-	router.POST("/incentive/evaluate/sendevaluate", s.sendevaluate)
+	// router.GET("/incentive/evaluate", s.evaluate) // use withAuth later
+	// router.POST("/incentive/evaluate/searchstaff", s.searchstaff)
+	// router.POST("/incentive/evaluate/searchcriterion", s.searchcriterion)
+	// router.POST("/incentive/evaluate/sendevaluate", s.sendevaluate)
 
-	router.GET("/incentive/overview", s.ioverview)
-	router.GET("/incentive/overview/loadscores", s.io_loadscores)
-	router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
-	router.POST("/incentive/overview/evalsearch", s.io_evalsearch)
+	// router.GET("/incentive/overview", s.ioverview)
+	// router.GET("/incentive/overview/loadscores", s.io_loadscores)
+	// router.POST("/incentive/overview/scoresearch", s.io_scoresearch)
+	// router.POST("/incentive/overview/evalsearch", s.io_evalsearch)
 
 	// HR //////////////////////////////////////////////////////////////
-	router.GET("/hr/overview", s.hr_overview)
-	router.GET("/hr/overview/loadchart", s.hr_loadchart)
+	// router.GET("/hr/overview", s.hr_overview)
+	// router.GET("/hr/overview/loadchart", s.hr_loadchart)
 
-	router.GET("/hr/admin", withAuth(s.hradmin))
-	router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
-	router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
-	router.GET("/hr/admin/exportempexcel", s.ha_exportempexcel)
-	router.GET("/hr/admin/prevnext/:currentPage/:prevnext", s.ha_prevnext)
+	// router.GET("/hr/admin", withAuth(s.hradmin))
+	// router.POST("/hr/admin/searchemployee", s.ha_searchemployee)
+	// router.POST("/hr/admin/upsertemployee", s.ha_upsertemployee)
+	// router.GET("/hr/admin/exportempexcel", s.ha_exportempexcel)
+	// router.GET("/hr/admin/prevnext/:currentPage/:prevnext", s.ha_prevnext)
 
-	router.GET("/hr/entry", withAuth(s.hr_entry))
-	router.POST("/hr/entry", s.hr_insertemplist)
+	// router.GET("/hr/entry", withAuth(s.hr_entry))
+	// router.POST("/hr/entry", s.hr_insertemplist)
 	// end /////////////////////////////////////////////////////////////
 
 	// 6S //////////////////////////////////////////////////////////////
-	router.GET("/6s/overview", s.s_overview)
+	// router.GET("/6s/overview", s.s_overview)
 
-	router.GET("/6s/entry", s.s6_entry)
-	router.POST("/6s/entry", s.s6_sendentry)
+	// router.GET("/6s/entry", s.s6_entry)
+	// router.POST("/6s/entry", s.s6_sendentry)
 
-	router.GET("/6s/admin", s.s6_admin)
+	// router.GET("/6s/admin", s.s6_admin)
 	// end 6S //////////////////////////////////////////////////////////////
 
 	// Rawwood ////////////////////////////////////////////////////////
@@ -230,9 +230,9 @@ func (s *Server) routes() http.Handler {
 	// end Veneer/////////////////////////////////////////////////////////////
 
 	// Finemill ////////////////////////////////////////////////////////
-	router.GET("/sections/finemill/entry", withAuth(s.sf_entry))
-	router.GET("/sections/finemill/entry/loadform", s.sfe_loadform)
-	router.POST("/sections/finemill/entry/sendentry", s.sfe_sendentry)
+	// router.GET("/sections/finemill/entry", withAuth(s.sf_entry))
+	// router.GET("/sections/finemill/entry/loadform", s.sfe_loadform)
+	// router.POST("/sections/finemill/entry/sendentry", s.sfe_sendentry)
 
 	// end Veneer/////////////////////////////////////////////////////////////
 
@@ -336,19 +336,19 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// packing ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/sections/packing/overview", s.sp_overview)
+	// router.GET("/sections/packing/overview", s.sp_overview)
 
-	router.GET("/sections/packing/entry", withAuth(s.sp_entry))
-	router.GET("/sections/packing/entry/loadentry", s.sp_loadentry)
-	router.GET("/selections/packing/entry/mo/:status", s.sp_mobystatus)
-	router.POST("/selections/packing/entry/mosearch", s.sp_mosearch)
-	router.GET("/sections/packing/entry/itemparts/:mo/:itemid/:pi", s.sp_itemparts)
-	router.POST("/sections/packing/entry/initpart", s.sp_itempart)
-	router.POST("/sections/packing/entry/initparts", s.sp_initparts)
-	router.POST("/sections/packing/entry/maxpartqtyinput", s.sp_getinputmax)
-	router.POST("/sections/packing/sendentry", s.sp_sendentry)
+	// router.GET("/sections/packing/entry", withAuth(s.sp_entry))
+	// router.GET("/sections/packing/entry/loadentry", s.sp_loadentry)
+	// router.GET("/selections/packing/entry/mo/:status", s.sp_mobystatus)
+	// router.POST("/selections/packing/entry/mosearch", s.sp_mosearch)
+	// router.GET("/sections/packing/entry/itemparts/:mo/:itemid/:pi", s.sp_itemparts)
+	// router.POST("/sections/packing/entry/initpart", s.sp_itempart)
+	// router.POST("/sections/packing/entry/initparts", s.sp_initparts)
+	// router.POST("/sections/packing/entry/maxpartqtyinput", s.sp_getinputmax)
+	// router.POST("/sections/packing/sendentry", s.sp_sendentry)
 
-	router.GET("/sections/packing/admin", s.sp_admin)
+	// router.GET("/sections/packing/admin", s.sp_admin)
 	// end packing
 
 	////////////////////////////////////////////////////////////////////
@@ -400,78 +400,78 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// Downtime ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/downtime/entry", withAuth(s.dt_entry))
-	router.GET("/downtime/entry/loadform", s.dte_loadform)
-	router.POST("/downtime/entry/sendentry", s.dte_sendentry)
+	// router.GET("/downtime/entry", withAuth(s.dt_entry))
+	// router.GET("/downtime/entry/loadform", s.dte_loadform)
+	// router.POST("/downtime/entry/sendentry", s.dte_sendentry)
 	// end Downtime
 
 	////////////////////////////////////////////////////////////////////
 	// Mixing Color ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 
-	router.POST("/mixingcolor/getusingstart", s.getusingstart)
-	router.GET("/mixingcolor/loaddeliveryentry", s.loaddeliveryentry)
-	router.POST("/mixingcolor/senddeliveryentry", s.senddeliveryentry)
-	router.GET("/mixingcolor/batchentry", s.mc_batchentry)
-	router.GET("/mixingcolor/entry/loadbatchform", s.mce_loadbatchform)
-	router.POST("/mixingcolor/entry/sendbatchentry", s.mce_sendbatchentry)
+	// router.POST("/mixingcolor/getusingstart", s.getusingstart)
+	// router.GET("/mixingcolor/loaddeliveryentry", s.loaddeliveryentry)
+	// router.POST("/mixingcolor/senddeliveryentry", s.senddeliveryentry)
+	// router.GET("/mixingcolor/batchentry", s.mc_batchentry)
+	// router.GET("/mixingcolor/entry/loadbatchform", s.mce_loadbatchform)
+	// router.POST("/mixingcolor/entry/sendbatchentry", s.mce_sendbatchentry)
 
-	router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
+	// router.POST("/mixingcolor/mixingfilter", s.mixingfilter)
 
-	router.POST("/mixingcolor/mixingreports/:batchno", s.mixingreports)
-	router.GET("/mixingcolor/deletereports", s.deletereport)
+	// router.POST("/mixingcolor/mixingreports/:batchno", s.mixingreports)
+	// router.GET("/mixingcolor/deletereports", s.deletereport)
 
-	router.GET("/mixingcolor/addcolorform", s.addcolorform)
-	router.PUT("/mixingcolor/addcolor", s.addcolor)
-	router.POST("/mixingcolor/colorsearch", s.colorsearch)
-	router.POST("/mixingcolor/colorfilter", s.colorfilter)
+	// router.GET("/mixingcolor/addcolorform", s.addcolorform)
+	// router.PUT("/mixingcolor/addcolor", s.addcolor)
+	// router.POST("/mixingcolor/colorsearch", s.colorsearch)
+	// router.POST("/mixingcolor/colorfilter", s.colorfilter)
 
-	router.GET("/mixingcolor/usingentry", s.mc_usingreports)
-	router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
-	router.GET("/mixingcolor/entry/getupdateform", s.mc_getupdateform)
-	router.POST("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
-	router.POST("/mixingcolor/entry/updateusingitem", s.mc_updateusingitem)
-	router.POST("/mixingcolor/entry/searchcolorcode", s.mce_searchcolorcode)
-	router.POST("/mixingcolor/entry/createfastbatch", s.mce_createfastbatch)
+	// router.GET("/mixingcolor/usingentry", s.mc_usingreports)
+	// router.GET("/mixingcolor/entry/loadusingform", s.mc_loadusingform)
+	// router.GET("/mixingcolor/entry/getupdateform", s.mc_getupdateform)
+	// router.POST("/mixingcolor/entry/updateusingtime", s.mc_updateusingtime)
+	// router.POST("/mixingcolor/entry/updateusingitem", s.mc_updateusingitem)
+	// router.POST("/mixingcolor/entry/searchcolorcode", s.mce_searchcolorcode)
+	// router.POST("/mixingcolor/entry/createfastbatch", s.mce_createfastbatch)
 
-	router.GET("/mixingcolor/colorentry", s.mc_colorentry)
-	router.GET("/mixingcolor/entry/loadcolorform", s.mc_loadcolorform)
+	// router.GET("/mixingcolor/colorentry", s.mc_colorentry)
+	// router.GET("/mixingcolor/entry/loadcolorform", s.mc_loadcolorform)
 	// end Mixing Color
 
 	////////////////////////////////////////////////////////////////////
 	// Color Mixing ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/colormixing/overview", s.c_overview)
-	router.GET("/colormixing/overview/changedisplay/:type", s.co_changedisplay)
-	router.POST("/colormixing/overview/searchbatch", s.co_searchbatch)
-	router.POST("/colormixing/overview/filterbatch", s.co_filterbatch)
-	router.POST("/colormixing/overview/batchitems/:batchno", s.co_batchitems)
-	router.POST("/colormixing/overview/searchcolor", s.co_searchcolor)
-	router.POST("/colormixing/overview/filtercolor", s.co_filtercolor)
-	router.POST("/colormixing/overview/createstandard", s.co_createstandard)
-	router.DELETE("/colormixing/overview/deletestandard/:name", s.co_deletestandard)
+	// router.GET("/colormixing/overview", s.c_overview)
+	// router.GET("/colormixing/overview/changedisplay/:type", s.co_changedisplay)
+	// router.POST("/colormixing/overview/searchbatch", s.co_searchbatch)
+	// router.POST("/colormixing/overview/filterbatch", s.co_filterbatch)
+	// router.POST("/colormixing/overview/batchitems/:batchno", s.co_batchitems)
+	// router.POST("/colormixing/overview/searchcolor", s.co_searchcolor)
+	// router.POST("/colormixing/overview/filtercolor", s.co_filtercolor)
+	// router.POST("/colormixing/overview/createstandard", s.co_createstandard)
+	// router.DELETE("/colormixing/overview/deletestandard/:name", s.co_deletestandard)
 
-	router.GET("/colormixing/admin", withAuth(s.c_admin))
-	router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
-	router.POST("/colormixing/admin/sendbatchentry", s.ca_sendmixingentry)
-	router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
-	router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
-	router.DELETE("/colormixing/admin/deletepanel/:id", s.ca_deletepanel)
-	router.GET("/colormixing/admin/panelupdateform/:id", s.ca_panelupdateform)
-	router.PUT("/colormixing/admin/updatepanel/:id", s.ca_updatepanel)
-	router.GET("/colormixing/admin/loadusingtimeform", s.ca_loadusingtimeform)
-	router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
-	router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
-	router.GET("/colormixing/admin/loadmixingbatch", s.ca_loadmixingbatch)
-	router.POST("/colormixing/admin/searchbatch", s.ca_searchbatch)
-	router.GET("/colormixing/admin/loadcolorpanel", s.ca_loadcolorpanel)
-	router.POST("/colormixing/admin/searchpanel", s.ca_searchpanel)
-	router.DELETE("/colormixing/admin/deletemixing/:batchno", s.ca_deletemixing)
-	router.GET("/colormixing/admin/batchupdateform/:batchno", s.ca_batchupdateform)
-	router.PUT("/colormixing/admin/updatebatch/:batchno", s.ca_updatebatch)
-	router.GET("/colormixing/admin/loadauditentry", s.ca_loadauditentry)
-	router.POST("/colormixing/admin/failaudit/:id", s.ca_failaudit)
-	router.POST("/colormixing/admin/passaudit/:id", s.ca_passaduti)
+	// router.GET("/colormixing/admin", withAuth(s.c_admin))
+	// router.GET("/colormixing/admin/loadbatchentry", s.ca_loadbatchentry)
+	// router.POST("/colormixing/admin/sendbatchentry", s.ca_sendmixingentry)
+	// router.GET("/colormixing/admin/loadpanelentry", s.ca_loadpanelentry)
+	// router.POST("/colormixing/admin/sendpanelentry", s.ca_sendpanelentry)
+	// router.DELETE("/colormixing/admin/deletepanel/:id", s.ca_deletepanel)
+	// router.GET("/colormixing/admin/panelupdateform/:id", s.ca_panelupdateform)
+	// router.PUT("/colormixing/admin/updatepanel/:id", s.ca_updatepanel)
+	// router.GET("/colormixing/admin/loadusingtimeform", s.ca_loadusingtimeform)
+	// router.GET("/colormixing/admin/loadinspectionform", s.ca_loadinspectionform)
+	// router.POST("/colormixing/admin/addinspection", s.ca_addinspection)
+	// router.GET("/colormixing/admin/loadmixingbatch", s.ca_loadmixingbatch)
+	// router.POST("/colormixing/admin/searchbatch", s.ca_searchbatch)
+	// router.GET("/colormixing/admin/loadcolorpanel", s.ca_loadcolorpanel)
+	// router.POST("/colormixing/admin/searchpanel", s.ca_searchpanel)
+	// router.DELETE("/colormixing/admin/deletemixing/:batchno", s.ca_deletemixing)
+	// router.GET("/colormixing/admin/batchupdateform/:batchno", s.ca_batchupdateform)
+	// router.PUT("/colormixing/admin/updatebatch/:batchno", s.ca_updatebatch)
+	// router.GET("/colormixing/admin/loadauditentry", s.ca_loadauditentry)
+	// router.POST("/colormixing/admin/failaudit/:id", s.ca_failaudit)
+	// router.POST("/colormixing/admin/passaudit/:id", s.ca_passaduti)
 	// end Color Mixing
 
 	////////////////////////////////////////////////////////////////////
@@ -485,67 +485,67 @@ func (s *Server) routes() http.Handler {
 	////////////////////////////////////////////////////////////////////
 	// GNHH ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/gnhh/overview", s.g_overview)
-	router.GET("/gnhh/overview/loadchart", s.go_loadchart)
-	router.GET("/gnhh/overview/loadproducttree", s.go_loadproducttree)
-	router.GET("/gnhh/overview/loadtimeline", s.go_loadtimeline)
-	router.GET("/gnhh/overview/loaddetail", s.go_loaddetail)
-	router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
-	router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
-	router.POST("/gnhh/overview/filtertimeline", s.go_filtertimeline)
-	router.POST("/gnhh/overview/iteminfo", s.go_iteminfo)
-	router.GET("/gnhh/overview/loadtree", s.go_loadtree)
-	router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
-	router.POST("/gnhh/overview/mofilter", s.go_mofilter)
-	router.POST("/gnhh/overview/productfilter", s.go_productfilter)
-	router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
+	// router.GET("/gnhh/overview", s.g_overview)
+	// router.GET("/gnhh/overview/loadchart", s.go_loadchart)
+	// router.GET("/gnhh/overview/loadproducttree", s.go_loadproducttree)
+	// router.GET("/gnhh/overview/loadtimeline", s.go_loadtimeline)
+	// router.GET("/gnhh/overview/loaddetail", s.go_loaddetail)
+	// router.POST("/gnhh/overview/updatetimeline", s.go_updatetimeline)
+	// router.POST("/gnhh/overview/searchtimeline", s.go_searchtimeline)
+	// router.POST("/gnhh/overview/filtertimeline", s.go_filtertimeline)
+	// router.POST("/gnhh/overview/iteminfo", s.go_iteminfo)
+	// router.GET("/gnhh/overview/loadtree", s.go_loadtree)
+	// router.POST("/gnhh/overview/getproductcodes", s.go_getproductcodes)
+	// router.POST("/gnhh/overview/mofilter", s.go_mofilter)
+	// router.POST("/gnhh/overview/productfilter", s.go_productfilter)
+	// router.POST("/gnhh/overview/searchdetail", s.go_searchdetail)
 
-	router.GET("/gnhh/entry/import", s.ge_import)
-	router.POST("/gnhh/entry/importdata", s.ge_importdata)
+	// router.GET("/gnhh/entry/import", s.ge_import)
+	// router.POST("/gnhh/entry/importdata", s.ge_importdata)
 	// end GNHH
 
 	////////////////////////////////////////////////////////////////////
 	// Safety ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/safety/entry", s.s_entry)
-	router.POST("/safety/sendentry", s.s_sendentry)
+	// router.GET("/safety/entry", s.s_entry)
+	// router.POST("/safety/sendentry", s.s_sendentry)
 	// end Safety
 
 	////////////////////////////////////////////////////////////////////
 	// Manpower ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.POST("/manpower/importfile", s.mp_importfile)
+	// router.POST("/manpower/importfile", s.mp_importfile)
 	// end Manpower
 
 	////////////////////////////////////////////////////////////////////
 	// OT-Attend ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.POST("/otattend/importfile", s.oa_importfile)
+	// router.POST("/otattend/importfile", s.oa_importfile)
 	// end OT-Attend
 
 	////////////////////////////////////////////////////////////////////
 	// mo ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/mo/entry", withAuth(s.mo_entry))
-	router.POST("/mo/entry", s.mo_insertMoList)
+	// router.GET("/mo/entry", withAuth(s.mo_entry))
+	// router.POST("/mo/entry", s.mo_insertMoList)
 
-	router.GET("/mo/admin", s.mo_admin)
+	// router.GET("/mo/admin", s.mo_admin)
 	// end packing --------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
 	// item ////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-	router.GET("/item/entry", withAuth(s.i_entry))
-	router.POST("/item/entry", s.i_importitemlist)
+	// router.GET("/item/entry", withAuth(s.i_entry))
+	// router.POST("/item/entry", s.i_importitemlist)
 
-	router.GET("/item/admin", s.i_admin)
+	// router.GET("/item/admin", s.i_admin)
 	// router.POST("/item/admin/additem", s.i_additem)
-	router.POST("/item/admin/addpart", s.i_addpart)
+	// router.POST("/item/admin/addpart", s.i_addpart)
 	// end item --------------------------------------------------------
 
-	router.GET("/test", s.handleGetTest)
+	// router.GET("/test", s.handleGetTest)
 
-	router.GET("/test/loadmain", s.testload)
+	// router.GET("/test/loadmain", s.testload)
 
 	return router
 }

@@ -1,7 +1,0 @@
-<select hx-post="/gnhh/overview/mofilter" hx-target="#chart-container" hx-swap="innerHTML settle:200ms"
-       name="productcode" id="productcode" class="mt-5 w-full border-x-0 border-t-0 px-0 text-center text-gray-700 sm:text-sm">
-  <option value="all">All</option>   
-  {{range .productcodes}}
-  <option value="{{.Productcode}}">{{.Productcode}}</option>
-  {{end}}
-</select>
